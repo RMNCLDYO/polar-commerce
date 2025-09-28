@@ -34,14 +34,11 @@ class Logger {
     } else {
       console.error(formattedMessage);
 
-      if (
-        typeof window !== "undefined" &&
-        (window as WindowWithErrorTracker).errorTracker
-      ) {
-        (window as WindowWithErrorTracker).errorTracker.logError(
-          message,
-          context,
-        );
+      if (typeof window !== "undefined") {
+        const windowWithTracker = window as WindowWithErrorTracker;
+        if (windowWithTracker.errorTracker) {
+          windowWithTracker.errorTracker.logError(message, context);
+        }
       }
     }
   }
