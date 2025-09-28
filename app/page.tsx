@@ -1,23 +1,24 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useState, useEffect, useRef } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Progress } from "@/components/ui/progress"
-import { ModeToggle } from "@/components/mode-toggle"
-import { toast } from "sonner"
-import { Upload, ShoppingBag, Heart, Search, Loader2 } from "lucide-react"
-import Image from "next/image"
-import { cn } from "@/lib/utils"
+import { Heart, Search, ShoppingBag, Upload, Sparkles } from "lucide-react";
+import Image from "next/image";
+import type React from "react";
+import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
+import { ModeToggle } from "@/components/mode-toggle";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Progress } from "@/components/ui/progress";
+import { cn } from "@/lib/utils";
+import { logger } from "@/lib/logger";
 
 interface Product {
-  id: string
-  name: string
-  price: string
-  category: string
-  image: string
-  description: string
+  id: string;
+  name: string;
+  price: string;
+  category: string;
+  image: string;
+  description: string;
 }
 
 const products: Product[] = [
@@ -53,286 +54,324 @@ const products: Product[] = [
     image: "/products/jordan-hoodie.jpeg",
     description: "Premium hoodie with signature graphics",
   },
-]
+];
 
 const techInfoMessages = [
   "Generating image for Nike ZoomX Vomero Plus",
   "Generating image for Nike Club Cap",
   "Generating image for Nike Tech Woven Pants",
   "Generating image for Jordan Fleece Hoodie",
-]
+];
 
 interface ImageWithLoadingProps {
-  src: string
-  alt: string
-  className?: string
-  productId: string
+  src: string;
+  alt: string;
+  className?: string;
+  productId: string;
 }
 
-const ImageWithLoading: React.FC<ImageWithLoadingProps> = ({ src, alt, className, productId }) => {
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState(false)
+const ImageWithLoading: React.FC<ImageWithLoadingProps> = ({
+  src,
+  alt,
+  className,
+  productId,
+}) => {
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const loadStartTime = useRef<number>(Date.now());
 
-  const handleLoad = () => {
-    setIsLoading(false)
-    setError(false)
-  }
+  const handleLoad = (): void => {
+    const loadTime = Date.now() - loadStartTime.current;
+    setIsLoading(false);
+    setError(false);
 
-  const handleError = () => {
-    setIsLoading(false)
-    setError(true)
-  }
+    logger.performance(`Image load: ${productId}`, loadTime, { productId, src: src.substring(0, 50) });
+  };
 
-  // Use Next.js Image for local images, regular img for base64 data URLs
-  const isDataUrl = src.startsWith('data:')
+  const handleError = (): void => {
+    setIsLoading(false);
+    setError(true);
+
+    logger.error(`Failed to load image for product ${productId}`, { productId, src: src.substring(0, 50) });
+  };
+
+  const isDataUrl = src.startsWith("data:");
+  const isBlobUrl = src.startsWith("blob:");
 
   return (
     <>
-      {/* Loading placeholder */}
       {isLoading && !error && (
-        <div className="w-full bg-muted animate-pulse" style={{ aspectRatio: '1/1' }}>
+        <div
+          className="w-full bg-muted animate-pulse"
+          style={{ aspectRatio: "1/1" }}
+        >
           <div className="w-full h-full bg-gradient-to-r from-muted via-accent to-muted animate-shimmer" />
         </div>
       )}
 
-      {/* Error state */}
       {error && (
-        <div className="w-full bg-muted flex items-center justify-center" style={{ aspectRatio: '1/1' }}>
-          <span className="text-muted-foreground text-xs">Failed to load image</span>
+        <div
+          className="w-full bg-muted flex items-center justify-center"
+          style={{ aspectRatio: "1/1" }}
+        >
+          <span className="text-muted-foreground text-xs">
+            Failed to load image
+          </span>
         </div>
       )}
 
-      {/* Image */}
       {!error && (
-        <>
-          {isDataUrl ? (
-            /* eslint-disable-next-line @next/next/no-img-element */
-            <img
-              src={src}
-              alt={alt}
-              className={cn(className, "transition-opacity duration-300", isLoading ? "opacity-0" : "opacity-100")}
-              onLoad={handleLoad}
-              onError={handleError}
-            />
-          ) : (
-            <Image
-              src={src}
-              alt={alt}
-              width={600}
-              height={600}
-              className={cn(className, "transition-opacity duration-300", isLoading ? "opacity-0" : "opacity-100")}
-              onLoad={(e) => {
-                if (e.currentTarget.complete) {
-                  handleLoad()
-                }
-              }}
-              onError={handleError}
-              priority={false}
-              style={{ height: 'auto', width: '100%' }}
-            />
+        <Image
+          key={productId}
+          src={src}
+          alt={alt}
+          width={600}
+          height={600}
+          className={cn(
+            className,
+            "transition-opacity duration-300",
+            isLoading ? "opacity-0" : "opacity-100",
           )}
-        </>
+          onLoad={handleLoad}
+          onError={handleError}
+          priority={false}
+          unoptimized={isDataUrl || isBlobUrl}
+          style={{ height: "auto", width: "100%" }}
+        />
       )}
     </>
-  )
-}
+  );
+};
 
 export default function BananaSportswearStorefront() {
-  const [userPhoto, setUserPhoto] = useState<File | null>(null)
-  const [isPersonalized, setIsPersonalized] = useState(false)
-  const [isGenerating, setIsGenerating] = useState(false)
-  const [personalizedImages, setPersonalizedImages] = useState<Record<string, string>>({})
-  const [generationProgress, setGenerationProgress] = useState(0)
-  const [isDragOver, setIsDragOver] = useState(false)
-  const [viewMode, setViewMode] = useState<"products" | "generated">("products")
-  const [currentProductIndex, setCurrentProductIndex] = useState(0)
-  const [isPageLoaded, setIsPageLoaded] = useState(false)
-  const [showGallery, setShowGallery] = useState(false)
-  const [isTransitioning, setIsTransitioning] = useState(false)
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [userPhoto, setUserPhoto] = useState<File | null>(null);
+  const [isPersonalized, setIsPersonalized] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [personalizedImages, setPersonalizedImages] = useState<
+    Record<string, string>
+  >({});
+  const [generationProgress, setGenerationProgress] = useState(0);
+  const [isDragOver, setIsDragOver] = useState(false);
+  const [viewMode, setViewMode] = useState<"products" | "generated">(
+    "products",
+  );
+  const [currentProductIndex, setCurrentProductIndex] = useState(0);
+  const [isPageLoaded, setIsPageLoaded] = useState(false);
+  const [showGallery, setShowGallery] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      setIsPageLoaded(true)
-    }, 100)
-    return () => clearTimeout(timer)
-  }, [])
+      setIsPageLoaded(true);
+    }, 100);
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setIsDragOver(true)
-  }
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(true);
+  };
 
   const handleDragLeave = (e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
+    e.preventDefault();
+    e.stopPropagation();
     if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-      setIsDragOver(false)
+      setIsDragOver(false);
     }
-  }
+  };
 
   const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setIsDragOver(false)
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
 
-    const files = e.dataTransfer.files
-    if (files.length > 0 && files[0].type.startsWith("image/")) {
-      handlePhotoUpload(files[0])
+    const files = e.dataTransfer.files;
+    const firstFile = files[0];
+    if (files.length > 0 && firstFile && firstFile.type.startsWith("image/")) {
+      handlePhotoUpload(firstFile);
     }
-  }
+  };
 
   const handlePhotoUpload = (file: File) => {
-    setUserPhoto(file)
-    setIsPersonalized(false)
-    setPersonalizedImages({})
-    setViewMode("products")
+    setUserPhoto(file);
+    setIsPersonalized(false);
+    setPersonalizedImages({});
+    setViewMode("products");
     setTimeout(() => {
-      generatePersonalizedImagesWithFile(file)
-    }, 100)
-  }
+      generatePersonalizedImagesWithFile(file);
+    }, 100);
+  };
 
   const generatePersonalizedImagesWithFile = async (file: File) => {
-    setIsGenerating(true)
-    setGenerationProgress(0)
-    setCurrentProductIndex(0)
-    setShowGallery(false)
-    setIsTransitioning(false)
-    const newPersonalizedImages: Record<string, string> = {}
+    setIsGenerating(true);
+    setGenerationProgress(0);
+    setCurrentProductIndex(0);
+    setShowGallery(false);
+    setIsTransitioning(false);
+    const newPersonalizedImages: Record<string, string> = {};
 
     try {
       for (let i = 0; i < products.length; i++) {
-        const product = products[i]
-        setCurrentProductIndex(i)
+        const product = products[i];
+        if (!product) continue; // Type guard for strict array access
+        setCurrentProductIndex(i);
 
-        const baseProgress = (i / products.length) * 100
-        const targetProgress = ((i + 1) / products.length) * 100
+        const baseProgress = (i / products.length) * 100;
+        const targetProgress = ((i + 1) / products.length) * 100;
 
-        const animateProgress = (startProgress: number, endProgress: number, duration: number) => {
+        const animateProgress = (
+          startProgress: number,
+          endProgress: number,
+          duration: number,
+        ) => {
           return new Promise<void>((resolve) => {
-            const startTime = Date.now()
-            const updateInterval = 16
+            const startTime = Date.now();
+            const updateInterval = 16;
 
             const updateProgress = () => {
-              const elapsed = Date.now() - startTime
-              const progress = Math.min(elapsed / duration, 1)
+              const elapsed = Date.now() - startTime;
+              const progress = Math.min(elapsed / duration, 1);
 
               const easeInOutCubic = (t: number) => {
-                return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2
-              }
+                return t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
+              };
 
-              const easedProgress = easeInOutCubic(progress)
-              const currentProgress = startProgress + (endProgress - startProgress) * easedProgress
-              setGenerationProgress(currentProgress)
+              const easedProgress = easeInOutCubic(progress);
+              const currentProgress =
+                startProgress + (endProgress - startProgress) * easedProgress;
+              setGenerationProgress(currentProgress);
 
               if (progress < 1) {
-                setTimeout(updateProgress, updateInterval)
+                setTimeout(updateProgress, updateInterval);
               } else {
-                resolve()
+                resolve();
               }
-            }
+            };
 
-            updateProgress()
-          })
-        }
+            updateProgress();
+          });
+        };
 
-        const progressPromise = animateProgress(baseProgress, targetProgress, 4000)
+        const progressPromise = animateProgress(
+          baseProgress,
+          targetProgress,
+          4000,
+        );
 
         try {
-          const productImageResponse = await fetch(product.image)
+          const productImageResponse = await fetch(product.image);
           if (!productImageResponse.ok) {
-            throw new Error(`Failed to fetch product image for ${product.name}`)
+            throw new Error(
+              `Failed to fetch product image for ${product.name}`,
+            );
           }
 
-          const productImageBlob = await productImageResponse.blob()
-          const productImageFile = new File([productImageBlob], `${product.id}.jpg`, {
-            type: productImageBlob.type,
-          })
+          const productImageBlob = await productImageResponse.blob();
+          const productImageFile = new File(
+            [productImageBlob],
+            `${product.id}.jpg`,
+            {
+              type: productImageBlob.type,
+            },
+          );
 
-          const formData = new FormData()
-          formData.append("userPhoto", file)
-          formData.append("productImage", productImageFile)
-          formData.append("productName", product.name)
-          formData.append("productCategory", product.category)
+          const formData = new FormData();
+          formData.append("userPhoto", file);
+          formData.append("productImage", productImageFile);
+          formData.append("productName", product.name);
+          formData.append("productCategory", product.category);
 
-          const controller = new AbortController()
-          const timeoutId = setTimeout(() => controller.abort(), 60000)
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 60000);
 
           const response = await fetch("/api/generate-model-image", {
             method: "POST",
             body: formData,
             signal: controller.signal,
-          })
+          });
 
-          clearTimeout(timeoutId)
+          clearTimeout(timeoutId);
 
           if (!response.ok) {
-            const errorText = await response.text()
-            throw new Error(`Failed to generate image for ${product.name}: ${response.status} - ${errorText}`)
+            const errorText = await response.text();
+            throw new Error(
+              `Failed to generate image for ${product.name}: ${response.status} - ${errorText}`,
+            );
           }
 
-          const data = await response.json()
+          const data = await response.json();
 
           if (!data.imageUrl) {
-            throw new Error(`No image URL returned for ${product.name}`)
+            throw new Error(`No image URL returned for ${product.name}`);
           }
 
-          newPersonalizedImages[product.id] = data.imageUrl
+          newPersonalizedImages[product.id] = data.imageUrl;
         } catch (productError) {
-          console.error(`Error generating image for ${product.name}:`, productError)
-          newPersonalizedImages[product.id] = product.image
+          console.error(
+            `Error generating image for ${product.name}:`,
+            productError,
+          );
+          newPersonalizedImages[product.id] = product.image;
         }
 
-        await progressPromise
+        await progressPromise;
       }
 
-      const generatedCount = Object.values(newPersonalizedImages).filter((url) => url.startsWith("data:")).length
+      const generatedCount = Object.values(newPersonalizedImages).filter(
+        (url) => url.startsWith("data:"),
+      ).length;
 
-      setPersonalizedImages(newPersonalizedImages)
-      setIsPersonalized(generatedCount > 0)
+      setPersonalizedImages(newPersonalizedImages);
+      setIsPersonalized(generatedCount > 0);
 
       if (generatedCount > 0) {
-        toast.success(`Successfully generated ${generatedCount} personalized images!`)
+        toast.success(
+          `Successfully generated ${generatedCount} personalized images!`,
+        );
         setTimeout(() => {
-          setIsTransitioning(true)
+          setIsTransitioning(true);
           setTimeout(() => {
-            setViewMode("generated")
+            setViewMode("generated");
             setTimeout(() => {
-              setIsTransitioning(false)
+              setIsTransitioning(false);
               setTimeout(() => {
-                setShowGallery(true)
-              }, 300)
-            }, 200)
-          }, 200)
-        }, 300)
+                setShowGallery(true);
+              }, 300);
+            }, 200);
+          }, 200);
+        }, 300);
       } else {
-        toast.error("Failed to generate personalized images. Please try again.")
+        toast.error(
+          "Failed to generate personalized images. Please try again.",
+        );
       }
     } catch (error) {
-      console.error("Error in generatePersonalizedImagesWithFile:", error)
-      toast.error("Failed to generate personalized images. Please try again.")
+      console.error("Error in generatePersonalizedImagesWithFile:", error);
+      toast.error("Failed to generate personalized images. Please try again.");
     } finally {
-      setIsGenerating(false)
-      setGenerationProgress(0)
+      setIsGenerating(false);
+      setGenerationProgress(0);
     }
-  }
+  };
 
   return (
     <div
       className={cn(
         "min-h-screen bg-background text-foreground font-mono transition-all duration-1000",
-        isPageLoaded ? "opacity-100" : "opacity-0"
+        isPageLoaded ? "opacity-100" : "opacity-0",
       )}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
-      {/* Upload Area - Fixed Position */}
       <div
         className={cn(
           "fixed bottom-8 right-8 z-40 transition-all duration-700 transform",
-          isPageLoaded ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0"
+          isPageLoaded
+            ? "translate-y-0 opacity-100"
+            : "translate-y-8 opacity-0",
         )}
         style={{ transitionDelay: "800ms" }}
       >
@@ -342,7 +381,7 @@ export default function BananaSportswearStorefront() {
             isDragOver
               ? "border-foreground bg-card shadow-lg scale-105"
               : "border-border/50 bg-muted/20",
-            "hover:shadow-md"
+            "hover:shadow-md",
           )}
           onClick={() => !userPhoto && fileInputRef.current?.click()}
         >
@@ -352,15 +391,17 @@ export default function BananaSportswearStorefront() {
             accept="image/*"
             className="hidden"
             onChange={(e) => {
-              const file = e.target.files?.[0]
-              if (file) handlePhotoUpload(file)
+              const file = e.target.files?.[0];
+              if (file) handlePhotoUpload(file);
             }}
           />
 
           {!userPhoto ? (
             <>
               <Upload className="w-6 h-6 mx-auto mb-3 text-muted-foreground animate-bounce" />
-              <h3 className="text-sm font-semibold mb-2 tracking-wide animate-pulse">DROP YOUR PHOTO</h3>
+              <h3 className="text-sm font-semibold mb-2 tracking-wide animate-pulse">
+                DROP YOUR PHOTO
+              </h3>
               <p className="text-xs text-muted-foreground font-mono tracking-wider mt-2">
                 To see how the products would look on you
               </p>
@@ -392,18 +433,21 @@ export default function BananaSportswearStorefront() {
           ) : (
             <>
               <Upload className="w-6 h-6 mx-auto mb-3 text-muted-foreground animate-pulse" />
-              <h3 className="text-xs font-semibold mb-2 tracking-wide">PHOTOS GENERATED!</h3>
+              <h3 className="text-xs font-semibold mb-2 tracking-wide">
+                PHOTOS GENERATED!
+              </h3>
               <p className="text-xs text-muted-foreground font-mono tracking-wider mb-3">
                 Drop a new photo to generate fresh samples
               </p>
               <Button
                 onClick={() => {
-                  const newMode = viewMode === "products" ? "generated" : "products"
-                  setViewMode(newMode)
+                  const newMode =
+                    viewMode === "products" ? "generated" : "products";
+                  setViewMode(newMode);
                   if (newMode === "generated") {
-                    setTimeout(() => setShowGallery(true), 300)
+                    setTimeout(() => setShowGallery(true), 300);
                   } else {
-                    setShowGallery(false)
+                    setShowGallery(false);
                   }
                 }}
                 variant="default"
@@ -416,21 +460,28 @@ export default function BananaSportswearStorefront() {
         </div>
       </div>
 
-      {/* Drag Overlay */}
       {isDragOver && (
         <div className="fixed inset-0 z-20 bg-foreground/5 border-4 border-dashed border-foreground pointer-events-none animate-in fade-in duration-200" />
       )}
 
-      {/* Header */}
       <header
         className={cn(
           "px-8 py-6 border-b border-border transition-all duration-700 transform",
-          isPageLoaded ? "translate-y-0 opacity-100" : "-translate-y-4 opacity-0"
+          isPageLoaded
+            ? "translate-y-0 opacity-100"
+            : "-translate-y-4 opacity-0",
         )}
       >
         <div className="mx-auto max-w-7xl flex items-center justify-between">
           <div className="flex items-center">
-            <Image src="/acme-logo.png" alt="BANANA SPORTSWEAR" width={160} height={40} className="h-10 w-auto" priority />
+            <Image
+              src="/acme-logo.png"
+              alt="BANANA SPORTSWEAR"
+              width={160}
+              height={40}
+              className="h-10 w-auto"
+              priority
+            />
           </div>
 
           <nav className="hidden md:flex items-center gap-x-12">
@@ -440,7 +491,9 @@ export default function BananaSportswearStorefront() {
                 href="#"
                 className={cn(
                   "text-xs font-semibold tracking-widest uppercase transition-all duration-500 hover:text-muted-foreground",
-                  isPageLoaded ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0"
+                  isPageLoaded
+                    ? "translate-y-0 opacity-100"
+                    : "translate-y-2 opacity-0",
                 )}
                 style={{ transitionDelay: `${200 + index * 100}ms` }}
               >
@@ -452,7 +505,9 @@ export default function BananaSportswearStorefront() {
               size="sm"
               className={cn(
                 "text-xs font-semibold tracking-widest uppercase px-6 hover:scale-105 transition-all duration-500",
-                isPageLoaded ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0"
+                isPageLoaded
+                  ? "translate-y-0 opacity-100"
+                  : "translate-y-2 opacity-0",
               )}
               style={{ transitionDelay: "600ms" }}
               onClick={() => fileInputRef.current?.click()}
@@ -464,7 +519,9 @@ export default function BananaSportswearStorefront() {
           <div
             className={cn(
               "flex items-center gap-x-6 transition-all duration-700 transform",
-              isPageLoaded ? "translate-x-0 opacity-100" : "translate-x-4 opacity-0"
+              isPageLoaded
+                ? "translate-x-0 opacity-100"
+                : "translate-x-4 opacity-0",
             )}
             style={{ transitionDelay: "400ms" }}
           >
@@ -483,17 +540,23 @@ export default function BananaSportswearStorefront() {
         </div>
       </header>
 
-      {/* Main Content */}
       <section className="px-8 py-16">
         <div className="mx-auto max-w-4xl">
           <div
             className={cn(
               "mb-16 flex items-center justify-between transition-all duration-700 transform",
-              isPageLoaded ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
+              isPageLoaded
+                ? "translate-y-0 opacity-100"
+                : "translate-y-4 opacity-0",
             )}
             style={{ transitionDelay: "300ms" }}
           >
-            <h2 className="text-xl font-semibold tracking-widest uppercase">FEATURED PRODUCTS</h2>
+            <h2 className="text-xl font-semibold tracking-widest uppercase flex items-center gap-3">
+              {isPersonalized && (
+                <Sparkles className="h-5 w-5 text-foreground animate-pulse" />
+              )}
+              {isPersonalized ? "YOUR PERSONALIZED LOOKS" : "FEATURED PRODUCTS"}
+            </h2>
             <Button
               variant="outline-black-rounded"
               className="text-xs font-semibold tracking-widest uppercase px-6 hover:scale-105"
@@ -508,14 +571,16 @@ export default function BananaSportswearStorefront() {
                 key={product.id}
                 className={cn(
                   "group cursor-pointer transition-all duration-700 transform",
-                  isPageLoaded ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0",
+                  isPageLoaded
+                    ? "translate-y-0 opacity-100"
+                    : "translate-y-8 opacity-0",
                   isTransitioning
                     ? "opacity-80"
                     : viewMode === "generated" && showGallery
                       ? "animate-in fade-in slide-in-from-bottom-4 opacity-100"
                       : viewMode === "generated"
                         ? "opacity-0"
-                        : "opacity-100"
+                        : "opacity-100",
                 )}
                 style={{
                   transitionDelay:
@@ -528,7 +593,7 @@ export default function BananaSportswearStorefront() {
                   <ImageWithLoading
                     src={
                       viewMode === "generated" && personalizedImages[product.id]
-                        ? personalizedImages[product.id]
+                        ? personalizedImages[product.id] ?? product.image
                         : product.image
                     }
                     alt={
@@ -538,7 +603,7 @@ export default function BananaSportswearStorefront() {
                     }
                     className={cn(
                       "w-full h-auto object-contain transition-all duration-500 group-hover:scale-105",
-                      isTransitioning ? "opacity-90" : "opacity-100"
+                      isTransitioning ? "opacity-90" : "opacity-100",
                     )}
                     productId={product.id}
                   />
@@ -546,11 +611,17 @@ export default function BananaSportswearStorefront() {
 
                 <div className="space-y-3">
                   <div>
-                    <h3 className="text-sm font-semibold tracking-wide">{product.name}</h3>
-                    <p className="text-xs text-muted-foreground uppercase tracking-widest font-mono">{product.category}</p>
+                    <h3 className="text-sm font-semibold tracking-wide">
+                      {product.name}
+                    </h3>
+                    <p className="text-xs text-muted-foreground uppercase tracking-widest font-mono">
+                      {product.category}
+                    </p>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-semibold tracking-wide">{product.price}</span>
+                    <span className="text-sm font-semibold tracking-wide">
+                      {product.price}
+                    </span>
                     <Button
                       variant="outline-black"
                       size="sm"
@@ -566,11 +637,12 @@ export default function BananaSportswearStorefront() {
         </div>
       </section>
 
-      {/* Footer */}
       <footer
         className={cn(
           "border-t border-border bg-muted/30 px-8 py-16 transition-all duration-700 transform",
-          isPageLoaded ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
+          isPageLoaded
+            ? "translate-y-0 opacity-100"
+            : "translate-y-4 opacity-0",
         )}
         style={{ transitionDelay: "1000ms" }}
       >
@@ -589,6 +661,6 @@ export default function BananaSportswearStorefront() {
           </p>
         </div>
       </footer>
-    </div >
-  )
+    </div>
+  );
 }

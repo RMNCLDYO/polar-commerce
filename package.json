@@ -1,7 +1,18 @@
 {
-  "name": "create-shadcn-app",
+  "name": "aisdk-storefront",
   "version": "0.1.0",
-  "private": true,
+  "description": "Vercel AI SDK showcase - v0 template demonstrating AI-powered features with Next.js 15, React 19, and Tailwind CSS v4",
+  "author": "Ray <hi@rmncldyo.com> (https://github.com/RMNCLDYO)",
+  "license": "MIT",
+  "private": false,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/RMNCLDYO/aisdk-storefront"
+  },
+  "bugs": {
+    "url": "https://github.com/RMNCLDYO/aisdk-storefront/issues"
+  },
+  "homepage": "https://github.com/RMNCLDYO/aisdk-storefront#readme",
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
