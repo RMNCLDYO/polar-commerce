@@ -242,10 +242,12 @@
   }
 
   .image-loading {
-    background: linear-gradient(90deg,
-        var(--color-muted) 25%,
-        var(--color-accent) 50%,
-        var(--color-muted) 75%);
+    background: linear-gradient(
+      90deg,
+      var(--color-muted) 25%,
+      var(--color-accent) 50%,
+      var(--color-muted) 75%
+    );
     background-size: 200% 100%;
     animation: shimmer 1.5s infinite;
   }

@@ -161,21 +161,24 @@ ABSOLUTELY CRITICAL - SKIN TONE CONSISTENCY: The person's face, neck, arms, hand
     });
   } catch (error) {
     const { message, details, retryable } = logger.apiError(
-      '/api/generate-model-image',
+      "/api/generate-model-image",
       error,
-      500
+      500,
     );
 
     return NextResponse.json(
       {
         error: message,
         retryable,
-        details
+        details,
       },
       {
-        status: error instanceof Error && error.message.includes('timeout') ? 408 :
-                error instanceof Error && error.message.includes('network') ? 503 :
-                500
+        status:
+          error instanceof Error && error.message.includes("timeout")
+            ? 408
+            : error instanceof Error && error.message.includes("network")
+              ? 503
+              : 500,
       },
     );
   }
