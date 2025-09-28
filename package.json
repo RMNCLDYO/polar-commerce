@@ -1,7 +1,7 @@
 {
   "name": "aisdk-storefront",
   "version": "0.1.0",
-  "description": "Modern storefront template with AI SDK, Next.js 15, React 19, Tailwind CSS v4, and shadcn/ui",
+  "description": "Vercel AI SDK showcase - v0 template demonstrating AI-powered features with Next.js 15, React 19, and Tailwind CSS v4",
   "author": "Ray <hi@rmncldyo.com> (https://github.com/RMNCLDYO)",
   "license": "MIT",
   "private": false,
