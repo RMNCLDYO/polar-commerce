@@ -1,6 +1,6 @@
 "use client";
 
-import { Heart, Search, ShoppingBag, Upload, Sparkles } from "lucide-react";
+import { Heart, Search, ShoppingBag, Sparkles, Upload } from "lucide-react";
 import Image from "next/image";
 import type React from "react";
 import { useEffect, useRef, useState } from "react";
@@ -9,8 +9,8 @@ import { ModeToggle } from "@/components/mode-toggle";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
-import { cn } from "@/lib/utils";
 import { logger } from "@/lib/logger";
+import { cn } from "@/lib/utils";
 
 interface Product {
   id: string;
@@ -85,14 +85,20 @@ const ImageWithLoading: React.FC<ImageWithLoadingProps> = ({
     setIsLoading(false);
     setError(false);
 
-    logger.performance(`Image load: ${productId}`, loadTime, { productId, src: src.substring(0, 50) });
+    logger.performance(`Image load: ${productId}`, loadTime, {
+      productId,
+      src: src.substring(0, 50),
+    });
   };
 
   const handleError = (): void => {
     setIsLoading(false);
     setError(true);
 
-    logger.error(`Failed to load image for product ${productId}`, { productId, src: src.substring(0, 50) });
+    logger.error(`Failed to load image for product ${productId}`, {
+      productId,
+      src: src.substring(0, 50),
+    });
   };
 
   const isDataUrl = src.startsWith("data:");
@@ -358,6 +364,8 @@ export default function BananaSportswearStorefront() {
 
   return (
     <div
+      role="application"
+      aria-label="AI SDK Storefront"
       className={cn(
         "min-h-screen bg-background text-foreground font-mono transition-all duration-1000",
         isPageLoaded ? "opacity-100" : "opacity-0",
@@ -375,7 +383,9 @@ export default function BananaSportswearStorefront() {
         )}
         style={{ transitionDelay: "800ms" }}
       >
-        <div
+        <button
+          type="button"
+          aria-label="Upload photo for AI try-on"
           className={cn(
             "border-2 border-dashed transition-all duration-300 p-8 text-center w-64 cursor-pointer",
             isDragOver
@@ -457,7 +467,7 @@ export default function BananaSportswearStorefront() {
               </Button>
             </>
           )}
-        </div>
+        </button>
       </div>
 
       {isDragOver && (
@@ -486,9 +496,10 @@ export default function BananaSportswearStorefront() {
 
           <nav className="hidden md:flex items-center gap-x-12">
             {["NEW", "MEN", "WOMEN", "KIDS"].map((item, index) => (
-              <a
+              <button
                 key={item}
-                href="#"
+                type="button"
+                onClick={() => console.log(`Navigate to ${item}`)}
                 className={cn(
                   "text-xs font-semibold tracking-widest uppercase transition-all duration-500 hover:text-muted-foreground",
                   isPageLoaded
@@ -498,7 +509,7 @@ export default function BananaSportswearStorefront() {
                 style={{ transitionDelay: `${200 + index * 100}ms` }}
               >
                 {item}
-              </a>
+              </button>
             ))}
             <Button
               variant="outline-black-rounded"
@@ -593,7 +604,7 @@ export default function BananaSportswearStorefront() {
                   <ImageWithLoading
                     src={
                       viewMode === "generated" && personalizedImages[product.id]
-                        ? personalizedImages[product.id] ?? product.image
+                        ? (personalizedImages[product.id] ?? product.image)
                         : product.image
                     }
                     alt={

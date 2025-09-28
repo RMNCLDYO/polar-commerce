@@ -1,6 +1,6 @@
-import { logger } from "@/lib/logger";
 import { generateText } from "ai";
 import { type NextRequest, NextResponse } from "next/server";
+import { logger } from "@/lib/logger";
 
 async function convertImageToSupportedFormat(
   file: File,
@@ -97,21 +97,24 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     });
   } catch (error) {
     const { message, details, retryable } = logger.apiError(
-      '/api/generate-image',
+      "/api/generate-image",
       error,
-      500
+      500,
     );
 
     return NextResponse.json(
       {
         error: message,
         retryable,
-        details
+        details,
       },
       {
-        status: error instanceof Error && error.message.includes('timeout') ? 408 :
-          error instanceof Error && error.message.includes('network') ? 503 :
-            500
+        status:
+          error instanceof Error && error.message.includes("timeout")
+            ? 408
+            : error instanceof Error && error.message.includes("network")
+              ? 503
+              : 500,
       },
     );
   }

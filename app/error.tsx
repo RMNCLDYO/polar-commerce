@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { logger } from "@/lib/logger";
 
-export default function Error({
+export default function ErrorBoundary({
   error,
   reset,
 }: {
@@ -14,7 +14,7 @@ export default function Error({
   useEffect(() => {
     console.error(error);
 
-    logger.error('Application Error Boundary Triggered', {
+    logger.error("Application Error Boundary Triggered", {
       error: error.message,
       ...(error.stack && { stack: error.stack }),
       ...(error.digest && { digest: error.digest }),
@@ -32,11 +32,7 @@ export default function Error({
             {error.message || "An unexpected error occurred. Please try again."}
           </p>
         </div>
-        <Button
-          onClick={reset}
-          variant="default"
-          className="px-6"
-        >
+        <Button onClick={reset} variant="default" className="px-6">
           Try again
         </Button>
       </div>
