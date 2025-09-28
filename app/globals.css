@@ -1,14 +1,10 @@
-/* Define layer order explicitly (v4 best practice) */
 @layer theme, base, components, utilities;
 
-/* Import Tailwind v4 */
 @import "tailwindcss";
 @import "tw-animate-css";
 
-/* Custom variant using v4 shorthand syntax */
 @custom-variant dark (&:is(.dark *));
 
-/* Theme configuration using @theme directive */
 @theme {
   /* Color tokens */
   --color-background: oklch(1 0 0);
@@ -36,7 +32,6 @@
   --color-chart-4: oklch(0.828 0.189 84.429);
   --color-chart-5: oklch(0.769 0.188 70.08);
 
-  /* Sidebar colors */
   --color-sidebar: oklch(0.985 0 0);
   --color-sidebar-foreground: oklch(0.145 0 0);
   --color-sidebar-primary: oklch(0.205 0 0);
@@ -46,25 +41,23 @@
   --color-sidebar-border: oklch(0.922 0 0);
   --color-sidebar-ring: oklch(0.708 0 0);
 
-  /* Spacing */
   --radius: 0.625rem;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
 
-  /* Typography */
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 
-  /* Shadows */
   --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  --shadow-lg:
+    0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-xl:
+    0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
 
-  /* Animation durations */
   --duration-fade-in: 0.6s;
   --duration-slide-up: 0.8s;
   --duration-slide-down: 0.6s;
@@ -73,7 +66,6 @@
   --duration-shimmer: 2s;
 }
 
-/* Dark mode theme overrides */
 @layer theme {
   .dark {
     --color-background: oklch(0.145 0 0);
@@ -122,24 +114,20 @@
 }
 
 @layer components {
-
-  /* Component-specific button styling */
   .add-button {
-    background-color: var(--color-foreground) !important;
-    color: var(--color-background) !important;
-    border: none !important;
-    outline: none !important;
-    padding: 8px 24px !important;
+    background-color: var(--color-foreground);
+    color: var(--color-background);
+    border: none;
+    outline: none;
+    padding: 8px 24px;
   }
 
   .add-button:hover {
-    opacity: 0.8 !important;
+    opacity: 0.8;
   }
 }
 
 @layer utilities {
-
-  /* Animation utilities */
   @keyframes fade-in {
     from {
       opacity: 0;
@@ -232,7 +220,6 @@
     opacity: 0;
   }
 
-  /* Staggered animations for product grid */
   .stagger-animation {
     opacity: 0;
     animation: slide-up var(--duration-slide-up, 0.8s) ease-out forwards;
@@ -254,9 +241,11 @@
     animation-delay: 0.4s;
   }
 
-  /* Image loading transitions */
   .image-loading {
-    background: linear-gradient(90deg, var(--color-muted) 25%, var(--color-accent) 50%, var(--color-muted) 75%);
+    background: linear-gradient(90deg,
+        var(--color-muted) 25%,
+        var(--color-accent) 50%,
+        var(--color-muted) 75%);
     background-size: 200% 100%;
     animation: shimmer 1.5s infinite;
   }
@@ -265,7 +254,6 @@
     animation: shimmer var(--duration-shimmer, 2s) linear infinite;
   }
 
-  /* Hover scale utilities */
   .hover\:scale-102:hover {
     transform: scale(1.02);
   }
