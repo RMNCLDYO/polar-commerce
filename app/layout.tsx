@@ -14,6 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'https://aisdk-storefront.vercel.app'),
   title: "BANANA SPORTSWEAR - Premium Athletic Gear | Vercel AI SDK Showcase",
   description:
     "Shop premium sportswear with AI-powered virtual try-on and product mashup. Built with Vercel AI SDK, Next.js 15, and React 19.",
