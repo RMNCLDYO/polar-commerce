@@ -1,57 +1,57 @@
-import "server-only";
+import 'server-only';
 import {
   unstable_cacheLife as cacheLife,
   unstable_cacheTag as cacheTag,
-} from "next/cache";
-import JordanHoodieImage from "@/public/products/jordan-hoodie.jpeg";
-import NikeCapImage from "@/public/products/nike-cap.jpeg";
-import NikeTechSetImage from "@/public/products/nike-tech-set.jpeg";
-import NikeVomeroImage from "@/public/products/nike-vomero.jpeg";
-import type { Product, ProductFilters } from "./types";
+} from 'next/cache';
+import JordanHoodieImage from '@/public/products/jordan-hoodie.jpeg';
+import NikeCapImage from '@/public/products/nike-cap.jpeg';
+import NikeTechSetImage from '@/public/products/nike-tech-set.jpeg';
+import NikeVomeroImage from '@/public/products/nike-vomero.jpeg';
+import type { Product, ProductFilters } from './types';
 
 export type { Product, ProductFilters };
 
 const allProducts: Product[] = [
   {
-    id: "1",
-    name: "Nike ZoomX Vomero Plus",
-    price: "$180",
-    category: "RUNNING SHOES",
+    id: '1',
+    name: 'Nike ZoomX Vomero Plus',
+    price: '$180',
+    category: 'RUNNING SHOES',
     image: NikeVomeroImage,
-    description: "Premium running shoes with ZoomX foam technology",
+    description: 'Premium running shoes with ZoomX foam technology',
   },
   {
-    id: "2",
-    name: "Nike Club Cap",
-    price: "$25",
-    category: "ACCESSORIES",
+    id: '2',
+    name: 'Nike Club Cap',
+    price: '$25',
+    category: 'ACCESSORIES',
     image: NikeCapImage,
-    description: "Classic baseball cap with Nike logo",
+    description: 'Classic baseball cap with Nike logo',
   },
   {
-    id: "3",
-    name: "Nike Tech Woven Pants",
-    price: "$120",
+    id: '3',
+    name: 'Nike Tech Woven Pants',
+    price: '$120',
     category: "MEN'S PANTS",
     image: NikeTechSetImage,
-    description: "Camo tracksuit with modern tech fabric",
+    description: 'Camo tracksuit with modern tech fabric',
   },
   {
-    id: "4",
-    name: "Jordan Fleece Hoodie",
-    price: "$85",
+    id: '4',
+    name: 'Jordan Fleece Hoodie',
+    price: '$85',
     category: "MEN'S HOODIE",
     image: JordanHoodieImage,
-    description: "Premium hoodie with signature graphics",
+    description: 'Premium hoodie with signature graphics',
   },
 ];
 
 export async function getProducts(
   filters?: ProductFilters,
 ): Promise<Product[]> {
-  "use cache";
-  cacheLife("hours");
-  cacheTag("products");
+  'use cache';
+  cacheLife('hours');
+  cacheTag('products');
 
   let products = [...allProducts];
 
@@ -74,7 +74,7 @@ export async function getProducts(
 
   if (filters?.minPrice !== undefined || filters?.maxPrice !== undefined) {
     products = products.filter((p) => {
-      const price = parseFloat(p.price.replace("$", ""));
+      const price = parseFloat(p.price.replace('$', ''));
       if (filters.minPrice !== undefined && price < filters.minPrice)
         return false;
       if (filters.maxPrice !== undefined && price > filters.maxPrice)
@@ -85,17 +85,17 @@ export async function getProducts(
 
   if (filters?.sort) {
     products.sort((a, b) => {
-      const priceA = parseFloat(a.price.replace("$", ""));
-      const priceB = parseFloat(b.price.replace("$", ""));
+      const priceA = parseFloat(a.price.replace('$', ''));
+      const priceB = parseFloat(b.price.replace('$', ''));
 
       switch (filters.sort) {
-        case "price-asc":
+        case 'price-asc':
           return priceA - priceB;
-        case "price-desc":
+        case 'price-desc':
           return priceB - priceA;
-        case "name-asc":
+        case 'name-asc':
           return a.name.localeCompare(b.name);
-        case "name-desc":
+        case 'name-desc':
           return b.name.localeCompare(a.name);
         default:
           return 0;
@@ -107,9 +107,9 @@ export async function getProducts(
 }
 
 export async function getProduct(id: string): Promise<Product | null> {
-  "use cache";
-  cacheLife("hours");
-  cacheTag("products", `product-${id}`);
+  'use cache';
+  cacheLife('hours');
+  cacheTag('products', `product-${id}`);
 
   const products = await getProducts();
   return products.find((p) => p.id === id) || null;

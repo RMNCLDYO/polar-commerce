@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { useEffect } from "react";
-import { Button } from "@/components/ui/button";
+import { useEffect } from 'react';
+import { Button } from '@/components/ui/button';
 
 export default function ShopError({
   error,
@@ -22,7 +22,7 @@ export default function ShopError({
             Something went wrong!
           </h2>
           <p className="text-sm text-muted-foreground">
-            {error.message || "An unexpected error occurred. Please try again."}
+            {error.message || 'An unexpected error occurred. Please try again.'}
           </p>
         </div>
         <Button onClick={reset} variant="default" className="px-6">

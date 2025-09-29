@@ -1,4 +1,3 @@
-import type { Metadata } from "next";
 import {
   Check,
   Heart,
@@ -6,12 +5,13 @@ import {
   Shield,
   ShoppingBag,
   Truck,
-} from "lucide-react";
-import Image from "next/image";
-import { notFound } from "next/navigation";
-import { Link } from "@/components/link";
-import { Button } from "@/components/ui/button";
-import { getProduct, getProducts } from "@/lib/products";
+} from 'lucide-react';
+import type { Metadata } from 'next';
+import Image from 'next/image';
+import { notFound } from 'next/navigation';
+import { Link } from '@/components/link';
+import { Button } from '@/components/ui/button';
+import { getProduct, getProducts } from '@/lib/products';
 
 export const experimental_ppr = true;
 export const revalidate = 3600;
@@ -182,12 +182,12 @@ export async function generateMetadata({
 
   if (!product) {
     return {
-      title: "Product Not Found",
+      title: 'Product Not Found',
     };
   }
 
   const imageUrl =
-    typeof product.image === "string" ? product.image : product.image.src;
+    typeof product.image === 'string' ? product.image : product.image.src;
 
   return {
     title: `${product.name} - BANANA SPORTSWEAR`,

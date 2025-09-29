@@ -1,9 +1,9 @@
-import { Heart, ShoppingBag } from "lucide-react";
-import Image from "next/image";
-import { Link } from "@/components/link";
-import { ModeToggle } from "@/components/mode-toggle";
-import { Search } from "@/components/search";
-import LogoImage from "@/public/logo.png";
+import { Heart, ShoppingBag } from 'lucide-react';
+import Image from 'next/image';
+import { Link } from '@/components/link';
+import { ModeToggle } from '@/components/mode-toggle';
+import { Search } from '@/components/search';
+import LogoImage from '@/public/logo.png';
 
 export function Header() {
   return (
@@ -21,7 +21,7 @@ export function Header() {
         </div>
 
         <nav className="hidden md:flex items-center gap-x-12">
-          {["NEW", "MEN", "WOMEN", "KIDS"].map((item, index) => (
+          {['NEW', 'MEN', 'WOMEN', 'KIDS'].map((item, index) => (
             <Link
               key={item}
               href={`/${item.toLowerCase()}`}
@@ -36,7 +36,7 @@ export function Header() {
 
         <div
           className="flex items-center gap-x-6 animate-slide-right"
-          style={{ animationDelay: "500ms" }}
+          style={{ animationDelay: '500ms' }}
         >
           <Search />
           <Heart className="size-4 cursor-pointer hover:text-muted-foreground transition-colors" />

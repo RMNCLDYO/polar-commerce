@@ -5,15 +5,15 @@ export default function Loading() {
         <div className="flex justify-center space-x-2">
           <div
             className="w-3 h-3 bg-foreground rounded-full animate-bounce"
-            style={{ animationDelay: "0ms" }}
+            style={{ animationDelay: '0ms' }}
           />
           <div
             className="w-3 h-3 bg-foreground rounded-full animate-bounce"
-            style={{ animationDelay: "150ms" }}
+            style={{ animationDelay: '150ms' }}
           />
           <div
             className="w-3 h-3 bg-foreground rounded-full animate-bounce"
-            style={{ animationDelay: "300ms" }}
+            style={{ animationDelay: '300ms' }}
           />
         </div>
         <p className="text-sm text-muted-foreground font-mono tracking-widest uppercase">

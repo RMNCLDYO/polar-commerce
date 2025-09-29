@@ -1,23 +1,23 @@
-"use server";
+'use server';
 
-import { revalidatePath, revalidateTag } from "next/cache";
+import { revalidatePath, revalidateTag } from 'next/cache';
 
 export async function revalidateProducts() {
-  revalidateTag("products");
-  revalidatePath("/products");
-  revalidatePath("/");
+  revalidateTag('products');
+  revalidatePath('/products');
+  revalidatePath('/');
 }
 
 export async function revalidateProduct(id: string) {
   revalidateTag(`product-${id}`);
-  revalidateTag("products");
+  revalidateTag('products');
   revalidatePath(`/product/${id}`);
-  revalidatePath("/products");
-  revalidatePath("/");
+  revalidatePath('/products');
+  revalidatePath('/');
 }
 
 export async function revalidateCategory(category: string) {
-  revalidateTag("products");
+  revalidateTag('products');
   revalidatePath(`/${category.toLowerCase()}`);
-  revalidatePath("/");
+  revalidatePath('/');
 }

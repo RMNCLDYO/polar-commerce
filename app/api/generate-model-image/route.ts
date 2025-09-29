@@ -1,7 +1,7 @@
-import "server-only";
-import { generateText } from "ai";
-import { type NextRequest, NextResponse } from "next/server";
-import { logger } from "@/lib/logger";
+import 'server-only';
+import { generateText } from 'ai';
+import { type NextRequest, NextResponse } from 'next/server';
+import { logger } from '@/lib/logger';
 
 /**
  * API Route for generating personalized model images using Google Gemini.
@@ -12,7 +12,7 @@ import { logger } from "@/lib/logger";
 async function convertImageToSupportedFormat(
   file: File,
 ): Promise<{ buffer: Buffer; mimeType: string }> {
-  const supportedTypes = ["image/png", "image/jpeg", "image/webp"];
+  const supportedTypes = ['image/png', 'image/jpeg', 'image/webp'];
 
   if (supportedTypes.includes(file.type)) {
     const buffer = Buffer.from(await file.arrayBuffer());
@@ -25,7 +25,7 @@ async function convertImageToSupportedFormat(
   const buffer = Buffer.from(await file.arrayBuffer());
   return {
     buffer,
-    mimeType: "image/jpeg",
+    mimeType: 'image/jpeg',
   };
 }
 
@@ -33,14 +33,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     const formData = await request.formData();
 
-    const userPhoto = formData.get("userPhoto") as File;
-    const productImage = formData.get("productImage") as File;
-    const productName = formData.get("productName") as string;
-    const productCategory = formData.get("productCategory") as string;
+    const userPhoto = formData.get('userPhoto') as File;
+    const productImage = formData.get('productImage') as File;
+    const productName = formData.get('productName') as string;
+    const productCategory = formData.get('productCategory') as string;
 
     if (!userPhoto || !productImage || !productName) {
       return NextResponse.json(
-        { error: "Missing required fields" },
+        { error: 'Missing required fields' },
         { status: 400 },
       );
     }
@@ -50,23 +50,23 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const convertedProductImage =
       await convertImageToSupportedFormat(productImage);
 
-    let prompt = "";
+    let prompt = '';
 
-    if (productName.includes("Vomero")) {
+    if (productName.includes('Vomero')) {
       prompt = `Create a professional product modeling photo showing the person from the first image wearing the exact Nike ZoomX Vomero Plus running shoes from the second image. The shoes must be the specific Nike Vomero Plus model - lightweight running sneakers with ZoomX foam technology, typically in colorways like blue/white, black/white, or other authentic Nike Vomero colorways. DO NOT substitute with other models. Frame the shot to show the full body with clear focus on the feet and shoes. The person should be posed naturally as a model in a running or athletic stance. 
 
 ABSOLUTELY CRITICAL - FACIAL FIDELITY: Preserve the EXACT facial features, bone structure, eye shape, nose shape, lip shape, eyebrow shape, and facial proportions from the uploaded person's photo. DO NOT add, remove, or modify any facial features. DO NOT change or add hairstyles, haircuts, or hair textures - keep the exact same hair as in the original photo. DO NOT alter facial hair, makeup, or any other facial characteristics. The face should be an EXACT replica of the uploaded photo with zero modifications or "improvements."
 
 ABSOLUTELY CRITICAL - SKIN TONE CONSISTENCY: The person's face, neck, arms, hands, legs, and ALL visible skin areas must have the EXACT SAME skin tone, ethnicity, and complexion as shown in the uploaded person's photo. Do NOT mix different skin tones - if the person has light skin, ALL visible skin must be light; if they have dark skin, ALL visible skin must be dark. Ensure perfect skin tone uniformity across the entire body. The background should be a smooth dark gray gradient transitioning from darker gray at the top to lighter gray at the bottom, exactly like professional Nike product photography studio backgrounds. Make it look like a high-quality Nike advertisement photo showcasing specifically the Vomero Plus running shoes, not any other shoe model. IMPORTANT: Do not include any watermarks, logos, text overlays, or branding marks from stock photo sites like Freepik, Shutterstock, or Getty Images. Generate a clean, professional image without any watermarks or text overlays.`;
-    } else if (productName.includes("Club Cap")) {
+    } else if (productName.includes('Club Cap')) {
       prompt = `Create a professional product modeling photo showing the person from the first image wearing the exact Nike Club Cap from the second image. The cap should be a classic Nike baseball cap with the Nike swoosh logo. Frame the shot from the chest up, focusing on the head and face area to showcase the cap clearly. The person should be posed naturally as a model. 
 
 ABSOLUTELY CRITICAL - FACIAL FIDELITY: Preserve the EXACT facial features, bone structure, eye shape, nose shape, lip shape, eyebrow shape, and facial proportions from the uploaded person's photo. DO NOT add, remove, or modify any facial features. DO NOT change or add hairstyles, haircuts, or hair textures - keep the exact same hair as in the original photo. DO NOT alter facial hair, makeup, or any other facial characteristics. The face should be an EXACT replica of the uploaded photo with zero modifications or "improvements."
 
 ABSOLUTELY CRITICAL - SKIN TONE CONSISTENCY: The person's face, neck, hands, arms, and ALL visible skin areas must have the EXACT SAME skin tone, ethnicity, and complexion as shown in the uploaded person's photo. Do NOT mix different skin tones - if the person has light skin, ALL visible skin must be light; if they have dark skin, ALL visible skin must be dark. Ensure perfect skin tone uniformity across all visible body parts - the hands must match the face exactly. The background should be a smooth dark gray gradient transitioning from darker gray at the top to lighter gray at the bottom, exactly like professional Nike product photography studio backgrounds. Make it look like a high-quality Nike advertisement photo with a cropped, portrait-style framing. IMPORTANT: Do not include any watermarks, logos, text overlays, or branding marks from stock photo sites like Freepik, Shutterstock, or Getty Images. Generate a clean, professional image without any watermarks or text overlays.`;
     } else if (
-      productName.includes("Tech Woven") ||
-      productName.includes("Tech")
+      productName.includes('Tech Woven') ||
+      productName.includes('Tech')
     ) {
       prompt = `Create a professional product modeling photo showing the person from the first image wearing the exact Nike Tech Woven Pants from the second image. CRITICAL CLOTHING FIT REQUIREMENT: The pants MUST maintain the EXACT SAME loose, baggy, relaxed fit as shown in the reference product image. DO NOT make the pants fitted, skinny, or tapered - they should be loose and baggy exactly like the original Nike Tech design. The pants should have the same wide leg opening, loose silhouette around the thighs and calves, and relaxed drape as the reference image. NEVER alter the clothing to be more fitted or form-hugging than the original. The garment should look identical to the reference product in terms of how loosely it fits and drapes on the body. Frame the shot to show the full body to showcase the pants clearly. The person should be posed naturally as a model. 
 
@@ -74,8 +74,8 @@ ABSOLUTELY CRITICAL - FACIAL FIDELITY: Preserve the EXACT facial features, bone 
 
 ABSOLUTELY CRITICAL - COMPLETE BODY SKIN TONE UNITY: Every single visible part of the person's body - face, forehead, cheeks, chin, neck, throat, hands, fingers, wrists, forearms, arms, and ANY other exposed skin - must be IDENTICAL in skin tone, color, and ethnicity to the uploaded person's photo. This is NON-NEGOTIABLE: if the uploaded person has light skin, then their face AND hands AND all visible skin must be light; if they have dark skin, then their face AND hands AND all visible skin must be dark. NEVER mix skin tones on the same person - the hands must be the EXACT same color as the face. Pay special attention to the hands and fingers - they must perfectly match the facial skin tone without any variation. The background should be a smooth dark gray gradient transitioning from darker gray at the top to lighter gray at the bottom, exactly like professional Nike product photography studio backgrounds. Make it look like a high-quality Nike advertisement photo showcasing the specific camo tech pants with their original authentic loose, baggy fit. IMPORTANT: Do not include any watermarks, logos, text overlays, or branding marks from stock photo sites like Freepik, Shutterstock, or Getty Images. Generate a clean, professional image without any watermarks or text overlays.`;
     } else if (
-      productName.includes("Fleece Hoodie") ||
-      productName.includes("Hoodie")
+      productName.includes('Fleece Hoodie') ||
+      productName.includes('Hoodie')
     ) {
       prompt = `Create a professional product modeling photo showing the person from the first image wearing the exact Nike Fleece Hoodie from the second image. CRITICAL CLOTHING FIT REQUIREMENT: The hoodie MUST maintain the EXACT SAME fit, proportions, and silhouette as shown in the reference product image - if it's oversized, keep it oversized; if it's fitted, keep it fitted. DO NOT alter the original Nike design characteristics or how the garment naturally fits and drapes. Frame the shot from the waist up to showcase the hoodie and upper body clearly. The person should be posed naturally as a model with hands visible. 
 
@@ -83,9 +83,9 @@ ABSOLUTELY CRITICAL - FACIAL FIDELITY: Preserve the EXACT facial features, bone 
 
 ABSOLUTELY CRITICAL - COMPLETE BODY SKIN TONE UNITY: Every single visible part of the person's body - face, forehead, cheeks, chin, neck, throat, hands, fingers, wrists, forearms, arms, and ANY other exposed skin - must be IDENTICAL in skin tone, color, and ethnicity to the uploaded person's photo. This is NON-NEGOTIABLE: if the uploaded person has light skin, then their face AND hands AND all visible skin must be light; if they have dark skin, then their face AND hands AND all visible skin must be dark. NEVER mix skin tones on the same person - the hands must be the EXACT same color as the face. Pay special attention to the hands and fingers - they must perfectly match the facial skin tone without any variation. The background should be a smooth dark gray gradient transitioning from darker gray at the top to lighter gray at the bottom, exactly like professional Nike product photography studio backgrounds. Make it look like a high-quality Nike advertisement photo with an upper body focus. IMPORTANT: Do not include any watermarks, logos, text overlays, or branding marks from stock photo sites like Freepik, Shutterstock, or Getty Images. Generate a clean, professional image without any watermarks or text overlays.`;
     } else if (
-      productCategory.toLowerCase().includes("accessories") ||
-      productCategory.toLowerCase().includes("cap") ||
-      productCategory.toLowerCase().includes("hat")
+      productCategory.toLowerCase().includes('accessories') ||
+      productCategory.toLowerCase().includes('cap') ||
+      productCategory.toLowerCase().includes('hat')
     ) {
       prompt = `Create a professional product modeling photo showing the person from the first image wearing the ${productName} from the second image. Frame the shot from the chest up, focusing on the head and face area to showcase the ${productCategory.toLowerCase()} clearly. The person should be posed naturally as a model. 
 
@@ -93,10 +93,10 @@ ABSOLUTELY CRITICAL - FACIAL FIDELITY: Preserve the EXACT facial features, bone 
 
 ABSOLUTELY CRITICAL - SKIN TONE CONSISTENCY: The person's face, neck, hands, arms, and ALL visible skin areas must have the EXACT SAME skin tone, ethnicity, and complexion as shown in the uploaded person's photo. Do NOT mix different skin tones - if the person has light skin, ALL visible skin must be light; if they have dark skin, ALL visible skin must be dark. Ensure perfect skin tone uniformity across all visible body parts - the hands must match the face exactly. The background should be a smooth dark gray gradient transitioning from darker gray at the top to lighter gray at the bottom, exactly like professional Nike product photography studio backgrounds. The ${productCategory.toLowerCase()} should fit naturally on the person and look realistic. Make it look like a high-quality Nike advertisement photo with a cropped, portrait-style framing. IMPORTANT: Do not include any watermarks, logos, text overlays, or branding marks from stock photo sites like Freepik, Shutterstock, or Getty Images. Generate a clean, professional image without any watermarks or text overlays.`;
     } else if (
-      productCategory.toLowerCase().includes("clothing") ||
-      productCategory.toLowerCase().includes("hoodie") ||
-      productCategory.toLowerCase().includes("shirt") ||
-      productCategory.toLowerCase().includes("jacket")
+      productCategory.toLowerCase().includes('clothing') ||
+      productCategory.toLowerCase().includes('hoodie') ||
+      productCategory.toLowerCase().includes('shirt') ||
+      productCategory.toLowerCase().includes('jacket')
     ) {
       prompt = `Create a professional product modeling photo showing the person from the first image wearing the ${productName} from the second image. CRITICAL CLOTHING FIT REQUIREMENT: The ${productCategory.toLowerCase()} MUST maintain the EXACT SAME fit, cut, silhouette, and proportions as shown in the reference product image. If the original garment is loose/baggy, keep it loose/baggy; if it's fitted, keep it fitted. DO NOT modify the clothing's original design characteristics, fit, or how it naturally drapes on the body. Preserve the authentic garment proportions exactly as designed. Frame the shot from the waist up to showcase the ${productCategory.toLowerCase()} and upper body clearly. The person should be posed naturally as a model with hands visible. 
 
@@ -112,26 +112,26 @@ ABSOLUTELY CRITICAL - SKIN TONE CONSISTENCY: The person's face, neck, arms, hand
     }
 
     const result = await generateText({
-      model: "google/gemini-2.5-flash-image-preview",
+      model: 'google/gemini-2.5-flash-image-preview',
       providerOptions: {
         google: {
-          responseModalities: ["TEXT", "IMAGE"],
+          responseModalities: ['TEXT', 'IMAGE'],
         },
       },
       messages: [
         {
-          role: "user",
+          role: 'user',
           content: [
             {
-              type: "text",
+              type: 'text',
               text: prompt,
             },
             {
-              type: "image",
+              type: 'image',
               image: convertedUserPhoto.buffer,
             },
             {
-              type: "image",
+              type: 'image',
               image: convertedProductImage.buffer,
             },
           ],
@@ -140,12 +140,12 @@ ABSOLUTELY CRITICAL - SKIN TONE CONSISTENCY: The person's face, neck, arms, hand
     });
 
     const imageFiles = result.files?.filter((f) =>
-      f.mediaType?.startsWith("image/"),
+      f.mediaType?.startsWith('image/'),
     );
 
     if (!imageFiles || imageFiles.length === 0) {
       return NextResponse.json(
-        { error: "No image was generated" },
+        { error: 'No image was generated' },
         { status: 500 },
       );
     }
@@ -154,7 +154,7 @@ ABSOLUTELY CRITICAL - SKIN TONE CONSISTENCY: The person's face, neck, arms, hand
 
     if (!generatedImage) {
       return NextResponse.json(
-        { error: "Generated image data is invalid" },
+        { error: 'Generated image data is invalid' },
         { status: 500 },
       );
     }
@@ -168,7 +168,7 @@ ABSOLUTELY CRITICAL - SKIN TONE CONSISTENCY: The person's face, neck, arms, hand
     });
   } catch (error) {
     const { message, details, retryable } = logger.apiError(
-      "/api/generate-model-image",
+      '/api/generate-model-image',
       error,
       500,
     );
@@ -181,9 +181,9 @@ ABSOLUTELY CRITICAL - SKIN TONE CONSISTENCY: The person's face, neck, arms, hand
       },
       {
         status:
-          error instanceof Error && error.message.includes("timeout")
+          error instanceof Error && error.message.includes('timeout')
             ? 408
-            : error instanceof Error && error.message.includes("network")
+            : error instanceof Error && error.message.includes('network')
               ? 503
               : 500,
       },

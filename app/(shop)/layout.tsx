@@ -1,6 +1,6 @@
-import { Toaster } from "sonner";
-import { Footer } from "@/components/footer";
-import { Header } from "@/components/header";
+import { Toaster } from 'sonner';
+import { Footer } from '@/components/footer';
+import { Header } from '@/components/header';
 
 export default function ShopLayout({
   children,

@@ -1,12 +1,12 @@
-"use client";
+'use client';
 
-import { Upload } from "lucide-react";
-import { useRef, useState } from "react";
-import { toast } from "sonner";
-import { Input } from "@/components/ui/input";
-import { Progress } from "@/components/ui/progress";
-import type { Product } from "@/lib/types";
-import { cn } from "@/lib/utils";
+import { Upload } from 'lucide-react';
+import { useRef, useState } from 'react';
+import { toast } from 'sonner';
+import { Input } from '@/components/ui/input';
+import { Progress } from '@/components/ui/progress';
+import type { Product } from '@/lib/types';
+import { cn } from '@/lib/utils';
 
 interface PhotoUploaderProps {
   products: Product[];
@@ -14,10 +14,10 @@ interface PhotoUploaderProps {
 }
 
 const techInfoMessages = [
-  "Generating image for Nike ZoomX Vomero Plus",
-  "Generating image for Nike Club Cap",
-  "Generating image for Nike Tech Woven Pants",
-  "Generating image for Jordan Fleece Hoodie",
+  'Generating image for Nike ZoomX Vomero Plus',
+  'Generating image for Nike Club Cap',
+  'Generating image for Nike Tech Woven Pants',
+  'Generating image for Jordan Fleece Hoodie',
 ];
 
 export function PhotoUploader({
@@ -53,7 +53,7 @@ export function PhotoUploader({
 
     const files = e.dataTransfer.files;
     const firstFile = files[0];
-    if (files.length > 0 && firstFile && firstFile.type.startsWith("image/")) {
+    if (files.length > 0 && firstFile && firstFile.type.startsWith('image/')) {
       handlePhotoUpload(firstFile);
     }
   };
@@ -122,7 +122,7 @@ export function PhotoUploader({
 
         try {
           const productImageUrl =
-            typeof product.image === "string"
+            typeof product.image === 'string'
               ? product.image
               : product.image.src;
           const productImageResponse = await fetch(productImageUrl);
@@ -142,16 +142,16 @@ export function PhotoUploader({
           );
 
           const formData = new FormData();
-          formData.append("userPhoto", file);
-          formData.append("productImage", productImageFile);
-          formData.append("productName", product.name);
-          formData.append("productCategory", product.category);
+          formData.append('userPhoto', file);
+          formData.append('productImage', productImageFile);
+          formData.append('productName', product.name);
+          formData.append('productCategory', product.category);
 
           const controller = new AbortController();
           const timeoutId = setTimeout(() => controller.abort(), 60000);
 
-          const response = await fetch("/api/generate-model-image", {
-            method: "POST",
+          const response = await fetch('/api/generate-model-image', {
+            method: 'POST',
             body: formData,
             signal: controller.signal,
           });
@@ -178,7 +178,7 @@ export function PhotoUploader({
             productError,
           );
           const fallbackImage =
-            typeof product.image === "string"
+            typeof product.image === 'string'
               ? product.image
               : product.image.src;
           newPersonalizedImages[product.id] = fallbackImage;
@@ -188,7 +188,7 @@ export function PhotoUploader({
       }
 
       const generatedCount = Object.values(newPersonalizedImages).filter(
-        (url) => url.startsWith("data:"),
+        (url) => url.startsWith('data:'),
       ).length;
 
       if (generatedCount > 0) {
@@ -199,12 +199,12 @@ export function PhotoUploader({
         onImagesGenerated(newPersonalizedImages);
       } else {
         toast.error(
-          "Failed to generate personalized images. Please try again.",
+          'Failed to generate personalized images. Please try again.',
         );
       }
     } catch (error) {
-      console.error("Error in generatePersonalizedImagesWithFile:", error);
-      toast.error("Failed to generate personalized images. Please try again.");
+      console.error('Error in generatePersonalizedImagesWithFile:', error);
+      toast.error('Failed to generate personalized images. Please try again.');
     } finally {
       setIsGenerating(false);
       setGenerationProgress(0);
@@ -215,7 +215,7 @@ export function PhotoUploader({
     <>
       <section
         className="fixed bottom-8 right-8 z-40 animate-slide-up"
-        style={{ animationDelay: "900ms" }}
+        style={{ animationDelay: '900ms' }}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
@@ -225,11 +225,11 @@ export function PhotoUploader({
           type="button"
           aria-label="Upload photo for AI try-on"
           className={cn(
-            "border-2 border-dashed transition-all duration-300 p-8 text-center w-64 cursor-pointer",
+            'border-2 border-dashed transition-all duration-300 p-8 text-center w-64 cursor-pointer',
             isDragOver
-              ? "border-foreground bg-card shadow-lg scale-105"
-              : "border-border/50 bg-muted/20",
-            "hover:shadow-md",
+              ? 'border-foreground bg-card shadow-lg scale-105'
+              : 'border-border/50 bg-muted/20',
+            'hover:shadow-md',
           )}
           onClick={() => !userPhoto && fileInputRef.current?.click()}
         >
@@ -261,20 +261,20 @@ export function PhotoUploader({
                 {Math.round(generationProgress)}% COMPLETE
               </p>
               <h3 className="text-xs font-semibold mb-4 tracking-wide animate-pulse transition-all duration-500 text-foreground">
-                {techInfoMessages[currentProductIndex] || "Generating..."}
+                {techInfoMessages[currentProductIndex] || 'Generating...'}
               </h3>
               <div className="flex justify-center mt-3 space-x-1">
                 <div
                   className="w-1.5 h-1.5 bg-muted-foreground rounded-full animate-bounce shadow-sm"
-                  style={{ animationDelay: "0ms" }}
+                  style={{ animationDelay: '0ms' }}
                 />
                 <div
                   className="w-1.5 h-1.5 bg-muted-foreground rounded-full animate-bounce shadow-sm"
-                  style={{ animationDelay: "150ms" }}
+                  style={{ animationDelay: '150ms' }}
                 />
                 <div
                   className="w-1.5 h-1.5 bg-muted-foreground rounded-full animate-bounce shadow-sm"
-                  style={{ animationDelay: "300ms" }}
+                  style={{ animationDelay: '300ms' }}
                 />
               </div>
             </>

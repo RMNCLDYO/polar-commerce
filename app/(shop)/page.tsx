@@ -1,7 +1,7 @@
-import { Suspense } from "react";
-import { ProductGrid } from "@/components/product-grid";
-import { Uploader } from "@/components/uploader";
-import { getProducts, type ProductFilters } from "@/lib/products";
+import { Suspense } from 'react';
+import { ProductGrid } from '@/components/product-grid';
+import { Uploader } from '@/components/uploader';
+import { getProducts, type ProductFilters } from '@/lib/products';
 
 export const experimental_ppr = true;
 export const revalidate = 3600;
@@ -41,7 +41,7 @@ async function DynamicProductContent({
   const filters: ProductFilters = {
     search: params?.search as string | undefined,
     category: params?.category as string | undefined,
-    sort: params?.sort as ProductFilters["sort"],
+    sort: params?.sort as ProductFilters['sort'],
   };
 
   const products = await getProducts(filters);

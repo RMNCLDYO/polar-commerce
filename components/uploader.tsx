@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
-import { Upload } from "lucide-react";
-import { useRef, useState } from "react";
-import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
+import { Upload } from 'lucide-react';
+import { useRef, useState } from 'react';
+import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { cn } from '@/lib/utils';
 
 export function Uploader() {
   const [userPhoto, setUserPhoto] = useState<File | null>(null);
@@ -33,21 +33,21 @@ export function Uploader() {
 
     const files = e.dataTransfer.files;
     const firstFile = files[0];
-    if (files.length > 0 && firstFile && firstFile.type.startsWith("image/")) {
+    if (files.length > 0 && firstFile && firstFile.type.startsWith('image/')) {
       handlePhotoUpload(firstFile);
     }
   };
 
   const handlePhotoUpload = (file: File) => {
     setUserPhoto(file);
-    toast.success("Photo uploaded! AI generation feature coming soon.");
+    toast.success('Photo uploaded! AI generation feature coming soon.');
   };
 
   return (
     <>
       <section
         className="fixed bottom-8 right-8 z-40 animate-slide-up"
-        style={{ animationDelay: "900ms" }}
+        style={{ animationDelay: '900ms' }}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
@@ -57,11 +57,11 @@ export function Uploader() {
           type="button"
           aria-label="Upload photo for AI try-on"
           className={cn(
-            "border-2 border-dashed transition-all duration-300 p-8 text-center w-64 cursor-pointer",
+            'border-2 border-dashed transition-all duration-300 p-8 text-center w-64 cursor-pointer',
             isDragOver
-              ? "border-foreground bg-card shadow-lg scale-105"
-              : "border-border/50 bg-muted/20",
-            "hover:shadow-md",
+              ? 'border-foreground bg-card shadow-lg scale-105'
+              : 'border-border/50 bg-muted/20',
+            'hover:shadow-md',
           )}
           onClick={() => fileInputRef.current?.click()}
         >
@@ -98,7 +98,7 @@ export function Uploader() {
               <Button
                 onClick={() => {
                   setUserPhoto(null);
-                  toast.info("Upload a new photo to try again");
+                  toast.info('Upload a new photo to try again');
                 }}
                 variant="default"
                 className="w-full bg-foreground text-background hover:opacity-80 text-xs font-semibold tracking-widest uppercase rounded-none transition-opacity"

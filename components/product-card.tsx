@@ -1,13 +1,13 @@
-"use client";
+'use client';
 
-import Image from "next/image";
-import { useRef, useState } from "react";
-import { toast } from "sonner";
-import { Link } from "@/components/link";
-import { Button } from "@/components/ui/button";
-import { logger } from "@/lib/logger";
-import type { Product } from "@/lib/types";
-import { cn } from "@/lib/utils";
+import Image from 'next/image';
+import { useRef, useState } from 'react';
+import { toast } from 'sonner';
+import { Link } from '@/components/link';
+import { Button } from '@/components/ui/button';
+import { logger } from '@/lib/logger';
+import type { Product } from '@/lib/types';
+import { cn } from '@/lib/utils';
 
 interface ProductCardProps {
   product: Product;
@@ -33,7 +33,7 @@ export function ProductCard({
 
     const srcForLog =
       personalizedImage ||
-      (typeof product.image === "string" ? product.image : product.image.src);
+      (typeof product.image === 'string' ? product.image : product.image.src);
     logger.performance(`Image load: ${product.id}`, loadTime, {
       productId: product.id,
       src: srcForLog.substring(0, 50),
@@ -46,7 +46,7 @@ export function ProductCard({
 
     const srcForLog =
       personalizedImage ||
-      (typeof product.image === "string" ? product.image : product.image.src);
+      (typeof product.image === 'string' ? product.image : product.image.src);
     logger.error(`Failed to load image for product ${product.id}`, {
       productId: product.id,
       src: srcForLog.substring(0, 50),
@@ -55,17 +55,17 @@ export function ProductCard({
 
   const imageSrc = personalizedImage || product.image;
   const isDataUrl =
-    typeof imageSrc === "string" && imageSrc.startsWith("data:");
+    typeof imageSrc === 'string' && imageSrc.startsWith('data:');
   const isBlobUrl =
-    typeof imageSrc === "string" && imageSrc.startsWith("blob:");
+    typeof imageSrc === 'string' && imageSrc.startsWith('blob:');
 
   return (
     <Link
       href={`/product/${product.id}`}
       prefetchStrategy="hover"
       className={cn(
-        "group cursor-pointer animate-slide-up",
-        isPersonalized ? "animate-in fade-in slide-in-from-bottom-4" : "",
+        'group cursor-pointer animate-slide-up',
+        isPersonalized ? 'animate-in fade-in slide-in-from-bottom-4' : '',
       )}
       style={{
         animationDelay: isPersonalized
@@ -77,7 +77,7 @@ export function ProductCard({
         {isLoading && !error && (
           <div
             className="w-full bg-muted animate-pulse"
-            style={{ aspectRatio: "1/1" }}
+            style={{ aspectRatio: '1/1' }}
           >
             <div className="w-full h-full bg-gradient-to-r from-muted via-accent to-muted animate-shimmer" />
           </div>
@@ -86,7 +86,7 @@ export function ProductCard({
         {error && (
           <div
             className="w-full bg-muted flex items-center justify-center"
-            style={{ aspectRatio: "1/1" }}
+            style={{ aspectRatio: '1/1' }}
           >
             <span className="text-muted-foreground text-xs">
               Failed to load image
@@ -104,14 +104,14 @@ export function ProductCard({
             width={600}
             height={600}
             className={cn(
-              "w-full h-auto object-contain transition-all duration-500 group-hover:scale-105",
-              isLoading ? "opacity-0" : "opacity-100",
+              'w-full h-auto object-contain transition-all duration-500 group-hover:scale-105',
+              isLoading ? 'opacity-0' : 'opacity-100',
             )}
             onLoad={handleImageLoad}
             onError={handleImageError}
             priority={false}
             unoptimized={isDataUrl || isBlobUrl}
-            style={{ height: "auto", width: "100%" }}
+            style={{ height: 'auto', width: '100%' }}
           />
         )}
       </div>

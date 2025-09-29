@@ -1,12 +1,12 @@
-"use client";
+'use client';
 
-import Form from "next/form";
-import { Search as SearchIcon } from "lucide-react";
-import { useSearchParams } from "next/navigation";
+import { Search as SearchIcon } from 'lucide-react';
+import Form from 'next/form';
+import { useSearchParams } from 'next/navigation';
 
 export function Search() {
   const searchParams = useSearchParams();
-  const currentSearch = searchParams.get("search") || "";
+  const currentSearch = searchParams.get('search') || '';
 
   return (
     <Form

@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { useEffect } from "react";
-import { Button } from "@/components/ui/button";
+import { useEffect } from 'react';
+import { Button } from '@/components/ui/button';
 
 export default function CategoryError({
   error,
@@ -25,7 +25,7 @@ export default function CategoryError({
               </h2>
               <p className="text-sm text-muted-foreground">
                 {error.message ||
-                  "Unable to load this category. Please try again."}
+                  'Unable to load this category. Please try again.'}
               </p>
             </div>
             <Button onClick={reset} variant="default" className="px-6">
