@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 
 export default function GlobalError({
@@ -9,8 +10,9 @@ export default function GlobalError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  // Log error on render (no useEffect needed)
-  console.error("Global Error Boundary Triggered", error);
+  useEffect(() => {
+    console.error(error);
+  }, [error]);
 
   return (
     <html lang="en">
