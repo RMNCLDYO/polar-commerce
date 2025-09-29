@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath, revalidateTag } from 'next/cache';
+import 'server-only';
 
 export async function revalidateProducts() {
   revalidateTag('products');
