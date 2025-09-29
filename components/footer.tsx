@@ -1,6 +1,6 @@
 import Image from "next/image";
 
-export function StorefrontFooter() {
+export function Footer() {
   return (
     <footer
       className="border-t border-border bg-muted/30 px-8 py-16 animate-slide-up"

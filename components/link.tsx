@@ -4,16 +4,16 @@ import NextLink from "next/link";
 import { useRouter } from "next/navigation";
 import { type ComponentProps, useRef } from "react";
 
-type OptimizedLinkProps = ComponentProps<typeof NextLink> & {
+type LinkProps = ComponentProps<typeof NextLink> & {
   prefetchStrategy?: "hover" | "visible" | "always" | "never";
 };
 
-export function OptimizedLink({
+export function Link({
   prefetchStrategy = "visible",
   children,
   prefetch,
   ...props
-}: OptimizedLinkProps) {
+}: LinkProps) {
   const router = useRouter();
   const hasPrefetched = useRef(false);
 
@@ -35,7 +35,7 @@ export function OptimizedLink({
   const linkProps = {
     ...props,
     prefetch: getPrefetchValue(),
-    onMouseEnter: (e: React.MouseEvent) => {
+    onMouseEnter: (e: React.MouseEvent<HTMLAnchorElement>) => {
       handleMouseEnter();
       props.onMouseEnter?.(e);
     },
