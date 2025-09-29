@@ -1,4 +1,5 @@
 import "server-only";
+import { unstable_cache } from "next/cache";
 import type { Product, ProductFilters } from "./types";
 
 export type { Product, ProductFilters };
@@ -38,7 +39,7 @@ const allProducts: Product[] = [
   },
 ];
 
-export async function getProducts(
+async function getProductsInternal(
   filters?: ProductFilters,
 ): Promise<Product[]> {
   let products = [...allProducts];
@@ -98,7 +99,37 @@ export async function getProducts(
   return products;
 }
 
+export async function getProducts(
+  filters?: ProductFilters,
+): Promise<Product[]> {
+  const cacheKey = JSON.stringify(filters || {});
+
+  const getCachedProducts = unstable_cache(
+    async () => {
+      return getProductsInternal(filters);
+    },
+    ["products", cacheKey],
+    {
+      tags: ["products"],
+      revalidate: 3600,
+    },
+  );
+
+  return getCachedProducts();
+}
+
 export async function getProduct(id: string): Promise<Product | null> {
-  const products = await getProducts();
-  return products.find((p) => p.id === id) || null;
+  const getCachedProduct = unstable_cache(
+    async () => {
+      const products = await getProductsInternal();
+      return products.find((p) => p.id === id) || null;
+    },
+    ["product", id],
+    {
+      tags: ["products", `product-${id}`],
+      revalidate: 3600,
+    },
+  );
+
+  return getCachedProduct();
 }
