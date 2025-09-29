@@ -1,7 +1,6 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { logger } from "@/lib/logger";
 
 export default function GlobalError({
   error,
@@ -10,24 +9,28 @@ export default function GlobalError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  logger.error("Global Error Boundary Triggered", {
-    error: error.message,
-    ...(error.stack && { stack: error.stack }),
-    ...(error.digest && { digest: error.digest }),
-  });
+  // Log error on render (no useEffect needed)
+  console.error("Global Error Boundary Triggered", error);
 
   return (
     <html lang="en">
-      <body>
-        <div className="min-h-screen flex items-center justify-center">
+      <body className="antialiased">
+        <div className="min-h-screen flex items-center justify-center bg-background">
           <div className="text-center space-y-6 p-8 max-w-md">
             <div className="space-y-2">
-              <h2 className="text-2xl font-bold">Something went wrong!</h2>
-              <p className="text-sm text-gray-600">
+              <h2 className="text-2xl font-bold text-foreground">
+                Something went wrong!
+              </h2>
+              <p className="text-sm text-muted-foreground">
                 A critical error occurred. Please try refreshing the page.
               </p>
+              {error.digest && (
+                <p className="text-xs text-muted-foreground font-mono">
+                  Error ID: {error.digest}
+                </p>
+              )}
             </div>
-            <Button onClick={reset} className="px-6">
+            <Button onClick={reset} variant="default" className="px-6">
               Try again
             </Button>
           </div>

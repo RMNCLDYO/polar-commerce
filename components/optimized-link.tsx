@@ -1,7 +1,7 @@
 "use client";
 
 import NextLink from "next/link";
-import { useState, type ComponentProps } from "react";
+import { type ComponentProps, useState } from "react";
 
 type OptimizedLinkProps = ComponentProps<typeof NextLink> & {
   prefetchStrategy?: "hover" | "visible" | "always" | "never";
@@ -14,7 +14,7 @@ export function OptimizedLink({
   ...props
 }: OptimizedLinkProps) {
   const [shouldPrefetch, setShouldPrefetch] = useState(
-    prefetchStrategy === "always" ? true : false
+    prefetchStrategy === "always",
   );
 
   const getPrefetchValue = () => {
@@ -37,9 +37,5 @@ export function OptimizedLink({
     }),
   };
 
-  return (
-    <NextLink {...linkProps}>
-      {children}
-    </NextLink>
-  );
+  return <NextLink {...linkProps}>{children}</NextLink>;
 }

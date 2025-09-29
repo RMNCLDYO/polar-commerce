@@ -8,7 +8,7 @@ type CategoryConfig = {
   title: string;
   description: string;
   filter: string | null;
-  defaultSort?: ProductFilters['sort'];
+  defaultSort?: ProductFilters["sort"];
   metaTitle: string;
   metaDescription: string;
 };
@@ -26,7 +26,8 @@ const categoryConfig: Record<string, CategoryConfig> = {
     description: "Stylish and functional sportswear items for every workout",
     filter: "WOMEN",
     metaTitle: "Women's Collection - BANANA SPORTSWEAR",
-    metaDescription: "Discover our women's premium athletic gear and sportswear",
+    metaDescription:
+      "Discover our women's premium athletic gear and sportswear",
   },
   kids: {
     title: "Kids' Collection",
@@ -39,9 +40,10 @@ const categoryConfig: Record<string, CategoryConfig> = {
     title: "New Arrivals",
     description: "Fresh additions to our premium sportswear collection",
     filter: null,
-    defaultSort: 'name-desc',
+    defaultSort: "name-desc",
     metaTitle: "New Arrivals - BANANA SPORTSWEAR",
-    metaDescription: "Discover the latest additions to our premium sportswear collection",
+    metaDescription:
+      "Discover the latest additions to our premium sportswear collection",
   },
 };
 
@@ -51,9 +53,17 @@ function isValidCategory(category: string): category is CategorySlug {
   return category in categoryConfig;
 }
 
-export default async function CategoryPage(props: PageProps<'/[category]'>) {
-  const { category } = await props.params;
-  const searchParams = await props.searchParams;
+interface CategoryPageProps {
+  params: Promise<{ category: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}
+
+export default async function CategoryPage({
+  params,
+  searchParams,
+}: CategoryPageProps) {
+  const { category } = await params;
+  const searchParamsData = await searchParams;
 
   const config = categoryConfig[category];
 
@@ -63,23 +73,24 @@ export default async function CategoryPage(props: PageProps<'/[category]'>) {
 
   const filters: ProductFilters = {
     ...(config.filter && { category: config.filter }),
-    search: searchParams?.search as string | undefined,
-    sort: (searchParams?.sort as ProductFilters['sort']) || config.defaultSort,
+    search: searchParamsData?.search as string | undefined,
+    sort:
+      (searchParamsData?.sort as ProductFilters["sort"]) || config.defaultSort,
   };
 
   const products = await getProducts(filters);
 
   const getEmptyMessage = () => {
-    if (category === 'new') {
-      return 'Check back soon for our latest collection';
+    if (category === "new") {
+      return "Check back soon for our latest collection";
     }
-    return `No ${category}'s products available${category !== 'new' ? ' yet' : ''}`;
+    return `No ${category}'s products available${category !== "new" ? " yet" : ""}`;
   };
 
   const getProductCount = () => {
     if (products.length === 0) return getEmptyMessage();
 
-    if (category === 'new') {
+    if (category === "new") {
       return `${products.length} fresh additions to our premium sportswear collection`;
     }
 
@@ -105,9 +116,7 @@ export default async function CategoryPage(props: PageProps<'/[category]'>) {
             <h1 className="text-3xl font-bold tracking-tight mb-4">
               {config.title}
             </h1>
-            <p className="text-muted-foreground">
-              {getProductCount()}
-            </p>
+            <p className="text-muted-foreground">{getProductCount()}</p>
           </div>
 
           {products.length > 0 && (
@@ -135,7 +144,9 @@ export default async function CategoryPage(props: PageProps<'/[category]'>) {
                     <p className="text-xs text-muted-foreground uppercase tracking-widest font-mono">
                       {product.category}
                     </p>
-                    <span className="text-sm font-semibold">{product.price}</span>
+                    <span className="text-sm font-semibold">
+                      {product.price}
+                    </span>
                   </div>
                 </Link>
               ))}
@@ -153,8 +164,8 @@ export async function generateStaticParams() {
   }));
 }
 
-export async function generateMetadata(props: PageProps<'/[category]'>) {
-  const { category } = await props.params;
+export async function generateMetadata({ params }: CategoryPageProps) {
+  const { category } = await params;
 
   const config = categoryConfig[category];
 

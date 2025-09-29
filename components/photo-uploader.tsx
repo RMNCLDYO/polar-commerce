@@ -5,8 +5,8 @@ import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
-import { cn } from "@/lib/utils";
 import type { Product } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 interface PhotoUploaderProps {
   products: Product[];
@@ -20,7 +20,10 @@ const techInfoMessages = [
   "Generating image for Jordan Fleece Hoodie",
 ];
 
-export function PhotoUploader({ products, onImagesGenerated }: PhotoUploaderProps) {
+export function PhotoUploader({
+  products,
+  onImagesGenerated,
+}: PhotoUploaderProps) {
   const [userPhoto, setUserPhoto] = useState<File | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationProgress, setGenerationProgress] = useState(0);
@@ -38,7 +41,7 @@ export function PhotoUploader({ products, onImagesGenerated }: PhotoUploaderProp
   const handleDragLeave = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+    if (!e.currentTarget.contains(e.relatedTarget as Element | null)) {
       setIsDragOver(false);
     }
   };
@@ -202,12 +205,13 @@ export function PhotoUploader({ products, onImagesGenerated }: PhotoUploaderProp
 
   return (
     <>
-      <div
+      <section
         className="fixed bottom-8 right-8 z-40 animate-slide-up"
         style={{ animationDelay: "900ms" }}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
+        aria-label="Photo upload area"
       >
         <button
           type="button"
@@ -288,7 +292,7 @@ export function PhotoUploader({ products, onImagesGenerated }: PhotoUploaderProp
             </>
           )}
         </button>
-      </div>
+      </section>
 
       {isDragOver && (
         <div className="fixed inset-0 z-20 bg-foreground/5 border-4 border-dashed border-foreground pointer-events-none animate-in fade-in duration-200" />

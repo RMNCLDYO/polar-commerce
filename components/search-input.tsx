@@ -2,7 +2,7 @@
 
 import { Search } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState, useEffect, useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 export function SearchInput() {
   const router = useRouter();
@@ -16,21 +16,27 @@ export function SearchInput() {
     }
   }, [searchParams]);
 
-  const handleSearch = useCallback((e: React.FormEvent) => {
-    e.preventDefault();
-    const params = new URLSearchParams(searchParams.toString());
+  const handleSearch = useCallback(
+    (e: React.FormEvent) => {
+      e.preventDefault();
+      const params = new URLSearchParams(searchParams.toString());
 
-    if (searchQuery.trim()) {
-      params.set("search", searchQuery.trim());
-    } else {
-      params.delete("search");
-    }
+      if (searchQuery.trim()) {
+        params.set("search", searchQuery.trim());
+      } else {
+        params.delete("search");
+      }
 
-    router.push(`/products?${params.toString()}`);
-  }, [searchQuery, searchParams, router]);
+      router.push(`/products?${params.toString()}`);
+    },
+    [searchQuery, searchParams, router],
+  );
 
   return (
-    <form onSubmit={handleSearch} className="hidden md:flex items-center border border-border bg-muted px-4 py-2 hover:bg-accent transition-colors">
+    <form
+      onSubmit={handleSearch}
+      className="hidden md:flex items-center border border-border bg-muted px-4 py-2 hover:bg-accent transition-colors"
+    >
       <Search className="mr-3 size-4 text-muted-foreground" />
       <input
         type="text"

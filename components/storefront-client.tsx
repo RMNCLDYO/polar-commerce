@@ -129,7 +129,6 @@ export function StorefrontClient({ products }: StorefrontClientProps) {
   const [isTransitioning, setIsTransitioning] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -139,7 +138,7 @@ export function StorefrontClient({ products }: StorefrontClientProps) {
   const handleDragLeave = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+    if (!e.currentTarget.contains(e.relatedTarget as Element | null)) {
       setIsDragOver(false);
     }
   };

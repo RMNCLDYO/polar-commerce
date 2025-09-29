@@ -2,7 +2,7 @@
 
 import { Search } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 
 export function SearchBar() {
   const router = useRouter();
@@ -30,7 +30,10 @@ export function SearchBar() {
   };
 
   return (
-    <form onSubmit={handleSearch} className="flex items-center border border-border bg-muted px-4 py-2">
+    <form
+      onSubmit={handleSearch}
+      className="flex items-center border border-border bg-muted px-4 py-2"
+    >
       <Search className="mr-3 size-4 text-muted-foreground" />
       <input
         type="text"

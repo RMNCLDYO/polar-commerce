@@ -1,19 +1,29 @@
 import { Filter } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
 import { SearchBar } from "@/components/search-bar";
+import { Button } from "@/components/ui/button";
 import { getProducts, type ProductFilters } from "@/lib/products";
 
-export default async function ProductsPage(props: PageProps<'/products'>) {
-  const searchParams = await props.searchParams;
+interface ProductsPageProps {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}
+
+export default async function ProductsPage({
+  searchParams,
+}: ProductsPageProps) {
+  const searchParamsData = await searchParams;
 
   const filters: ProductFilters = {
-    search: searchParams?.search as string | undefined,
-    category: searchParams?.category as string | undefined,
-    sort: searchParams?.sort as ProductFilters['sort'],
-    minPrice: searchParams?.minPrice ? parseFloat(searchParams.minPrice as string) : undefined,
-    maxPrice: searchParams?.maxPrice ? parseFloat(searchParams.maxPrice as string) : undefined,
+    search: searchParamsData?.search as string | undefined,
+    category: searchParamsData?.category as string | undefined,
+    sort: searchParamsData?.sort as ProductFilters["sort"],
+    minPrice: searchParamsData?.minPrice
+      ? parseFloat(searchParamsData.minPrice as string)
+      : undefined,
+    maxPrice: searchParamsData?.maxPrice
+      ? parseFloat(searchParamsData.maxPrice as string)
+      : undefined,
   };
 
   const products = await getProducts(filters);
@@ -40,15 +50,20 @@ export default async function ProductsPage(props: PageProps<'/products'>) {
         <div className="mx-auto max-w-7xl">
           <div className="mb-12">
             <h1 className="text-3xl font-bold tracking-tight mb-4">
-              {searchParams?.search ? `Search results for "${searchParams.search}"` :
-               searchParams?.category ? `${searchParams.category} Products` :
-               'All Products'}
+              {searchParamsData?.search
+                ? `Search results for "${searchParamsData.search}"`
+                : searchParamsData?.category
+                  ? `${searchParamsData.category} Products`
+                  : "All Products"}
             </h1>
             <p className="text-muted-foreground">
-              {products.length === 0 ? 'No products found matching your criteria' :
-               `Showing ${products.length} product${products.length !== 1 ? 's' : ''}${
-                 filters.sort ? ` (sorted by ${filters.sort.replace('-', ' ')})` : ''
-               }`}
+              {products.length === 0
+                ? "No products found matching your criteria"
+                : `Showing ${products.length} product${products.length !== 1 ? "s" : ""}${
+                    filters.sort
+                      ? ` (sorted by ${filters.sort.replace("-", " ")})`
+                      : ""
+                  }`}
             </p>
           </div>
 
