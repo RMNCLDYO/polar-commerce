@@ -15,6 +15,10 @@ interface WindowWithErrorTracker extends Window {
   };
 }
 
+// NODE_ENV is automatically set by Next.js:
+// - 'development' when running 'next dev'
+// - 'production' for all other commands (build, start)
+// - 'test' when running tests
 const isDevelopment = process.env.NODE_ENV === "development";
 const isProduction = process.env.NODE_ENV === "production";
 
