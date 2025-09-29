@@ -42,6 +42,7 @@ export const metadata: Metadata = {
     description: "AI-powered sportswear shopping with virtual try-on",
     type: "website",
     siteName: "BANANA SPORTSWEAR",
+    locale: "en_US",
     images: [
       {
         url: "/opengraph-image.png",
