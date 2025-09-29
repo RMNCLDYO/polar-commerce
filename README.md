@@ -124,15 +124,14 @@ components/
 │   ├── input.tsx          # Form input component
 │   ├── dropdown-menu.tsx  # Dropdown menu component
 │   └── progress.tsx       # Progress bar component
-├── optimized-link.tsx     # Smart prefetching Link wrapper
-├── storefront-header.tsx  # Header with navigation (Server Component)
-├── storefront-footer.tsx  # Footer (Server Component)
+├── link.tsx               # Smart prefetching Link wrapper
+├── header.tsx             # Header with navigation (Server Component)
+├── footer.tsx             # Footer (Server Component)
 ├── product-grid.tsx       # Product grid display (Server Component)
 ├── product-card.tsx       # Individual product card (Client Component)
 ├── photo-uploader.tsx     # Full-featured AI uploader (Client Component)
-├── simple-photo-uploader.tsx # Simplified uploader for homepage
-├── search-input.tsx       # Search with routing (Client Component)
-├── search-bar.tsx         # Alternative search component
+├── uploader.tsx           # Simplified uploader for homepage
+├── search.tsx             # Search with routing (Client Component)
 ├── mode-toggle.tsx        # Dark/light theme toggle (Client Component)
 └── theme-provider.tsx     # Theme context provider (Client Component)
 
@@ -177,12 +176,12 @@ export default function ShopLayout({ children }: { children: React.ReactNode }) 
   return (
     <div className="min-h-screen bg-background text-foreground font-mono">
       {/* ⚡ Static shell - shared across all shop routes */}
-      <StorefrontHeader />
+      <Header />
 
       {children} {/* Dynamic content from each page */}
 
       {/* ⚡ Static footer - shared across all shop routes */}
-      <StorefrontFooter />
+      <Footer />
       <Toaster position="bottom-right" />
     </div>
   );
@@ -207,7 +206,7 @@ export default function Page({ searchParams }: PageProps) {
       </Suspense>
 
       {/* ✨ AI Features */}
-      <SimplePhotoUploader />
+      <Uploader />
     </div>
   );
 }
@@ -220,8 +219,8 @@ export default function Page({ searchParams }: PageProps) {
 - **Click** → Page loads from cache instantly (0ms network time!)
 
 ```tsx
-// components/optimized-link.tsx - Smart prefetch implementation
-export function OptimizedLink({ prefetchStrategy = "visible", ...props }) {
+// components/link.tsx - Smart prefetch implementation
+export function Link({ prefetchStrategy = "visible", ...props }) {
   const router = useRouter();
   const hasPrefetched = useRef(false);
 
@@ -281,13 +280,13 @@ export default async function CategoryPage({ params, searchParams }) {
       {products.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
           {products.map((product) => (
-            <OptimizedLink
+            <Link
               key={product.id}
               href={`/product/${product.id}`}
               prefetchStrategy="hover"
             >
               {/* Product card content */}
-            </OptimizedLink>
+            </Link>
           ))}
         </div>
       )}
@@ -331,7 +330,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 
 | Command | Description |
 |---------|------------|
-| `npm run dev` | Development server (Turbopack auto-enabled) |
+| `npm run dev` | Development server with Turbopack |
 | `npm run build` | Production build with PPR |
 | `npm run lint` | Biome code quality check |
 | `npm run format` | Biome code formatting |
@@ -388,7 +387,7 @@ Route (app)
 ├ ○ /robots.txt         - Static
 └ ○ /sitemap.xml        - Static
 
-All shop routes use (shop) route group with shared StorefrontHeader/Footer!
+All shop routes use (shop) route group with shared Header/Footer!
 ```
 
 ### **🎯 PPR Architecture Verified** ✅
