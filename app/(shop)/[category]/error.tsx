@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 
-export default function GlobalError({
+export default function CategoryError({
   error,
   reset,
 }: {
@@ -15,29 +15,25 @@ export default function GlobalError({
   }, [error]);
 
   return (
-    <html lang="en">
-      <body className="antialiased">
-        <div className="min-h-screen flex items-center justify-center bg-background">
+    <main className="px-8 py-12">
+      <div className="mx-auto max-w-7xl">
+        <div className="flex items-center justify-center min-h-[60vh]">
           <div className="text-center space-y-6 p-8 max-w-md">
             <div className="space-y-2">
-              <h2 className="text-2xl font-bold text-foreground">
+              <h2 className="text-2xl font-bold tracking-tight">
                 Something went wrong!
               </h2>
               <p className="text-sm text-muted-foreground">
-                A critical error occurred. Please try refreshing the page.
+                {error.message ||
+                  "Unable to load this category. Please try again."}
               </p>
-              {error.digest && (
-                <p className="text-xs text-muted-foreground font-mono">
-                  Error ID: {error.digest}
-                </p>
-              )}
             </div>
             <Button onClick={reset} variant="default" className="px-6">
               Try again
             </Button>
           </div>
         </div>
-      </body>
-    </html>
+      </div>
+    </main>
   );
 }

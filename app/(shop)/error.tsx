@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 
-export default function ErrorBoundary({
+export default function ShopError({
   error,
   reset,
 }: {
@@ -15,7 +15,7 @@ export default function ErrorBoundary({
   }, [error]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
+    <div className="min-h-screen flex items-center justify-center bg-background px-8">
       <div className="text-center space-y-6 p-8 max-w-md">
         <div className="space-y-2">
           <h2 className="text-2xl font-bold tracking-tight">
