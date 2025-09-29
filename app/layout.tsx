@@ -14,13 +14,36 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "BANANA SPORTSWEAR - Premium Athletic Gear",
+  title: "BANANA SPORTSWEAR - Premium Athletic Gear | Vercel AI SDK Showcase",
   description:
-    "Shop the latest collection of premium sportswear and athletic apparel from BANANA SPORTSWEAR",
+    "Shop premium sportswear with AI-powered virtual try-on and product mashup. Built with Vercel AI SDK, Next.js 15, and React 19.",
+  keywords: [
+    "Vercel AI SDK",
+    "sportswear",
+    "virtual try-on",
+    "AI fashion",
+    "athletic gear",
+  ],
+  authors: [{ name: "RMNCLDYO" }],
   icons: {
     icon: "/acme-logo.png",
     shortcut: "/acme-logo.png",
     apple: "/acme-logo.png",
+  },
+  openGraph: {
+    title: "BANANA SPORTSWEAR - Premium Athletic Gear",
+    description: "AI-powered sportswear shopping with virtual try-on",
+    type: "website",
+    siteName: "BANANA SPORTSWEAR",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "BANANA SPORTSWEAR",
+    description: "AI-powered sportswear shopping with virtual try-on",
+  },
+  robots: {
+    index: true,
+    follow: true,
   },
 };
 

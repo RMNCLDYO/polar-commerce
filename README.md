@@ -1,16 +1,16 @@
 # Vercel AI SDK Storefront Showcase
 
-**Built with [Vercel AI SDK](https://sdk.vercel.ai)** - A v0 template showcase demonstrating modern AI integration patterns.
+**Built with [Vercel AI SDK](https://sdk.vercel.ai)** - An enhanced v0 template demonstrating modern AI integration patterns.
 
 [![Vercel AI SDK](https://img.shields.io/badge/Vercel_AI_SDK-5.0.52-FF6B6B?style=flat-square&logo=vercel)](https://sdk.vercel.ai)
 [![Next.js](https://img.shields.io/badge/Next.js-15.5.4-black?style=flat-square)](https://nextjs.org)
 [![React](https://img.shields.io/badge/React-19.1.0-61DAFB?style=flat-square)](https://react.dev)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-v4-38B2AC?style=flat-square)](https://tailwindcss.com)
-[![v0 Template](https://img.shields.io/badge/v0-Template-purple?style=flat-square)](https://v0.dev)
+[![v0 Template](https://img.shields.io/badge/v0-Enhanced-purple?style=flat-square)](https://v0.dev)
 
 ## Overview
 
-Showcase for **Vercel AI SDK** demonstrating seamless AI model integration in modern web applications. Originally a v0 template, enhanced to exemplify AI SDK's power for building AI features with minimal code.
+Showcase for **Vercel AI SDK** demonstrating seamless AI model integration in modern web applications. Started from a working v0 template and enhanced with production-ready improvements including modern tooling, better architecture, and optimized performance.
 
 ## Why Vercel AI SDK
 
@@ -150,11 +150,30 @@ This project demonstrates:
 - Error handling and logging best practices
 - Image optimization strategies
 
+## What's Enhanced from the Original v0 Template
+
+This project started from the original [v0 Storefront Template](https://v0.app/templates/storefront-w-nano-banana-ai-sdk-ai-gateway-XAMOoZPMUO5) and has been significantly enhanced:
+
+### Major Improvements
+- **Modern Stack**: Upgraded from Next.js 14.2 → 15.5, React 18 → 19
+- **Optimized Dependencies**: Reduced from 60+ to just 8 core dependencies
+- **Dark/Light Theme**: Added full theme support with mode toggle
+- **Better Architecture**: Added structured logging, image loader, error boundaries
+- **Type Safety**: Stricter TypeScript configuration with additional checks
+- **Modern Tooling**: Biome for linting/formatting, Turbopack for builds
+- **Production Ready**: Proper error handling, accessibility improvements, SEO optimization
+
+### Performance Gains
+- **Faster Builds**: Turbopack compilation
+- **Smaller Bundle**: 87% fewer dependencies
+- **Optimized Images**: Custom image loader with proper caching
+- **Better UX**: Loading states, error boundaries, theme persistence
+
 ## Credits
 
-Based on the original [v0 Storefront Template](https://v0.app/templates/storefront-w-nano-banana-ai-sdk-ai-gateway-XAMOoZPMUO5) by [Esteban Suarez](https://x.com/EstebanSuarez), DevRel at v0/Vercel.
+Original [v0 Storefront Template](https://v0.app/templates/storefront-w-nano-banana-ai-sdk-ai-gateway-XAMOoZPMUO5) by [Esteban Suarez](https://x.com/EstebanSuarez), DevRel at v0/Vercel.
 
-Modernized with Next.js 15, React 19, Tailwind CSS v4, and shadcn/ui components.
+Enhanced and modernized with Next.js 15, React 19, Tailwind CSS v4, production-ready architecture, and performance optimizations.
 
 ## Author
 
