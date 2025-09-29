@@ -136,11 +136,11 @@ components/
 └── theme-provider.tsx     # Theme context provider (Client Component)
 
 lib/
-├── products.ts            # Server-only product data functions
-├── types.ts               # Shared type definitions
+├── products.ts            # Server-only product data functions with static imports
+├── types.ts               # Shared type definitions (StaticImageData support)
 ├── utils.ts               # Utility functions (cn, etc.)
 ├── logger.ts              # Logging utilities
-├── image-loader.ts        # Custom Next.js image loader
+├── revalidate.ts          # Cache revalidation functions
 └── api-utils.ts           # Server-only API utilities
 
 public/                    # Static assets
@@ -153,18 +153,34 @@ public/                    # Static assets
 
 ## 🛠️ Ultra-Modern Tech Stack
 
-- **Next.js 15.6.0-canary.34** - Latest canary with PPR, Turbopack, RDC
+- **Next.js 15.6.0-canary.34** - Latest canary with PPR, Turbopack, RDC, native image optimization
 - **React 19.1.0** - Latest stable with concurrent features
-- **TypeScript 5** - Strict mode, ES modules, path aliases
+- **TypeScript 5** - Strict mode, ES modules, path aliases, StaticImageData types
 - **Tailwind CSS v4** - CSS-in-JS, @theme layer, OKLCH colors
 - **Vercel AI SDK 5.0.52** - Google Gemini 2.5 Flash with streaming
 - **Biome 2.2** - Ultra-fast linting and formatting
 - **shadcn/ui** - Radix-based accessible components
+- **Next.js Image** - Native optimization with AVIF/WebP, static imports, automatic blur placeholders
 
 ### 🧪 **Experimental Features Enabled**
 - **Partial Prerendering (PPR)** - `experimental.ppr: "incremental"`
 - **Request Deduplication for Navigations** - Auto-enabled by PPR
 - **Turbopack** - Next-generation bundler for development
+- **CSS Chunking** - `experimental.cssChunking: true` for optimal CSS delivery
+
+### 🖼️ **Image Optimization Configuration**
+```ts
+// next.config.ts - Native Next.js image optimization
+const nextConfig: NextConfig = {
+  images: {
+    // No custom loader - uses Next.js default optimization
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    formats: ["image/avif", "image/webp"], // ✅ AVIF + WebP for best compression
+    dangerouslyAllowSVG: false, // Security: Disable SVG uploads
+  },
+};
+```
 
 ## Key Implementation Details
 
@@ -304,17 +320,69 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 }
 ```
 
-### Server-Only Data Fetching
+### Server-Only Data Fetching with Static Image Imports
 ```tsx
-// lib/products.ts - Server-only functions with proper directive
+// lib/products.ts - Server-only functions with static image imports
 import "server-only";
+import { unstable_cache } from "next/cache";
+import NikeVomeroImage from "@/public/products/nike-vomero.jpeg";
+import NikeCapImage from "@/public/products/nike-cap.jpeg";
 import type { Product, ProductFilters } from "./types";
 
+const allProducts: Product[] = [
+  {
+    id: "1",
+    name: "Nike ZoomX Vomero Plus",
+    price: "$180",
+    category: "RUNNING SHOES",
+    image: NikeVomeroImage, // ✅ Static import for automatic optimization
+    description: "Premium running shoes with ZoomX foam technology",
+  },
+  // ... more products
+];
+
 export async function getProducts(filters?: ProductFilters): Promise<Product[]> {
-  // Server-side data fetching logic
+  // Server-side data fetching logic with caching
   // This code never reaches the client bundle
 }
 ```
+
+### Next.js 15 Image Optimization (100% Compliance)
+```tsx
+// Static imports enable automatic optimization
+import Image from "next/image";
+import LogoImage from "@/public/logo.png";
+
+export function Header() {
+  return (
+    <Image
+      src={LogoImage}  // ✅ Static import
+      alt="BANANA SPORTSWEAR"
+      className="h-10 w-auto"
+      priority  // ✅ Above-the-fold optimization
+      // width/height automatically inferred
+      // Automatic blur placeholder available
+    />
+  );
+}
+
+// Product images with responsive sizing
+<Image
+  src={product.image}  // StaticImageData from static import
+  alt={product.name}
+  fill
+  className="object-contain"
+  sizes="(max-width: 1024px) 100vw, 50vw"  // ✅ Responsive optimization
+  priority={isHero}
+/>
+```
+
+**Benefits of Static Imports:**
+- ✅ Automatic width/height inference (prevents CLS)
+- ✅ Built-in blur placeholder generation
+- ✅ Native AVIF/WebP conversion
+- ✅ Optimal image sizing per device
+- ✅ Zero configuration required
 
 ### React 19 Patterns
 ```tsx
@@ -350,7 +418,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 - **PPR Implementation** - Static shells with streaming dynamic content for sub-second loads
 - **Smart Prefetching** - Hover, always, visible, and never strategies for optimal UX
 - **Server-side Rendering** - Automatic SSR with incremental static regeneration
-- **Image Optimization** - Custom loader with responsive sizing and WebP format
+- **Next.js Image Optimization** - Native optimization with AVIF/WebP, static imports, automatic blur placeholders
 
 ### ✅ **Code Quality**
 - **Type Safety** - 100% strict TypeScript with proper interfaces and forwardRef patterns
@@ -400,6 +468,7 @@ All shop routes use (shop) route group with shared Header/Footer!
 - ✅ **ES Module Configuration** - Modern JavaScript performance
 - ✅ **Server Component Boundaries** - Optimal static/dynamic separation
 - ✅ **Proper File Organization** - Consistent structure following Next.js 15 best practices
+- ✅ **Native Image Optimization** - Static imports, AVIF/WebP, automatic width/height inference
 
 ### **⚡ Performance Innovations** ✅
 - ✅ **Sub-second page loads** - PPR enables instant static shell delivery
@@ -421,6 +490,7 @@ All shop routes use (shop) route group with shared Header/Footer!
 | **Navigation Performance** | 0ms 🎯 | Prefetched routes load from cache instantly |
 | **Bundle Optimization** | Minimal 📦 | Server/client boundaries minimize JS |
 | **Type Safety** | 100% ✅ | Zero runtime errors with strict TypeScript |
+| **Image Optimization** | Native ⚡ | Static imports, AVIF/WebP, auto blur placeholders |
 | **Accessibility** | WCAG Compliant ♿ | Full keyboard navigation and ARIA support |
 | **SEO Performance** | Perfect 💯 | Dynamic sitemap with optimal metadata |
 
