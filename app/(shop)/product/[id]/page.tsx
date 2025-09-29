@@ -137,6 +137,7 @@ export default async function ProductPage(
                   <Link
                     key={relatedProduct.id}
                     href={`/product/${relatedProduct.id}`}
+                    prefetch={false}
                     className="group cursor-pointer"
                   >
                     <div className="relative aspect-square mb-4 overflow-hidden bg-muted/50">
