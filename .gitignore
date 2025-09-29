@@ -30,13 +30,15 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env
+# env files
+# Note: .env.test should be committed for consistent test environments
 .env
 .env.local
 .env.production
 .env.development
 .env*.local
 !.env.example
+!.env.test
 
 # vercel
 .vercel

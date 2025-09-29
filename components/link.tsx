@@ -1,8 +1,7 @@
 "use client";
 
 import NextLink from "next/link";
-import { useRouter } from "next/navigation";
-import { type ComponentProps, useRef } from "react";
+import { type ComponentProps, useState } from "react";
 
 type LinkProps = ComponentProps<typeof NextLink> & {
   prefetchStrategy?: "hover" | "visible" | "always" | "never";
@@ -11,32 +10,29 @@ type LinkProps = ComponentProps<typeof NextLink> & {
 export function Link({
   prefetchStrategy = "visible",
   children,
-  prefetch,
   ...props
 }: LinkProps) {
-  const router = useRouter();
-  const hasPrefetched = useRef(false);
+  const [shouldPrefetch, setShouldPrefetch] = useState(
+    prefetchStrategy !== "hover",
+  );
 
   const getPrefetchValue = () => {
     if (prefetchStrategy === "never") return false;
     if (prefetchStrategy === "always") return true;
-    if (prefetchStrategy === "visible") return undefined; // Default Next.js behavior
-    if (prefetchStrategy === "hover") return false; // Don't prefetch until hover
-    return undefined;
-  };
-
-  const handleMouseEnter = () => {
-    if (prefetchStrategy === "hover" && !hasPrefetched.current) {
-      hasPrefetched.current = true;
-      router.prefetch(props.href.toString());
+    if (prefetchStrategy === "visible") return null;
+    if (prefetchStrategy === "hover") {
+      return shouldPrefetch ? null : false;
     }
+    return null;
   };
 
   const linkProps = {
     ...props,
     prefetch: getPrefetchValue(),
     onMouseEnter: (e: React.MouseEvent<HTMLAnchorElement>) => {
-      handleMouseEnter();
+      if (prefetchStrategy === "hover" && !shouldPrefetch) {
+        setShouldPrefetch(true);
+      }
       props.onMouseEnter?.(e);
     },
   };

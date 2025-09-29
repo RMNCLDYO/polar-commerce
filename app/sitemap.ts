@@ -2,6 +2,8 @@ import type { MetadataRoute } from "next";
 import { getProducts } from "@/lib/products";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  // NEXT_PUBLIC_BASE_URL is used for absolute URL generation in sitemap
+  // Falls back to production URL if not set in environment
   const baseUrl =
     process.env.NEXT_PUBLIC_BASE_URL || "https://aisdk-storefront.vercel.app";
 

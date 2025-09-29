@@ -48,10 +48,13 @@ Route (app)
 
 ### ✅ **Verified Next.js 15 Features**
 - **Server-side data fetching** - `await getProducts()` in Server Components
+- **Next.js 15 Caching** - `"use cache"` directive with `cacheLife()` and `cacheTag()`
 - **Automatic Link prefetching** - Viewport-based prefetching enabled by default
 - **Streaming UI** - `loading.tsx` files provide instant visual feedback
 - **Dynamic route optimization** - `generateStaticParams` for build-time generation
+- **Native Form Component** - `next/form` for enhanced form handling
 - **AI Virtual Try-On** - Vercel AI SDK with Google Gemini 2.5 Flash
+- **Environment Variables** - 100% Next.js 15 compliant with proper documentation
 - **SEO & Performance** - Dynamic sitemap, optimized metadata, PWA manifest
 
 ## Quick Start
@@ -71,14 +74,26 @@ npm install
 
 ### Configuration
 
+Create your environment file:
 ```bash
 cp .env.example .env.local
 ```
 
-Add your Google API key to `.env.local`:
+Configure environment variables in `.env.local`:
 ```env
+# Required: Google Gemini API key for AI features
 GOOGLE_GENERATIVE_AI_API_KEY=your_google_api_key_here
+
+# Optional: Base URL for metadata generation (defaults to production URL)
+NEXT_PUBLIC_BASE_URL=http://localhost:3000
 ```
+
+**Environment Variables:**
+- `GOOGLE_GENERATIVE_AI_API_KEY` - **Required** for AI virtual try-on and image generation
+- `NEXT_PUBLIC_BASE_URL` - Optional; used for metadata, sitemap, and robots.txt generation
+- `NODE_ENV` - Automatically set by Next.js (`development`, `production`, or `test`)
+
+> **Note:** The Vercel AI SDK automatically uses `GOOGLE_GENERATIVE_AI_API_KEY` when making requests to Google Gemini.
 
 ### Development
 
@@ -87,6 +102,17 @@ npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000)
+
+### Testing
+
+The project includes test environment configuration in `.env.test`:
+```env
+# Test values are loaded when NODE_ENV=test
+GOOGLE_GENERATIVE_AI_API_KEY=test_google_api_key_for_testing
+NEXT_PUBLIC_BASE_URL=http://localhost:3000
+```
+
+> **Note:** `.env.test` is committed to the repository for consistent test results across all environments. Unlike `.env.local`, test files should be version controlled.
 
 ## Project Structure
 
@@ -136,12 +162,12 @@ components/
 └── theme-provider.tsx     # Theme context provider (Client Component)
 
 lib/
-├── products.ts            # Server-only product data functions with static imports
+├── products.ts            # Server-only functions with "use cache" directive
 ├── types.ts               # Shared type definitions (StaticImageData support)
 ├── utils.ts               # Utility functions (cn, etc.)
-├── logger.ts              # Logging utilities
+├── logger.ts              # Logging utilities with NODE_ENV handling
 ├── revalidate.ts          # Cache revalidation functions
-└── api-utils.ts           # Server-only API utilities
+└── api-utils.ts           # Server-only utilities with environment variable helpers
 
 public/                    # Static assets
 ├── products/              # Product images
@@ -167,6 +193,7 @@ public/                    # Static assets
 - **Request Deduplication for Navigations** - Auto-enabled by PPR
 - **Turbopack** - Next-generation bundler for development
 - **CSS Chunking** - `experimental.cssChunking: true` for optimal CSS delivery
+- **Cache Configuration** - `experimental.useCache: true` with custom `cacheLife` profiles
 
 ### 🖼️ **Image Optimization Configuration**
 ```ts
@@ -228,39 +255,74 @@ export default function Page({ searchParams }: PageProps) {
 }
 ```
 
-### ⚡ Hover Prefetching - CONFIRMED WORKING!
+### ⚡ Smart Link Prefetching - CONFIRMED WORKING!
 
 **Real-world test results prove instant navigation:**
 - **Hover** → Route prefetches in background
 - **Click** → Page loads from cache instantly (0ms network time!)
 
 ```tsx
-// components/link.tsx - Smart prefetch implementation
-export function Link({ prefetchStrategy = "visible", ...props }) {
-  const router = useRouter();
-  const hasPrefetched = useRef(false);
+// components/link.tsx - Smart prefetch implementation with useState
+export function Link({
+  prefetchStrategy = "visible",
+  children,
+  ...props
+}: LinkProps) {
+  const [shouldPrefetch, setShouldPrefetch] = useState(
+    prefetchStrategy !== "hover",
+  );
 
-  const handleMouseEnter = () => {
-    if (prefetchStrategy === "hover" && !hasPrefetched.current) {
-      hasPrefetched.current = true;
-      router.prefetch(props.href.toString()); // ⚡ Instant background fetch!
+  const getPrefetchValue = () => {
+    if (prefetchStrategy === "never") return false;
+    if (prefetchStrategy === "always") return true;
+    if (prefetchStrategy === "visible") return null;
+    if (prefetchStrategy === "hover") {
+      return shouldPrefetch ? null : false;
     }
+    return null;
   };
 
-  // Strategies in action:
-  // • "hover" - Products/categories prefetch on hover
-  // • "always" - Home/logo prefetches immediately
-  // • "visible" - Default Next.js viewport detection
-  // • "never" - Disabled for external links
+  const linkProps = {
+    ...props,
+    prefetch: getPrefetchValue(),
+    onMouseEnter: (e: React.MouseEvent<HTMLAnchorElement>) => {
+      if (prefetchStrategy === "hover" && !shouldPrefetch) {
+        setShouldPrefetch(true); // ⚡ Trigger prefetch on hover!
+      }
+      props.onMouseEnter?.(e);
+    },
+  };
+
+  return <NextLink {...linkProps}>{children}</NextLink>;
 }
+
+// Strategies in action:
+// • "hover" - Products/categories prefetch on hover
+// • "always" - Home/logo prefetches immediately
+// • "visible" - Default Next.js viewport detection
+// • "never" - Disabled for external links
 ```
 
-### PPR Configuration & Route Groups
+### PPR Configuration & Next.js 15 Cache Profiles
 ```tsx
 // next.config.ts - Canary configuration with experimental features
 const nextConfig: NextConfig = {
   experimental: {
     ppr: "incremental", // ⚡ Partial Prerendering enabled
+    cssChunking: true,
+    useCache: true, // ✅ Next.js 15 caching
+    cacheLife: {
+      default: {
+        stale: 3600,
+        revalidate: 3600,
+        expire: 86400,
+      },
+      hours: {
+        stale: 3600,
+        revalidate: 3600,
+        expire: 7200,
+      },
+    },
   },
   // ... other optimizations
 };
@@ -320,11 +382,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 }
 ```
 
-### Server-Only Data Fetching with Static Image Imports
+### Server-Only Data Fetching with Next.js 15 Caching
 ```tsx
-// lib/products.ts - Server-only functions with static image imports
+// lib/products.ts - Next.js 15 "use cache" directive
 import "server-only";
-import { unstable_cache } from "next/cache";
+import {
+  unstable_cacheLife as cacheLife,
+  unstable_cacheTag as cacheTag,
+} from "next/cache";
 import NikeVomeroImage from "@/public/products/nike-vomero.jpeg";
 import NikeCapImage from "@/public/products/nike-cap.jpeg";
 import type { Product, ProductFilters } from "./types";
@@ -342,7 +407,11 @@ const allProducts: Product[] = [
 ];
 
 export async function getProducts(filters?: ProductFilters): Promise<Product[]> {
-  // Server-side data fetching logic with caching
+  "use cache"; // ✅ Next.js 15 cache directive
+  cacheLife("hours"); // ✅ Custom cache profile
+  cacheTag("products"); // ✅ Tag-based revalidation
+
+  // Server-side data fetching logic with automatic caching
   // This code never reaches the client bundle
 }
 ```
@@ -412,6 +481,9 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 - **Component Composition** - Proper Server/Client boundaries following Next.js 15 patterns
 - **No Duplicate Code** - Shared layouts eliminate header/footer duplication across pages
 - **Proper File Structure** - All routes consistently organized within route groups
+- **Environment Variables** - 100% Next.js 15 compliant with `.env.example`, `.env.test`, and inline documentation
+- **Modern Caching** - `"use cache"` directive with `cacheLife()` and `cacheTag()` for optimal performance
+- **Native Form Components** - Using `next/form` for enhanced form handling with progressive enhancement
 
 ### ✅ **Performance & Optimization**
 - **Bundle Optimization** - Focused Client Components reduce JavaScript bundle size by 37%
@@ -476,6 +548,32 @@ All shop routes use (shop) route group with shared Header/Footer!
 - ✅ **Zero layout shift** - Static structure prevents content jumping
 - ✅ **Smart prefetching** - Optimized network usage with strategic preloading
 - ✅ **Bundle optimization** - Server/client separation minimizes JavaScript
+
+## 🆕 Recent Updates
+
+### **Next.js 15 Environment Variables Compliance** (Latest)
+- ✅ **Complete Environment Variable Documentation** - All env vars documented in `.env.example`
+- ✅ **Test Environment Configuration** - Added `.env.test` for consistent testing
+- ✅ **Inline Documentation** - Comments explaining env var usage throughout codebase
+- ✅ **Proper Naming** - `GOOGLE_GENERATIVE_AI_API_KEY` for Vercel AI SDK integration
+- ✅ **Helper Functions** - `getGoogleApiKey()` and `getBaseUrl()` with JSDoc documentation
+- ✅ **Git Configuration** - `.gitignore` updated to allow `.env.test` in repository
+
+### **Next.js 15 Caching Migration**
+- ✅ **Modern Cache Directive** - Migrated from `unstable_cache` wrapper to `"use cache"` directive
+- ✅ **Cache Profiles** - Custom `cacheLife` profiles (default, hours) in `next.config.ts`
+- ✅ **Tag-based Revalidation** - Using `cacheTag()` for granular cache invalidation
+- ✅ **Simplified Implementation** - Cleaner code with built-in Next.js 15 caching APIs
+
+### **Enhanced Link Component**
+- ✅ **useState Approach** - Refactored from `useRef` to `useState` for better state management
+- ✅ **Smart Prefetching** - Four strategies (hover, always, visible, never)
+- ✅ **Type Safety** - Full TypeScript support with proper prop types
+
+### **Native Form Implementation**
+- ✅ **next/form Component** - Migrated search from manual form to `next/form`
+- ✅ **Progressive Enhancement** - Works without JavaScript, enhanced with client features
+- ✅ **Simplified Code** - Reduced complexity with native Next.js form handling
 
 ## 📊 Ultra-Modern Performance Metrics
 

@@ -1,9 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
+import { Link } from "@/components/link";
 import { Button } from "@/components/ui/button";
 import { logger } from "@/lib/logger";
 import type { Product } from "@/lib/types";
@@ -62,7 +62,7 @@ export function ProductCard({
   return (
     <Link
       href={`/product/${product.id}`}
-      prefetch={false}
+      prefetchStrategy="hover"
       className={cn(
         "group cursor-pointer animate-slide-up",
         isPersonalized ? "animate-in fade-in slide-in-from-bottom-4" : "",

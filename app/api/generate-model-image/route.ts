@@ -3,6 +3,12 @@ import { generateText } from "ai";
 import { type NextRequest, NextResponse } from "next/server";
 import { logger } from "@/lib/logger";
 
+/**
+ * API Route for generating personalized model images using Google Gemini.
+ * Uses GOOGLE_GENERATIVE_AI_API_KEY environment variable automatically via Vercel AI SDK.
+ * This is a server-only route that handles virtual try-on image generation.
+ */
+
 async function convertImageToSupportedFormat(
   file: File,
 ): Promise<{ buffer: Buffer; mimeType: string }> {
