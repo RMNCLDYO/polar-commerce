@@ -6,14 +6,18 @@ import "./globals.css";
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
+  display: "swap",
 });
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
+  // NEXT_PUBLIC_BASE_URL is used for absolute URL generation in metadata
+  // Falls back to production URL if not set in environment
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_BASE_URL || "https://aisdk-storefront.vercel.app",
   ),
