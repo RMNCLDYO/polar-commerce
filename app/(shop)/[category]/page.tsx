@@ -5,7 +5,6 @@ import { Link } from '@/components/link';
 import { getProducts, type ProductFilters } from '@/lib/products';
 
 export const experimental_ppr = true;
-export const revalidate = 3600;
 export const dynamicParams = false;
 
 type CategoryConfig = {
@@ -62,12 +61,16 @@ interface CategoryPageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
-export default async function CategoryPage({
-  params,
-  searchParams,
-}: CategoryPageProps) {
-  const { category } = await params;
-  const searchParamsData = await searchParams;
+async function CachedCategoryContent({
+  category,
+  search,
+  sort,
+}: {
+  category: string;
+  search?: string;
+  sort?: ProductFilters['sort'];
+}) {
+  'use cache';
 
   const config = categoryConfig[category];
 
@@ -77,9 +80,8 @@ export default async function CategoryPage({
 
   const filters: ProductFilters = {
     ...(config.filter && { category: config.filter }),
-    search: searchParamsData?.search as string | undefined,
-    sort:
-      (searchParamsData?.sort as ProductFilters['sort']) || config.defaultSort,
+    search,
+    sort: sort || config.defaultSort,
   };
 
   const products = await getProducts(filters);
@@ -144,6 +146,22 @@ export default async function CategoryPage({
         )}
       </div>
     </main>
+  );
+}
+
+export default async function CategoryPage({
+  params,
+  searchParams,
+}: CategoryPageProps) {
+  const { category } = await params;
+  const searchParamsData = await searchParams;
+
+  return (
+    <CachedCategoryContent
+      category={category}
+      search={searchParamsData?.search as string | undefined}
+      sort={searchParamsData?.sort as ProductFilters['sort']}
+    />
   );
 }
 

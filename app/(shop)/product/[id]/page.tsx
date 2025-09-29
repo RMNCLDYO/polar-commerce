@@ -14,15 +14,14 @@ import { Button } from '@/components/ui/button';
 import { getProduct, getProducts } from '@/lib/products';
 
 export const experimental_ppr = true;
-export const revalidate = 3600;
 export const dynamicParams = true;
 
 interface ProductPageProps {
   params: Promise<{ id: string }>;
 }
 
-export default async function ProductPage({ params }: ProductPageProps) {
-  const { id } = await params;
+async function CachedProductContent({ id }: { id: string }) {
+  'use cache';
 
   const productData = getProduct(id);
   const relatedProductsData = getProducts();
@@ -165,6 +164,11 @@ export default async function ProductPage({ params }: ProductPageProps) {
       </div>
     </main>
   );
+}
+
+export default async function ProductPage({ params }: ProductPageProps) {
+  const { id } = await params;
+  return <CachedProductContent id={id} />;
 }
 
 export async function generateStaticParams() {

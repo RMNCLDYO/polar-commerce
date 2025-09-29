@@ -1,29 +1,35 @@
+import type { Metadata } from 'next';
 import Image from 'next/image';
 import { Link } from '@/components/link';
 import { getProducts, type ProductFilters } from '@/lib/products';
 
 export const experimental_ppr = true;
-export const revalidate = 3600;
 
 interface ProductsPageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
-export default async function ProductsPage({
-  searchParams,
-}: ProductsPageProps) {
-  const searchParamsData = await searchParams;
+async function CachedProductsContent({
+  search,
+  category,
+  sort,
+  minPrice,
+  maxPrice,
+}: {
+  search?: string;
+  category?: string;
+  sort?: ProductFilters['sort'];
+  minPrice?: number;
+  maxPrice?: number;
+}) {
+  'use cache';
 
   const filters: ProductFilters = {
-    search: searchParamsData?.search as string | undefined,
-    category: searchParamsData?.category as string | undefined,
-    sort: searchParamsData?.sort as ProductFilters['sort'],
-    minPrice: searchParamsData?.minPrice
-      ? parseFloat(searchParamsData.minPrice as string)
-      : undefined,
-    maxPrice: searchParamsData?.maxPrice
-      ? parseFloat(searchParamsData.maxPrice as string)
-      : undefined,
+    search,
+    category,
+    sort,
+    minPrice,
+    maxPrice,
   };
 
   const products = await getProducts(filters);
@@ -33,19 +39,17 @@ export default async function ProductsPage({
       <div className="mx-auto max-w-7xl">
         <div className="mb-12">
           <h1 className="text-3xl font-bold tracking-tight mb-4">
-            {searchParamsData?.search
-              ? `Search results for "${searchParamsData.search}"`
-              : searchParamsData?.category
-                ? `${searchParamsData.category} Products`
+            {search
+              ? `Search results for "${search}"`
+              : category
+                ? `${category} Products`
                 : 'All Products'}
           </h1>
           <p className="text-muted-foreground">
             {products.length === 0
               ? 'No products found matching your criteria'
               : `Showing ${products.length} product${products.length !== 1 ? 's' : ''}${
-                  filters.sort
-                    ? ` (sorted by ${filters.sort.replace('-', ' ')})`
-                    : ''
+                  sort ? ` (sorted by ${sort.replace('-', ' ')})` : ''
                 }`}
           </p>
         </div>
@@ -89,8 +93,34 @@ export default async function ProductsPage({
   );
 }
 
-export const metadata = {
-  title: 'All Products - BANANA SPORTSWEAR',
-  description:
-    'Browse our complete collection of premium athletic gear and sportswear',
-};
+export default async function ProductsPage({
+  searchParams,
+}: ProductsPageProps) {
+  const searchParamsData = await searchParams;
+
+  return (
+    <CachedProductsContent
+      search={searchParamsData?.search as string | undefined}
+      category={searchParamsData?.category as string | undefined}
+      sort={searchParamsData?.sort as ProductFilters['sort']}
+      minPrice={
+        searchParamsData?.minPrice
+          ? parseFloat(searchParamsData.minPrice as string)
+          : undefined
+      }
+      maxPrice={
+        searchParamsData?.maxPrice
+          ? parseFloat(searchParamsData.maxPrice as string)
+          : undefined
+      }
+    />
+  );
+}
+
+export async function generateMetadata(): Promise<Metadata> {
+  return {
+    title: 'All Products - BANANA SPORTSWEAR',
+    description:
+      'Browse our complete collection of premium athletic gear and sportswear',
+  };
+}
