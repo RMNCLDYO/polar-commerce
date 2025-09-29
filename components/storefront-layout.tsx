@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import { PhotoUploader } from "@/components/photo-uploader";
-import ProductGrid from "@/components/product-grid";
-import StorefrontFooter from "@/components/storefront-footer";
-import StorefrontHeader from "@/components/storefront-header";
+import { ProductGrid } from "@/components/product-grid";
+import { StorefrontFooter } from "@/components/storefront-footer";
+import { StorefrontHeader } from "@/components/storefront-header";
 import type { Product } from "@/lib/types";
 
 interface StorefrontLayoutProps {
