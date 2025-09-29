@@ -425,7 +425,7 @@ export function StorefrontClient({ products }: StorefrontClientProps) {
           <div className="flex items-center">
             <Link href="/">
               <Image
-                src="/acme-logo.png"
+                src="/logo.png"
                 alt="BANANA SPORTSWEAR"
                 width={160}
                 height={40}
@@ -579,7 +579,7 @@ export function StorefrontClient({ products }: StorefrontClientProps) {
         <div className="mx-auto max-w-4xl text-center">
           <div className="mb-6 flex justify-center">
             <Image
-              src="/acme-logo.png"
+              src="/logo.png"
               alt="BANANA SPORTSWEAR"
               width={128}
               height={32}
