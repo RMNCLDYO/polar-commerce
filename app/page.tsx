@@ -2,13 +2,17 @@ import { Suspense } from "react";
 import { StorefrontLayout } from "@/components/storefront-layout";
 import { getProducts, type ProductFilters } from "@/lib/products";
 
-async function ProductsSection(props: { searchParams: any }) {
-  const searchParams = await props.searchParams;
+async function ProductsSection({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+  const params = await searchParams;
 
   const filters: ProductFilters = {
-    search: searchParams?.search as string | undefined,
-    category: searchParams?.category as string | undefined,
-    sort: searchParams?.sort as ProductFilters['sort'],
+    search: params?.search as string | undefined,
+    category: params?.category as string | undefined,
+    sort: params?.sort as ProductFilters["sort"],
   };
 
   const products = await getProducts(filters);
@@ -45,10 +49,14 @@ function ProductGridSkeleton() {
   );
 }
 
-export default async function Page(props: PageProps<'/'>) {
+interface PageProps {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}
+
+export default async function Page({ searchParams }: PageProps) {
   return (
     <Suspense fallback={<PageLoadingSkeleton />}>
-      <ProductsSection searchParams={props.searchParams} />
+      <ProductsSection searchParams={searchParams} />
     </Suspense>
   );
 }
