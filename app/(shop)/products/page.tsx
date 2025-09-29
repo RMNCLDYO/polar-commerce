@@ -3,6 +3,7 @@ import { Link } from "@/components/link";
 import { getProducts, type ProductFilters } from "@/lib/products";
 
 export const experimental_ppr = true;
+export const revalidate = 3600;
 
 interface ProductsPageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;

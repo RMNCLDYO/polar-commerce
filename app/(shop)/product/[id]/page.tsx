@@ -14,6 +14,8 @@ import { Button } from "@/components/ui/button";
 import { getProduct, getProducts } from "@/lib/products";
 
 export const experimental_ppr = true;
+export const revalidate = 3600;
+export const dynamicParams = true;
 
 interface ProductPageProps {
   params: Promise<{ id: string }>;

@@ -5,6 +5,8 @@ import { Link } from "@/components/link";
 import { getProducts, type ProductFilters } from "@/lib/products";
 
 export const experimental_ppr = true;
+export const revalidate = 3600;
+export const dynamicParams = false;
 
 type CategoryConfig = {
   title: string;
