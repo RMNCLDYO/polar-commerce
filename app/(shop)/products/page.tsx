@@ -1,6 +1,6 @@
-import Image from "next/image";
-import { Link } from "@/components/link";
-import { getProducts, type ProductFilters } from "@/lib/products";
+import Image from 'next/image';
+import { Link } from '@/components/link';
+import { getProducts, type ProductFilters } from '@/lib/products';
 
 export const experimental_ppr = true;
 export const revalidate = 3600;
@@ -17,7 +17,7 @@ export default async function ProductsPage({
   const filters: ProductFilters = {
     search: searchParamsData?.search as string | undefined,
     category: searchParamsData?.category as string | undefined,
-    sort: searchParamsData?.sort as ProductFilters["sort"],
+    sort: searchParamsData?.sort as ProductFilters['sort'],
     minPrice: searchParamsData?.minPrice
       ? parseFloat(searchParamsData.minPrice as string)
       : undefined,
@@ -37,15 +37,15 @@ export default async function ProductsPage({
               ? `Search results for "${searchParamsData.search}"`
               : searchParamsData?.category
                 ? `${searchParamsData.category} Products`
-                : "All Products"}
+                : 'All Products'}
           </h1>
           <p className="text-muted-foreground">
             {products.length === 0
-              ? "No products found matching your criteria"
-              : `Showing ${products.length} product${products.length !== 1 ? "s" : ""}${
+              ? 'No products found matching your criteria'
+              : `Showing ${products.length} product${products.length !== 1 ? 's' : ''}${
                   filters.sort
-                    ? ` (sorted by ${filters.sort.replace("-", " ")})`
-                    : ""
+                    ? ` (sorted by ${filters.sort.replace('-', ' ')})`
+                    : ''
                 }`}
           </p>
         </div>
@@ -90,7 +90,7 @@ export default async function ProductsPage({
 }
 
 export const metadata = {
-  title: "All Products - BANANA SPORTSWEAR",
+  title: 'All Products - BANANA SPORTSWEAR',
   description:
-    "Browse our complete collection of premium athletic gear and sportswear",
+    'Browse our complete collection of premium athletic gear and sportswear',
 };
