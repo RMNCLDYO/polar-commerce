@@ -1,4 +1,4 @@
-import "server-only";
+import 'server-only';
 
 /**
  * Server-only utilities for API configuration and environment variables.
@@ -21,6 +21,6 @@ export function getGoogleApiKey(): string | undefined {
  */
 export function getBaseUrl(): string {
   return (
-    process.env.NEXT_PUBLIC_BASE_URL || "https://aisdk-storefront.vercel.app"
+    process.env.NEXT_PUBLIC_BASE_URL || 'https://aisdk-storefront.vercel.app'
   );
 }

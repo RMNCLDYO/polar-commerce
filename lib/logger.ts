@@ -19,8 +19,8 @@ interface WindowWithErrorTracker extends Window {
 // - 'development' when running 'next dev'
 // - 'production' for all other commands (build, start)
 // - 'test' when running tests
-const isDevelopment = process.env.NODE_ENV === "development";
-const isProduction = process.env.NODE_ENV === "production";
+const isDevelopment = process.env.NODE_ENV === 'development';
+const isProduction = process.env.NODE_ENV === 'production';
 
 class Logger {
   private formatMessage(level: string, message: string): string {
@@ -31,14 +31,14 @@ class Logger {
   }
 
   error(message: string, context?: ErrorContext): void {
-    const formattedMessage = this.formatMessage("ERROR", message);
+    const formattedMessage = this.formatMessage('ERROR', message);
 
     if (isDevelopment) {
       console.error(formattedMessage, context);
     } else {
       console.error(formattedMessage);
 
-      if (typeof window !== "undefined") {
+      if (typeof window !== 'undefined') {
         const windowWithTracker = window as WindowWithErrorTracker;
         if (windowWithTracker.errorTracker) {
           windowWithTracker.errorTracker.logError(message, context);
@@ -48,7 +48,7 @@ class Logger {
   }
 
   warn(message: string, context?: LogContext): void {
-    const formattedMessage = this.formatMessage("WARN", message);
+    const formattedMessage = this.formatMessage('WARN', message);
 
     if (isDevelopment) {
       console.warn(formattedMessage, context);
@@ -56,7 +56,7 @@ class Logger {
   }
 
   info(message: string, context?: LogContext): void {
-    const formattedMessage = this.formatMessage("INFO", message);
+    const formattedMessage = this.formatMessage('INFO', message);
 
     if (isDevelopment) {
       console.log(formattedMessage, context);
@@ -65,26 +65,26 @@ class Logger {
 
   debug(message: string, context?: LogContext): void {
     if (isDevelopment) {
-      const formattedMessage = this.formatMessage("DEBUG", message);
+      const formattedMessage = this.formatMessage('DEBUG', message);
       console.log(formattedMessage, context);
     }
   }
 
   productGeneration(
     productName: string,
-    status: "start" | "success" | "error",
+    status: 'start' | 'success' | 'error',
     details?: LogContext,
   ): void {
     const message = `Product Generation: ${productName} - ${status}`;
 
     switch (status) {
-      case "error":
+      case 'error':
         this.error(message, { productName, ...details });
         break;
-      case "success":
+      case 'success':
         this.info(message, { productName, ...details });
         break;
-      case "start":
+      case 'start':
         this.debug(message, { productName, ...details });
         break;
     }
@@ -96,11 +96,11 @@ class Logger {
     statusCode?: number,
   ): { message: string; details?: string; retryable: boolean } {
     const errorMessage =
-      error instanceof Error ? error.message : "Unknown error";
+      error instanceof Error ? error.message : 'Unknown error';
     const isNetworkError =
-      errorMessage.includes("fetch") || errorMessage.includes("network");
+      errorMessage.includes('fetch') || errorMessage.includes('network');
     const isTimeout =
-      errorMessage.includes("timeout") || errorMessage.includes("abort");
+      errorMessage.includes('timeout') || errorMessage.includes('abort');
 
     this.error(`API Error: ${endpoint}`, {
       error,
@@ -111,10 +111,10 @@ class Logger {
 
     return {
       message: isTimeout
-        ? "Request timed out"
+        ? 'Request timed out'
         : isNetworkError
-          ? "Network error"
-          : "Failed to process request",
+          ? 'Network error'
+          : 'Failed to process request',
       details: isDevelopment ? errorMessage : undefined,
       retryable: isNetworkError || isTimeout,
     };

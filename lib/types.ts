@@ -1,5 +1,5 @@
 // Shared types that can be used in both Server and Client components
-import type { StaticImageData } from "next/image";
+import type { StaticImageData } from 'next/image';
 
 export interface Product {
   id: string;
@@ -13,7 +13,7 @@ export interface Product {
 export interface ProductFilters {
   category?: string;
   search?: string;
-  sort?: "price-asc" | "price-desc" | "name-asc" | "name-desc";
+  sort?: 'price-asc' | 'price-desc' | 'name-asc' | 'name-desc';
   minPrice?: number;
   maxPrice?: number;
 }
