@@ -1,19 +1,7 @@
-export interface Product {
-  id: string;
-  name: string;
-  price: string;
-  category: string;
-  image: string;
-  description: string;
-}
+import 'server-only';
+import type { Product, ProductFilters } from './types';
 
-export interface ProductFilters {
-  category?: string;
-  search?: string;
-  sort?: 'price-asc' | 'price-desc' | 'name-asc' | 'name-desc';
-  minPrice?: number;
-  maxPrice?: number;
-}
+export type { Product, ProductFilters };
 
 const allProducts: Product[] = [
   {
