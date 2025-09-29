@@ -24,15 +24,17 @@ Production-ready Next.js 15 storefront with AI-powered virtual try-on. Fully com
 - **Server Components by default** - Main page uses async data fetching
 - **Client Components only where needed** - Interactive UI isolated to client
 - **Dynamic routing** - `[id]` segments with generateStaticParams
+- **PageProps helper** - Type-safe params and searchParams
 - **Loading states** - Streaming UI with loading.tsx files
 - **Error boundaries** - Global and route-level error handling
 
 ### ✅ Features
 - **AI Virtual Try-On** - Vercel AI SDK with Google Gemini 2.5 Flash
+- **Search & Filtering** - URL-based search params with server-side filtering
 - **SEO Optimized** - Dynamic sitemap, robots.txt, Open Graph images
 - **PWA Ready** - Manifest with proper icons (192x192, 512x512)
-- **Type-Safe** - Strict TypeScript with forwardRef patterns
-- **Performance** - 37% smaller JS bundle with Server Components
+- **Type-Safe** - Strict TypeScript with PageProps helpers
+- **Performance** - Dynamic rendering with searchParams support
 
 ## Quick Start
 
@@ -106,11 +108,15 @@ public/                    # Optimized assets with icons
 
 ## Key Implementation Details
 
-### Server Components
+### Server Components with SearchParams
 ```tsx
-// app/page.tsx - Server Component with data fetching
-export default async function Page() {
-  const products = await getProducts();
+// app/page.tsx - Server Component with searchParams
+export default async function Page(props: PageProps<'/'>) {
+  const searchParams = await props.searchParams;
+  const products = await getProducts({
+    search: searchParams?.search,
+    category: searchParams?.category
+  });
   return <StorefrontClient products={products} />;
 }
 ```

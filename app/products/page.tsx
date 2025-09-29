@@ -1,11 +1,22 @@
-import { Filter, Search } from "lucide-react";
+import { Filter } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { getProducts } from "@/lib/products";
+import { SearchBar } from "@/components/search-bar";
+import { getProducts, type ProductFilters } from "@/lib/products";
 
-export default async function ProductsPage() {
-  const products = await getProducts();
+export default async function ProductsPage(props: PageProps<'/products'>) {
+  const searchParams = await props.searchParams;
+
+  const filters: ProductFilters = {
+    search: searchParams?.search as string | undefined,
+    category: searchParams?.category as string | undefined,
+    sort: searchParams?.sort as ProductFilters['sort'],
+    minPrice: searchParams?.minPrice ? parseFloat(searchParams.minPrice as string) : undefined,
+    maxPrice: searchParams?.maxPrice ? parseFloat(searchParams.maxPrice as string) : undefined,
+  };
+
+  const products = await getProducts(filters);
 
   return (
     <div className="min-h-screen bg-background">
@@ -16,9 +27,7 @@ export default async function ProductsPage() {
               BANANA SPORTSWEAR
             </Link>
             <div className="flex items-center gap-6">
-              <Button variant="ghost" size="icon">
-                <Search className="h-4 w-4" />
-              </Button>
+              <SearchBar />
               <Button variant="ghost" size="icon">
                 <Filter className="h-4 w-4" />
               </Button>
@@ -31,10 +40,15 @@ export default async function ProductsPage() {
         <div className="mx-auto max-w-7xl">
           <div className="mb-12">
             <h1 className="text-3xl font-bold tracking-tight mb-4">
-              All Products
+              {searchParams?.search ? `Search results for "${searchParams.search}"` :
+               searchParams?.category ? `${searchParams.category} Products` :
+               'All Products'}
             </h1>
             <p className="text-muted-foreground">
-              Discover our complete collection of premium sportswear
+              {products.length === 0 ? 'No products found matching your criteria' :
+               `Showing ${products.length} product${products.length !== 1 ? 's' : ''}${
+                 filters.sort ? ` (sorted by ${filters.sort.replace('-', ' ')})` : ''
+               }`}
             </p>
           </div>
 
