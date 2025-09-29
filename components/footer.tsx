@@ -1,4 +1,5 @@
 import Image from "next/image";
+import LogoImage from "@/public/logo.png";
 
 export function Footer() {
   return (
@@ -9,10 +10,8 @@ export function Footer() {
       <div className="mx-auto max-w-4xl text-center">
         <div className="mb-6 flex justify-center">
           <Image
-            src="/logo.png"
+            src={LogoImage}
             alt="BANANA SPORTSWEAR"
-            width={128}
-            height={32}
             className="h-8 w-auto opacity-40"
           />
         </div>

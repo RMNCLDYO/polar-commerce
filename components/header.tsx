@@ -3,6 +3,7 @@ import Image from "next/image";
 import { Link } from "@/components/link";
 import { ModeToggle } from "@/components/mode-toggle";
 import { Search } from "@/components/search";
+import LogoImage from "@/public/logo.png";
 
 export function Header() {
   return (
@@ -11,10 +12,8 @@ export function Header() {
         <div className="flex items-center">
           <Link href="/" prefetchStrategy="always">
             <Image
-              src="/logo.png"
+              src={LogoImage}
               alt="BANANA SPORTSWEAR"
-              width={160}
-              height={40}
               className="h-10 w-auto"
               priority
             />

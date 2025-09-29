@@ -121,7 +121,11 @@ export function PhotoUploader({
         );
 
         try {
-          const productImageResponse = await fetch(product.image);
+          const productImageUrl =
+            typeof product.image === "string"
+              ? product.image
+              : product.image.src;
+          const productImageResponse = await fetch(productImageUrl);
           if (!productImageResponse.ok) {
             throw new Error(
               `Failed to fetch product image for ${product.name}`,
@@ -173,7 +177,11 @@ export function PhotoUploader({
             `Error generating image for ${product.name}:`,
             productError,
           );
-          newPersonalizedImages[product.id] = product.image;
+          const fallbackImage =
+            typeof product.image === "string"
+              ? product.image
+              : product.image.src;
+          newPersonalizedImages[product.id] = fallbackImage;
         }
 
         await progressPromise;

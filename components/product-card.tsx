@@ -31,9 +31,12 @@ export function ProductCard({
     setIsLoading(false);
     setError(false);
 
+    const srcForLog =
+      personalizedImage ||
+      (typeof product.image === "string" ? product.image : product.image.src);
     logger.performance(`Image load: ${product.id}`, loadTime, {
       productId: product.id,
-      src: (personalizedImage || product.image).substring(0, 50),
+      src: srcForLog.substring(0, 50),
     });
   };
 
@@ -41,15 +44,20 @@ export function ProductCard({
     setIsLoading(false);
     setError(true);
 
+    const srcForLog =
+      personalizedImage ||
+      (typeof product.image === "string" ? product.image : product.image.src);
     logger.error(`Failed to load image for product ${product.id}`, {
       productId: product.id,
-      src: (personalizedImage || product.image).substring(0, 50),
+      src: srcForLog.substring(0, 50),
     });
   };
 
   const imageSrc = personalizedImage || product.image;
-  const isDataUrl = imageSrc.startsWith("data:");
-  const isBlobUrl = imageSrc.startsWith("blob:");
+  const isDataUrl =
+    typeof imageSrc === "string" && imageSrc.startsWith("data:");
+  const isBlobUrl =
+    typeof imageSrc === "string" && imageSrc.startsWith("blob:");
 
   return (
     <Link
