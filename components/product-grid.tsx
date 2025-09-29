@@ -1,8 +1,8 @@
-import { Sparkles } from "lucide-react";
-import { Link } from "@/components/link";
-import { ProductCard } from "@/components/product-card";
-import { Button } from "@/components/ui/button";
-import type { Product } from "@/lib/products";
+import { Sparkles } from 'lucide-react';
+import { Link } from '@/components/link';
+import { ProductCard } from '@/components/product-card';
+import { Button } from '@/components/ui/button';
+import type { Product } from '@/lib/products';
 
 interface ProductGridProps {
   products: Product[];
@@ -20,13 +20,13 @@ export function ProductGrid({
       <div className="mx-auto max-w-4xl">
         <div
           className="mb-16 flex items-center justify-between animate-slide-up"
-          style={{ animationDelay: "400ms" }}
+          style={{ animationDelay: '400ms' }}
         >
           <h2 className="text-xl font-semibold tracking-widest uppercase flex items-center gap-3">
             {isPersonalized && (
               <Sparkles className="h-5 w-5 text-foreground animate-pulse" />
             )}
-            {isPersonalized ? "YOUR PERSONALIZED LOOKS" : "FEATURED PRODUCTS"}
+            {isPersonalized ? 'YOUR PERSONALIZED LOOKS' : 'FEATURED PRODUCTS'}
           </h2>
           <Link href="/products" prefetchStrategy="hover">
             <Button

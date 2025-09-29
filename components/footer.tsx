@@ -1,11 +1,11 @@
-import Image from "next/image";
-import LogoImage from "@/public/logo.png";
+import Image from 'next/image';
+import LogoImage from '@/public/logo.png';
 
 export function Footer() {
   return (
     <footer
       className="border-t border-border bg-muted/30 px-8 py-16 animate-slide-up"
-      style={{ animationDelay: "1100ms" }}
+      style={{ animationDelay: '1100ms' }}
     >
       <div className="mx-auto max-w-4xl text-center">
         <div className="mb-6 flex justify-center">
