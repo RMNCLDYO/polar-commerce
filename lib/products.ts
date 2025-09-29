@@ -1,5 +1,9 @@
 import "server-only";
 import { unstable_cache } from "next/cache";
+import JordanHoodieImage from "@/public/products/jordan-hoodie.jpeg";
+import NikeCapImage from "@/public/products/nike-cap.jpeg";
+import NikeTechSetImage from "@/public/products/nike-tech-set.jpeg";
+import NikeVomeroImage from "@/public/products/nike-vomero.jpeg";
 import type { Product, ProductFilters } from "./types";
 
 export type { Product, ProductFilters };
@@ -10,7 +14,7 @@ const allProducts: Product[] = [
     name: "Nike ZoomX Vomero Plus",
     price: "$180",
     category: "RUNNING SHOES",
-    image: "/products/nike-vomero.jpeg",
+    image: NikeVomeroImage,
     description: "Premium running shoes with ZoomX foam technology",
   },
   {
@@ -18,7 +22,7 @@ const allProducts: Product[] = [
     name: "Nike Club Cap",
     price: "$25",
     category: "ACCESSORIES",
-    image: "/products/nike-cap.jpeg",
+    image: NikeCapImage,
     description: "Classic baseball cap with Nike logo",
   },
   {
@@ -26,7 +30,7 @@ const allProducts: Product[] = [
     name: "Nike Tech Woven Pants",
     price: "$120",
     category: "MEN'S PANTS",
-    image: "/products/nike-tech-set.jpeg",
+    image: NikeTechSetImage,
     description: "Camo tracksuit with modern tech fabric",
   },
   {
@@ -34,7 +38,7 @@ const allProducts: Product[] = [
     name: "Jordan Fleece Hoodie",
     price: "$85",
     category: "MEN'S HOODIE",
-    image: "/products/jordan-hoodie.jpeg",
+    image: JordanHoodieImage,
     description: "Premium hoodie with signature graphics",
   },
 ];
