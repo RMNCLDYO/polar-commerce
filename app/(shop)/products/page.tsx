@@ -1,9 +1,11 @@
 import { Filter } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
+import { OptimizedLink } from "@/components/optimized-link";
 import { SearchBar } from "@/components/search-bar";
 import { Button } from "@/components/ui/button";
 import { getProducts, type ProductFilters } from "@/lib/products";
+
+export const experimental_ppr = true;
 
 interface ProductsPageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -33,9 +35,13 @@ export default async function ProductsPage({
       <header className="px-8 py-6 border-b border-border">
         <div className="mx-auto max-w-7xl">
           <nav className="flex items-center justify-between">
-            <Link href="/" className="text-2xl font-bold tracking-tight">
+            <OptimizedLink
+              href="/"
+              prefetchStrategy="always"
+              className="text-2xl font-bold tracking-tight"
+            >
               BANANA SPORTSWEAR
-            </Link>
+            </OptimizedLink>
             <div className="flex items-center gap-6">
               <SearchBar />
               <Button variant="ghost" size="icon">
@@ -69,10 +75,10 @@ export default async function ProductsPage({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
             {products.map((product) => (
-              <Link
+              <OptimizedLink
                 key={product.id}
                 href={`/product/${product.id}`}
-                prefetch={false}
+                prefetchStrategy="hover"
                 className="group cursor-pointer"
               >
                 <div className="relative aspect-square mb-4 overflow-hidden bg-muted/50">
@@ -100,7 +106,7 @@ export default async function ProductsPage({
                     </span>
                   </div>
                 </div>
-              </Link>
+              </OptimizedLink>
             ))}
           </div>
         </div>

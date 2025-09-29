@@ -8,10 +8,12 @@ import {
   Truck,
 } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
 import { notFound } from "next/navigation";
+import { OptimizedLink } from "@/components/optimized-link";
 import { Button } from "@/components/ui/button";
 import { getProduct, getProducts } from "@/lib/products";
+
+export const experimental_ppr = true;
 
 interface ProductPageProps {
   params: Promise<{ id: string }>;
@@ -32,13 +34,14 @@ export default async function ProductPage({ params }: ProductPageProps) {
     <div className="min-h-screen bg-background">
       <header className="px-8 py-6 border-b border-border">
         <div className="mx-auto max-w-7xl">
-          <Link
+          <OptimizedLink
             href="/"
+            prefetchStrategy="always"
             className="inline-flex items-center gap-2 text-sm font-mono tracking-wider uppercase hover:text-muted-foreground transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to Store
-          </Link>
+          </OptimizedLink>
         </div>
       </header>
 
@@ -136,10 +139,10 @@ export default async function ProductPage({ params }: ProductPageProps) {
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                 {filteredRelated.slice(0, 3).map((relatedProduct) => (
-                  <Link
+                  <OptimizedLink
                     key={relatedProduct.id}
                     href={`/product/${relatedProduct.id}`}
-                    prefetch={false}
+                    prefetchStrategy="hover"
                     className="group cursor-pointer"
                   >
                     <div className="relative aspect-square mb-4 overflow-hidden bg-muted/50">
@@ -162,7 +165,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                         {relatedProduct.price}
                       </p>
                     </div>
-                  </Link>
+                  </OptimizedLink>
                 ))}
               </div>
             </section>

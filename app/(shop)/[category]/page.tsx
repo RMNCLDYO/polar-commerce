@@ -1,8 +1,10 @@
 import { ArrowLeft } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
 import { notFound } from "next/navigation";
+import { OptimizedLink } from "@/components/optimized-link";
 import { getProducts, type ProductFilters } from "@/lib/products";
+
+export const experimental_ppr = true;
 
 type CategoryConfig = {
   title: string;
@@ -101,13 +103,14 @@ export default async function CategoryPage({
     <div className="min-h-screen bg-background">
       <header className="px-8 py-6 border-b border-border">
         <div className="mx-auto max-w-7xl">
-          <Link
+          <OptimizedLink
             href="/"
+            prefetchStrategy="always"
             className="inline-flex items-center gap-2 text-sm font-mono tracking-wider uppercase hover:text-muted-foreground transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to Store
-          </Link>
+          </OptimizedLink>
         </div>
       </header>
       <main className="px-8 py-12">
@@ -122,10 +125,10 @@ export default async function CategoryPage({
           {products.length > 0 && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
               {products.map((product) => (
-                <Link
+                <OptimizedLink
                   key={product.id}
                   href={`/product/${product.id}`}
-                  prefetch={false}
+                  prefetchStrategy="hover"
                   className="group cursor-pointer"
                 >
                   <div className="relative aspect-square mb-4 overflow-hidden bg-muted/50">
@@ -148,7 +151,7 @@ export default async function CategoryPage({
                       {product.price}
                     </span>
                   </div>
-                </Link>
+                </OptimizedLink>
               ))}
             </div>
           )}
