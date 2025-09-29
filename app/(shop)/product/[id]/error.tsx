@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { useEffect } from "react";
-import { Link } from "@/components/link";
-import { Button } from "@/components/ui/button";
+import { useEffect } from 'react';
+import { Link } from '@/components/link';
+import { Button } from '@/components/ui/button';
 
 export default function ProductError({
   error,
@@ -26,7 +26,7 @@ export default function ProductError({
               </h2>
               <p className="text-sm text-muted-foreground">
                 {error.message ||
-                  "Unable to load this product. Please try again."}
+                  'Unable to load this product. Please try again.'}
               </p>
             </div>
             <div className="flex gap-3 justify-center">
