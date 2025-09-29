@@ -1,4 +1,4 @@
-import 'server-only';
+import "server-only";
 import { generateText } from "ai";
 import { type NextRequest, NextResponse } from "next/server";
 import { logger } from "@/lib/logger";

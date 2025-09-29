@@ -3,13 +3,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { ModeToggle } from "@/components/mode-toggle";
 import { SearchInput } from "@/components/search-input";
-import { Button } from "@/components/ui/button";
 
-interface StorefrontHeaderProps {
-  onAITryOnClick?: () => void;
-}
-
-export default function StorefrontHeader({ onAITryOnClick }: StorefrontHeaderProps) {
+export default function StorefrontHeader() {
   return (
     <header className="px-8 py-6 border-b border-border animate-slide-down">
       <div className="mx-auto max-w-7xl flex items-center justify-between">
@@ -38,17 +33,6 @@ export default function StorefrontHeader({ onAITryOnClick }: StorefrontHeaderPro
               {item}
             </Link>
           ))}
-          {onAITryOnClick && (
-            <Button
-              variant="outline-black-rounded"
-              size="sm"
-              className="text-xs font-semibold tracking-widest uppercase px-6 hover:scale-105 transition-transform animate-slide-up"
-              style={{ animationDelay: "700ms" }}
-              onClick={onAITryOnClick}
-            >
-              AI TRY-ON
-            </Button>
-          )}
         </nav>
 
         <div

@@ -2,12 +2,12 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState, useRef } from "react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { logger } from "@/lib/logger";
 import type { Product } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { logger } from "@/lib/logger";
 
 interface ProductCardProps {
   product: Product;
@@ -20,7 +20,7 @@ export function ProductCard({
   product,
   personalizedImage,
   isPersonalized = false,
-  index
+  index,
 }: ProductCardProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -57,10 +57,12 @@ export function ProductCard({
       prefetch={false}
       className={cn(
         "group cursor-pointer animate-slide-up",
-        isPersonalized ? "animate-in fade-in slide-in-from-bottom-4" : ""
+        isPersonalized ? "animate-in fade-in slide-in-from-bottom-4" : "",
       )}
       style={{
-        animationDelay: isPersonalized ? `${index * 100}ms` : `${600 + index * 150}ms`,
+        animationDelay: isPersonalized
+          ? `${index * 100}ms`
+          : `${600 + index * 150}ms`,
       }}
     >
       <div className="relative mb-4 w-full overflow-hidden bg-muted/50">
@@ -88,12 +90,14 @@ export function ProductCard({
           <Image
             key={product.id}
             src={imageSrc}
-            alt={personalizedImage ? `You modeling ${product.name}` : product.name}
+            alt={
+              personalizedImage ? `You modeling ${product.name}` : product.name
+            }
             width={600}
             height={600}
             className={cn(
               "w-full h-auto object-contain transition-all duration-500 group-hover:scale-105",
-              isLoading ? "opacity-0" : "opacity-100"
+              isLoading ? "opacity-0" : "opacity-100",
             )}
             onLoad={handleImageLoad}
             onError={handleImageError}

@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { PhotoUploader } from "@/components/photo-uploader";
-import StorefrontHeader from "@/components/storefront-header";
-import StorefrontFooter from "@/components/storefront-footer";
 import ProductGrid from "@/components/product-grid";
+import StorefrontFooter from "@/components/storefront-footer";
+import StorefrontHeader from "@/components/storefront-header";
 import type { Product } from "@/lib/types";
 
 interface StorefrontLayoutProps {
@@ -12,7 +12,9 @@ interface StorefrontLayoutProps {
 }
 
 export function StorefrontLayout({ products }: StorefrontLayoutProps) {
-  const [personalizedImages, setPersonalizedImages] = useState<Record<string, string>>({});
+  const [personalizedImages, setPersonalizedImages] = useState<
+    Record<string, string>
+  >({});
   const [isPersonalized, setIsPersonalized] = useState(false);
 
   const handleImagesGenerated = (images: Record<string, string>) => {
