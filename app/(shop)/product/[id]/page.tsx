@@ -20,13 +20,19 @@ interface ProductPageProps {
 
 export default async function ProductPage({ params }: ProductPageProps) {
   const { id } = await params;
-  const product = await getProduct(id);
+
+  const productData = getProduct(id);
+  const relatedProductsData = getProducts();
+
+  const [product, relatedProducts] = await Promise.all([
+    productData,
+    relatedProductsData,
+  ]);
 
   if (!product) {
     notFound();
   }
 
-  const relatedProducts = await getProducts();
   const filteredRelated = relatedProducts.filter((p) => p.id !== id);
 
   return (
