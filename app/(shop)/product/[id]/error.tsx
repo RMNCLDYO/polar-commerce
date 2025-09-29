@@ -25,7 +25,8 @@ export default function ProductError({
                 Something went wrong!
               </h2>
               <p className="text-sm text-muted-foreground">
-                {error.message || "Unable to load this product. Please try again."}
+                {error.message ||
+                  "Unable to load this product. Please try again."}
               </p>
             </div>
             <div className="flex gap-3 justify-center">
