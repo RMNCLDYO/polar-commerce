@@ -1,5 +1,8 @@
 import "server-only";
-import { unstable_cache } from "next/cache";
+import {
+  unstable_cacheLife as cacheLife,
+  unstable_cacheTag as cacheTag,
+} from "next/cache";
 import JordanHoodieImage from "@/public/products/jordan-hoodie.jpeg";
 import NikeCapImage from "@/public/products/nike-cap.jpeg";
 import NikeTechSetImage from "@/public/products/nike-tech-set.jpeg";
@@ -43,12 +46,15 @@ const allProducts: Product[] = [
   },
 ];
 
-async function getProductsInternal(
+export async function getProducts(
   filters?: ProductFilters,
 ): Promise<Product[]> {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("products");
+
   let products = [...allProducts];
 
-  // Filter by category
   if (filters?.category) {
     const categoryFilter = filters.category.toUpperCase();
     products = products.filter((p) =>
@@ -56,7 +62,6 @@ async function getProductsInternal(
     );
   }
 
-  // Filter by search term
   if (filters?.search) {
     const searchTerm = filters.search.toLowerCase();
     products = products.filter(
@@ -67,7 +72,6 @@ async function getProductsInternal(
     );
   }
 
-  // Filter by price range
   if (filters?.minPrice !== undefined || filters?.maxPrice !== undefined) {
     products = products.filter((p) => {
       const price = parseFloat(p.price.replace("$", ""));
@@ -79,7 +83,6 @@ async function getProductsInternal(
     });
   }
 
-  // Sort products
   if (filters?.sort) {
     products.sort((a, b) => {
       const priceA = parseFloat(a.price.replace("$", ""));
@@ -103,37 +106,11 @@ async function getProductsInternal(
   return products;
 }
 
-export async function getProducts(
-  filters?: ProductFilters,
-): Promise<Product[]> {
-  const cacheKey = JSON.stringify(filters || {});
-
-  const getCachedProducts = unstable_cache(
-    async () => {
-      return getProductsInternal(filters);
-    },
-    ["products", cacheKey],
-    {
-      tags: ["products"],
-      revalidate: 3600,
-    },
-  );
-
-  return getCachedProducts();
-}
-
 export async function getProduct(id: string): Promise<Product | null> {
-  const getCachedProduct = unstable_cache(
-    async () => {
-      const products = await getProductsInternal();
-      return products.find((p) => p.id === id) || null;
-    },
-    ["product", id],
-    {
-      tags: ["products", `product-${id}`],
-      revalidate: 3600,
-    },
-  );
+  "use cache";
+  cacheLife("hours");
+  cacheTag("products", `product-${id}`);
 
-  return getCachedProduct();
+  const products = await getProducts();
+  return products.find((p) => p.id === id) || null;
 }

@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { Link } from "@/components/link";
 import { Button } from "@/components/ui/button";
 
 export default function NotFound() {
@@ -12,7 +12,7 @@ export default function NotFound() {
             Sorry, we couldn't find the page you're looking for.
           </p>
         </div>
-        <Link href="/">
+        <Link href="/" prefetchStrategy="always">
           <Button variant="default" className="px-6">
             Go back home
           </Button>

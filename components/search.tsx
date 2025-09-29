@@ -1,50 +1,27 @@
 "use client";
 
+import Form from "next/form";
 import { Search as SearchIcon } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 
 export function Search() {
-  const router = useRouter();
   const searchParams = useSearchParams();
-  const [searchQuery, setSearchQuery] = useState("");
-
-  useEffect(() => {
-    const currentSearch = searchParams.get("search");
-    if (currentSearch) {
-      setSearchQuery(currentSearch);
-    }
-  }, [searchParams]);
-
-  const handleSearch = useCallback(
-    (e: React.FormEvent) => {
-      e.preventDefault();
-      const params = new URLSearchParams(searchParams.toString());
-
-      if (searchQuery.trim()) {
-        params.set("search", searchQuery.trim());
-      } else {
-        params.delete("search");
-      }
-
-      router.push(`/products?${params.toString()}`);
-    },
-    [searchQuery, searchParams, router],
-  );
+  const currentSearch = searchParams.get("search") || "";
 
   return (
-    <form
-      onSubmit={handleSearch}
+    <Form
+      action="/products"
       className="hidden md:flex items-center border border-border bg-muted px-4 py-2 hover:bg-accent transition-colors"
     >
       <SearchIcon className="mr-3 size-4 text-muted-foreground" />
       <input
+        key={currentSearch}
         type="text"
+        name="search"
         placeholder="SEARCH"
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
+        defaultValue={currentSearch}
         className="w-24 bg-transparent text-xs font-mono tracking-wider outline-none placeholder:text-muted-foreground"
       />
-    </form>
+    </Form>
   );
 }
