@@ -15,7 +15,7 @@ export function Header() {
               src={LogoImage}
               alt="BANANA SPORTSWEAR"
               className="h-10 w-auto"
-              priority
+              priority={true}
             />
           </Link>
         </div>

@@ -2,7 +2,7 @@ import { Toaster } from 'sonner';
 import { Footer } from '@/components/footer';
 import { Header } from '@/components/header';
 
-export default function ShopLayout({
+export default async function ShopLayout({
   children,
 }: {
   children: React.ReactNode;

@@ -13,6 +13,8 @@ export function Footer() {
             src={LogoImage}
             alt="BANANA SPORTSWEAR"
             className="h-8 w-auto opacity-40"
+            width={32}
+            height={32}
           />
         </div>
         <p className="text-xs font-mono tracking-widest uppercase text-muted-foreground">
