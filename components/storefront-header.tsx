@@ -1,15 +1,15 @@
 import { Heart, ShoppingBag } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
 import { ModeToggle } from "@/components/mode-toggle";
+import { OptimizedLink } from "@/components/optimized-link";
 import { SearchInput } from "@/components/search-input";
 
-export default function StorefrontHeader() {
+export function StorefrontHeader() {
   return (
     <header className="px-8 py-6 border-b border-border animate-slide-down">
       <div className="mx-auto max-w-7xl flex items-center justify-between">
         <div className="flex items-center">
-          <Link href="/">
+          <OptimizedLink href="/" prefetchStrategy="always">
             <Image
               src="/logo.png"
               alt="BANANA SPORTSWEAR"
@@ -18,20 +18,20 @@ export default function StorefrontHeader() {
               className="h-10 w-auto"
               priority
             />
-          </Link>
+          </OptimizedLink>
         </div>
 
         <nav className="hidden md:flex items-center gap-x-12">
           {["NEW", "MEN", "WOMEN", "KIDS"].map((item, index) => (
-            <Link
+            <OptimizedLink
               key={item}
               href={`/${item.toLowerCase()}`}
-              prefetch={true}
+              prefetchStrategy="hover"
               className="text-xs font-semibold tracking-widest uppercase hover:text-muted-foreground animate-slide-up transition-colors"
               style={{ animationDelay: `${300 + index * 100}ms` }}
             >
               {item}
-            </Link>
+            </OptimizedLink>
           ))}
         </nav>
 

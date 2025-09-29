@@ -1,5 +1,5 @@
 import { Sparkles } from "lucide-react";
-import Link from "next/link";
+import { OptimizedLink } from "@/components/optimized-link";
 import { ProductCard } from "@/components/product-card";
 import { Button } from "@/components/ui/button";
 import type { Product } from "@/lib/products";
@@ -10,7 +10,7 @@ interface ProductGridProps {
   isPersonalized?: boolean;
 }
 
-export default function ProductGrid({
+export function ProductGrid({
   products,
   personalizedImages = {},
   isPersonalized = false,
@@ -28,14 +28,14 @@ export default function ProductGrid({
             )}
             {isPersonalized ? "YOUR PERSONALIZED LOOKS" : "FEATURED PRODUCTS"}
           </h2>
-          <Link href="/products">
+          <OptimizedLink href="/products" prefetchStrategy="hover">
             <Button
               variant="outline-black-rounded"
               className="text-xs font-semibold tracking-widest uppercase px-6 hover:scale-105"
             >
               VIEW ALL
             </Button>
-          </Link>
+          </OptimizedLink>
         </div>
 
         <div className="grid grid-cols-1 gap-12 md:grid-cols-2">
