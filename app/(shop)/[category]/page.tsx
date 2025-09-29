@@ -1,8 +1,8 @@
-import type { Metadata } from "next";
-import Image from "next/image";
-import { notFound } from "next/navigation";
-import { Link } from "@/components/link";
-import { getProducts, type ProductFilters } from "@/lib/products";
+import type { Metadata } from 'next';
+import Image from 'next/image';
+import { notFound } from 'next/navigation';
+import { Link } from '@/components/link';
+import { getProducts, type ProductFilters } from '@/lib/products';
 
 export const experimental_ppr = true;
 export const revalidate = 3600;
@@ -12,7 +12,7 @@ type CategoryConfig = {
   title: string;
   description: string;
   filter: string | null;
-  defaultSort?: ProductFilters["sort"];
+  defaultSort?: ProductFilters['sort'];
   metaTitle: string;
   metaDescription: string;
 };
@@ -20,34 +20,34 @@ type CategoryConfig = {
 const categoryConfig: Record<string, CategoryConfig> = {
   men: {
     title: "Men's Collection",
-    description: "Premium athletic items designed for peak performance",
-    filter: "MEN",
+    description: 'Premium athletic items designed for peak performance',
+    filter: 'MEN',
     metaTitle: "Men's Collection - BANANA SPORTSWEAR",
     metaDescription: "Explore our men's premium athletic gear and sportswear",
   },
   women: {
     title: "Women's Collection",
-    description: "Stylish and functional sportswear items for every workout",
-    filter: "WOMEN",
+    description: 'Stylish and functional sportswear items for every workout',
+    filter: 'WOMEN',
     metaTitle: "Women's Collection - BANANA SPORTSWEAR",
     metaDescription:
       "Discover our women's premium athletic gear and sportswear",
   },
   kids: {
     title: "Kids' Collection",
-    description: "Fun and durable sportswear items for young athletes",
-    filter: "KIDS",
+    description: 'Fun and durable sportswear items for young athletes',
+    filter: 'KIDS',
     metaTitle: "Kids' Collection - BANANA SPORTSWEAR",
     metaDescription: "Shop our kids' premium athletic gear and sportswear",
   },
   new: {
-    title: "New Arrivals",
-    description: "Fresh additions to our premium sportswear collection",
+    title: 'New Arrivals',
+    description: 'Fresh additions to our premium sportswear collection',
     filter: null,
-    defaultSort: "name-desc",
-    metaTitle: "New Arrivals - BANANA SPORTSWEAR",
+    defaultSort: 'name-desc',
+    metaTitle: 'New Arrivals - BANANA SPORTSWEAR',
     metaDescription:
-      "Discover the latest additions to our premium sportswear collection",
+      'Discover the latest additions to our premium sportswear collection',
   },
 };
 
@@ -79,22 +79,22 @@ export default async function CategoryPage({
     ...(config.filter && { category: config.filter }),
     search: searchParamsData?.search as string | undefined,
     sort:
-      (searchParamsData?.sort as ProductFilters["sort"]) || config.defaultSort,
+      (searchParamsData?.sort as ProductFilters['sort']) || config.defaultSort,
   };
 
   const products = await getProducts(filters);
 
   const getEmptyMessage = () => {
-    if (category === "new") {
-      return "Check back soon for our latest collection";
+    if (category === 'new') {
+      return 'Check back soon for our latest collection';
     }
-    return `No ${category}'s products available${category !== "new" ? " yet" : ""}`;
+    return `No ${category}'s products available${category !== 'new' ? ' yet' : ''}`;
   };
 
   const getProductCount = () => {
     if (products.length === 0) return getEmptyMessage();
 
-    if (category === "new") {
+    if (category === 'new') {
       return `${products.length} fresh additions to our premium sportswear collection`;
     }
 
@@ -162,7 +162,7 @@ export async function generateMetadata({
 
   if (!config || !isValidCategory(category)) {
     return {
-      title: "Category Not Found",
+      title: 'Category Not Found',
     };
   }
 

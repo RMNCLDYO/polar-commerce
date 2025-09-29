@@ -1,5 +1,5 @@
-import { Link } from "@/components/link";
-import { Button } from "@/components/ui/button";
+import { Link } from '@/components/link';
+import { Button } from '@/components/ui/button';
 
 export default function CategoryNotFound() {
   return (
