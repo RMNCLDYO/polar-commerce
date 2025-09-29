@@ -1,10 +1,10 @@
 "use client";
 
-import { Search } from "lucide-react";
+import { Search as SearchIcon } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
-export function SearchInput() {
+export function Search() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
@@ -37,7 +37,7 @@ export function SearchInput() {
       onSubmit={handleSearch}
       className="hidden md:flex items-center border border-border bg-muted px-4 py-2 hover:bg-accent transition-colors"
     >
-      <Search className="mr-3 size-4 text-muted-foreground" />
+      <SearchIcon className="mr-3 size-4 text-muted-foreground" />
       <input
         type="text"
         placeholder="SEARCH"

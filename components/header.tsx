@@ -1,15 +1,15 @@
 import { Heart, ShoppingBag } from "lucide-react";
 import Image from "next/image";
+import { Link } from "@/components/link";
 import { ModeToggle } from "@/components/mode-toggle";
-import { OptimizedLink } from "@/components/optimized-link";
-import { SearchInput } from "@/components/search-input";
+import { Search } from "@/components/search";
 
-export function StorefrontHeader() {
+export function Header() {
   return (
     <header className="px-8 py-6 border-b border-border animate-slide-down">
       <div className="mx-auto max-w-7xl flex items-center justify-between">
         <div className="flex items-center">
-          <OptimizedLink href="/" prefetchStrategy="always">
+          <Link href="/" prefetchStrategy="always">
             <Image
               src="/logo.png"
               alt="BANANA SPORTSWEAR"
@@ -18,12 +18,12 @@ export function StorefrontHeader() {
               className="h-10 w-auto"
               priority
             />
-          </OptimizedLink>
+          </Link>
         </div>
 
         <nav className="hidden md:flex items-center gap-x-12">
           {["NEW", "MEN", "WOMEN", "KIDS"].map((item, index) => (
-            <OptimizedLink
+            <Link
               key={item}
               href={`/${item.toLowerCase()}`}
               prefetchStrategy="hover"
@@ -31,7 +31,7 @@ export function StorefrontHeader() {
               style={{ animationDelay: `${300 + index * 100}ms` }}
             >
               {item}
-            </OptimizedLink>
+            </Link>
           ))}
         </nav>
 
@@ -39,7 +39,7 @@ export function StorefrontHeader() {
           className="flex items-center gap-x-6 animate-slide-right"
           style={{ animationDelay: "500ms" }}
         >
-          <SearchInput />
+          <Search />
           <Heart className="size-4 cursor-pointer hover:text-muted-foreground transition-colors" />
           <ShoppingBag className="size-4 cursor-pointer hover:text-muted-foreground transition-colors" />
           <ModeToggle />
