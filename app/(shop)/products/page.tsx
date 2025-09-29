@@ -57,6 +57,7 @@ export default async function ProductsPage(props: PageProps<'/products'>) {
               <Link
                 key={product.id}
                 href={`/product/${product.id}`}
+                prefetch={false}
                 className="group cursor-pointer"
               >
                 <div className="relative aspect-square mb-4 overflow-hidden bg-muted/50">
