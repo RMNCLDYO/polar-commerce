@@ -25,21 +25,34 @@ export const metadata: Metadata = {
     "athletic gear",
   ],
   authors: [{ name: "RMNCLDYO" }],
+  manifest: "/manifest.json",
   icons: {
-    icon: "/acme-logo.png",
-    shortcut: "/acme-logo.png",
-    apple: "/acme-logo.png",
+    icon: [
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    shortcut: "/logo.png",
+    apple: "/apple-icon.png",
   },
   openGraph: {
     title: "BANANA SPORTSWEAR - Premium Athletic Gear",
     description: "AI-powered sportswear shopping with virtual try-on",
     type: "website",
     siteName: "BANANA SPORTSWEAR",
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "BANANA SPORTSWEAR - Premium Athletic Gear",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "BANANA SPORTSWEAR",
     description: "AI-powered sportswear shopping with virtual try-on",
+    images: ["/twitter-image.png"],
   },
   robots: {
     index: true,
