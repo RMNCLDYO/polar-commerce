@@ -4,6 +4,7 @@ import { Uploader } from "@/components/uploader";
 import { getProducts, type ProductFilters } from "@/lib/products";
 
 export const experimental_ppr = true;
+export const revalidate = 3600;
 
 function PageLoadingSkeleton() {
   return (
