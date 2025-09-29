@@ -3,6 +3,7 @@
 import { Heart, Search, ShoppingBag, Sparkles, Upload } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import type React from "react";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
@@ -112,6 +113,8 @@ interface StorefrontClientProps {
 }
 
 export function StorefrontClient({ products }: StorefrontClientProps) {
+  const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState("");
   const [userPhoto, setUserPhoto] = useState<File | null>(null);
   const [isPersonalized, setIsPersonalized] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -127,6 +130,13 @@ export function StorefrontClient({ products }: StorefrontClientProps) {
   const [showGallery, setShowGallery] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/products?search=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -461,14 +471,16 @@ export function StorefrontClient({ products }: StorefrontClientProps) {
             className="flex items-center gap-x-6 animate-slide-right"
             style={{ animationDelay: "500ms" }}
           >
-            <div className="hidden md:flex items-center border border-border bg-muted px-4 py-2">
+            <form onSubmit={handleSearch} className="hidden md:flex items-center border border-border bg-muted px-4 py-2">
               <Search className="mr-3 size-4 text-muted-foreground" />
               <input
                 type="text"
                 placeholder="SEARCH"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-24 bg-transparent text-xs font-mono tracking-wider outline-none placeholder:text-muted-foreground"
               />
-            </div>
+            </form>
             <Heart className="size-4 cursor-pointer hover:text-muted-foreground transition-colors" />
             <ShoppingBag className="size-4 cursor-pointer hover:text-muted-foreground transition-colors" />
             <ModeToggle />
