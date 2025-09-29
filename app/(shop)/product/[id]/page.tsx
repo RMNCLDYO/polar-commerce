@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import {
   Check,
   Heart,
@@ -171,7 +172,9 @@ export async function generateStaticParams() {
   }));
 }
 
-export async function generateMetadata({ params }: ProductPageProps) {
+export async function generateMetadata({
+  params,
+}: ProductPageProps): Promise<Metadata> {
   const { id } = await params;
   const product = await getProduct(id);
 
@@ -181,13 +184,16 @@ export async function generateMetadata({ params }: ProductPageProps) {
     };
   }
 
+  const imageUrl =
+    typeof product.image === "string" ? product.image : product.image.src;
+
   return {
     title: `${product.name} - BANANA SPORTSWEAR`,
     description: product.description,
     openGraph: {
       title: product.name,
       description: product.description,
-      images: [product.image],
+      images: [imageUrl],
     },
   };
 }

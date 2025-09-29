@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { Link } from "@/components/link";
@@ -150,7 +151,9 @@ export async function generateStaticParams() {
   }));
 }
 
-export async function generateMetadata({ params }: CategoryPageProps) {
+export async function generateMetadata({
+  params,
+}: CategoryPageProps): Promise<Metadata> {
   const { category } = await params;
 
   const config = categoryConfig[category];
@@ -164,5 +167,9 @@ export async function generateMetadata({ params }: CategoryPageProps) {
   return {
     title: config.metaTitle,
     description: config.metaDescription,
+    openGraph: {
+      title: config.metaTitle,
+      description: config.metaDescription,
+    },
   };
 }
