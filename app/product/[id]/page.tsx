@@ -13,12 +13,10 @@ import { notFound } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { getProduct, getProducts } from "@/lib/products";
 
-export default async function ProductPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const { id } = await params;
+export default async function ProductPage(
+  props: PageProps<'/product/[id]'>
+) {
+  const { id } = await props.params;
   const product = await getProduct(id);
 
   if (!product) {
@@ -179,12 +177,10 @@ export async function generateStaticParams() {
   }));
 }
 
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const { id } = await params;
+export async function generateMetadata(
+  props: PageProps<'/product/[id]'>
+) {
+  const { id } = await props.params;
   const product = await getProduct(id);
 
   if (!product) {
