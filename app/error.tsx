@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { logger } from "@/lib/logger";
 
@@ -11,15 +10,11 @@ export default function ErrorBoundary({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  useEffect(() => {
-    console.error(error);
-
-    logger.error("Application Error Boundary Triggered", {
-      error: error.message,
-      ...(error.stack && { stack: error.stack }),
-      ...(error.digest && { digest: error.digest }),
-    });
-  }, [error]);
+  logger.error("Application Error Boundary Triggered", {
+    error: error.message,
+    ...(error.stack && { stack: error.stack }),
+    ...(error.digest && { digest: error.digest }),
+  });
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
