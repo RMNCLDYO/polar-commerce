@@ -1,3 +1,7 @@
+import {
+  unstable_cacheLife as cacheLife,
+  unstable_cacheTag as cacheTag,
+} from 'next/cache';
 import { ProductGrid } from '@/components/product-grid';
 import { Uploader } from '@/components/uploader';
 import { getProducts, type ProductFilters } from '@/lib/products';
@@ -14,6 +18,8 @@ async function CachedProductContent({
   sort?: ProductFilters['sort'];
 }) {
   'use cache';
+  cacheLife('hours');
+  cacheTag('products');
 
   const filters: ProductFilters = {
     search,
