@@ -7,9 +7,8 @@ const nextConfig: NextConfig = {
     },
   },
   experimental: {
-    ppr: 'incremental',
     cssChunking: true,
-    useCache: true,
+    cacheComponents: true,
     cacheLife: {
       default: {
         stale: 3600,
