@@ -38,10 +38,19 @@ class Logger {
     } else {
       console.error(formattedMessage);
 
-      if (typeof window !== 'undefined') {
+      // Feature-flag error tracking and add proper error boundaries
+      if (
+        typeof window !== 'undefined' &&
+        process.env.NEXT_PUBLIC_ERROR_TRACKING_ENABLED === 'true'
+      ) {
         const windowWithTracker = window as WindowWithErrorTracker;
-        if (windowWithTracker.errorTracker) {
-          windowWithTracker.errorTracker.logError(message, context);
+        if (windowWithTracker.errorTracker?.logError) {
+          try {
+            windowWithTracker.errorTracker.logError(message, context);
+          } catch (trackingError) {
+            // Silently fail if error tracking service is down
+            console.error('Error tracking failed:', trackingError);
+          }
         }
       }
     }
