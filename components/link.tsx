@@ -16,26 +16,30 @@ export function Link({
     prefetchStrategy !== 'hover',
   );
 
-  const getPrefetchValue = () => {
-    if (prefetchStrategy === 'never') return false;
-    if (prefetchStrategy === 'always') return true;
-    if (prefetchStrategy === 'visible') return null;
-    if (prefetchStrategy === 'hover') {
-      return shouldPrefetch ? null : false;
+  // Simplified prefetch logic
+  const prefetchValue =
+    prefetchStrategy === 'never'
+      ? false
+      : prefetchStrategy === 'always'
+        ? true
+        : prefetchStrategy === 'hover' && !shouldPrefetch
+          ? false
+          : null;
+
+  const handleMouseEnter = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (prefetchStrategy === 'hover' && !shouldPrefetch) {
+      setShouldPrefetch(true);
     }
-    return null;
+    props.onMouseEnter?.(e);
   };
 
-  const linkProps = {
-    ...props,
-    prefetch: getPrefetchValue(),
-    onMouseEnter: (e: React.MouseEvent<HTMLAnchorElement>) => {
-      if (prefetchStrategy === 'hover' && !shouldPrefetch) {
-        setShouldPrefetch(true);
-      }
-      props.onMouseEnter?.(e);
-    },
-  };
-
-  return <NextLink {...linkProps}>{children}</NextLink>;
+  return (
+    <NextLink
+      {...props}
+      prefetch={prefetchValue}
+      onMouseEnter={handleMouseEnter}
+    >
+      {children}
+    </NextLink>
+  );
 }
