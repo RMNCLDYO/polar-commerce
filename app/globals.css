@@ -103,7 +103,8 @@
 }
 
 @layer utilities {
-  @keyframes page-fade-in {
+  /* Consolidated fade animations */
+  @keyframes fade-in {
     from {
       opacity: 0;
     }
@@ -112,54 +113,59 @@
     }
   }
 
-  @keyframes slide-up-fade {
+  /* Consolidated slide animations with CSS variables */
+  @keyframes slide-up {
     from {
-      transform: translateY(8px);
       opacity: 0;
+      transform: translateY(var(--slide-distance, 20px));
     }
     to {
+      opacity: 1;
       transform: translateY(0);
-      opacity: 1;
     }
   }
 
-  @keyframes slide-down-fade {
+  @keyframes slide-down {
     from {
-      transform: translateY(-4px);
       opacity: 0;
+      transform: translateY(calc(-1 * var(--slide-distance, 20px)));
     }
     to {
+      opacity: 1;
       transform: translateY(0);
-      opacity: 1;
     }
   }
 
-  @keyframes slide-right-fade {
+  @keyframes slide-right {
     from {
-      transform: translateX(-4px);
       opacity: 0;
+      transform: translateX(calc(-1 * var(--slide-distance, 4px)));
     }
     to {
+      opacity: 1;
       transform: translateX(0);
-      opacity: 1;
     }
   }
 
   .animate-page-in {
-    animation: page-fade-in 1s ease-out both;
+    animation: fade-in 1s ease-out both;
     animation-delay: 100ms;
   }
 
+  /* Use single animation with CSS variables for different distances */
   .animate-slide-up {
-    animation: slide-up-fade 0.7s ease-out both;
+    animation: slide-up var(--duration-slide-up, 0.8s) ease-out both;
+    opacity: 0;
   }
 
   .animate-slide-down {
-    animation: slide-down-fade 0.7s ease-out both;
+    animation: slide-down var(--duration-slide-down, 0.6s) ease-out both;
+    opacity: 0;
   }
 
   .animate-slide-right {
-    animation: slide-right-fade 0.7s ease-out both;
+    --slide-distance: 4px;
+    animation: slide-right 0.7s ease-out both;
   }
 }
 
@@ -188,61 +194,15 @@
 }
 
 @layer utilities {
-  @keyframes fade-in {
-    from {
-      opacity: 0;
-    }
-
-    to {
-      opacity: 1;
-    }
-  }
-
-  @keyframes slide-up {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  @keyframes slide-down {
-    from {
-      opacity: 0;
-      transform: translateY(-20px);
-    }
-
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
+  /* Additional animations */
   @keyframes scale-in {
     from {
       opacity: 0;
       transform: scale(0.95);
     }
-
     to {
       opacity: 1;
       transform: scale(1);
-    }
-  }
-
-  @keyframes fade-in-up {
-    from {
-      opacity: 0;
-      transform: translateY(10px);
-    }
-
-    to {
-      opacity: 1;
-      transform: translateY(0);
     }
   }
 
@@ -250,7 +210,6 @@
     0% {
       background-position: -200% 0;
     }
-
     100% {
       background-position: 200% 0;
     }
@@ -260,23 +219,14 @@
     animation: fade-in var(--duration-fade-in, 0.6s) ease-out forwards;
   }
 
-  .animate-slide-up {
-    animation: slide-up var(--duration-slide-up, 0.8s) ease-out forwards;
-    opacity: 0;
-  }
-
-  .animate-slide-down {
-    animation: slide-down var(--duration-slide-down, 0.6s) ease-out forwards;
-    opacity: 0;
-  }
-
   .animate-scale-in {
     animation: scale-in var(--duration-scale-in, 0.5s) ease-out forwards;
     opacity: 0;
   }
 
   .animate-fade-in-up {
-    animation: fade-in-up var(--duration-fade-in-up, 0.6s) ease-out forwards;
+    --slide-distance: 10px;
+    animation: slide-up var(--duration-fade-in-up, 0.6s) ease-out forwards;
     opacity: 0;
   }
 
