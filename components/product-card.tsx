@@ -101,17 +101,16 @@ export function ProductCard({
             alt={
               personalizedImage ? `You modeling ${product.name}` : product.name
             }
-            width={600}
-            height={600}
+            fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             className={cn(
-              'w-full h-auto object-contain transition-all duration-500 group-hover:scale-105',
+              'object-contain transition-all duration-500 group-hover:scale-105',
               isLoading ? 'opacity-0' : 'opacity-100',
             )}
             onLoad={handleImageLoad}
             onError={handleImageError}
-            priority={false}
+            priority={index < 2}
             unoptimized={isDataUrl || isBlobUrl}
-            style={{ height: 'auto', width: '100%' }}
           />
         )}
       </div>
