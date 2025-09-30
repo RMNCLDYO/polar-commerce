@@ -28,7 +28,7 @@ async function convertImageToSupportedFormat(
   };
 }
 
-export async function POST(request: NextRequest): Promise<NextResponse> {
+export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
 
