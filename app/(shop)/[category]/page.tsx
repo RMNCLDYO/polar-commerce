@@ -1,11 +1,14 @@
 import type { Metadata } from 'next';
+import {
+  unstable_cacheLife as cacheLife,
+  unstable_cacheTag as cacheTag,
+} from 'next/cache';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { Link } from '@/components/link';
 import { getProducts, type ProductFilters } from '@/lib/products';
 
 export const experimental_ppr = true;
-export const dynamicParams = false;
 
 type CategoryConfig = {
   title: string;
@@ -71,6 +74,8 @@ async function CachedCategoryContent({
   sort?: ProductFilters['sort'];
 }) {
   'use cache';
+  cacheLife('hours');
+  cacheTag('products', `category-${category}`);
 
   const config = categoryConfig[category];
 

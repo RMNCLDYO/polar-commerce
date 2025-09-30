@@ -7,6 +7,10 @@ import {
   Truck,
 } from 'lucide-react';
 import type { Metadata } from 'next';
+import {
+  unstable_cacheLife as cacheLife,
+  unstable_cacheTag as cacheTag,
+} from 'next/cache';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { Link } from '@/components/link';
@@ -14,7 +18,6 @@ import { Button } from '@/components/ui/button';
 import { getProduct, getProducts } from '@/lib/products';
 
 export const experimental_ppr = true;
-export const dynamicParams = true;
 
 interface ProductPageProps {
   params: Promise<{ id: string }>;
@@ -22,6 +25,8 @@ interface ProductPageProps {
 
 async function CachedProductContent({ id }: { id: string }) {
   'use cache';
+  cacheLife('hours');
+  cacheTag('products', `product-${id}`);
 
   const productData = getProduct(id);
   const relatedProductsData = getProducts();

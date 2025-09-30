@@ -1,4 +1,8 @@
 import type { Metadata } from 'next';
+import {
+  unstable_cacheLife as cacheLife,
+  unstable_cacheTag as cacheTag,
+} from 'next/cache';
 import Image from 'next/image';
 import { Link } from '@/components/link';
 import { getProducts, type ProductFilters } from '@/lib/products';
@@ -23,6 +27,8 @@ async function CachedProductsContent({
   maxPrice?: number;
 }) {
   'use cache';
+  cacheLife('hours');
+  cacheTag('products');
 
   const filters: ProductFilters = {
     search,
