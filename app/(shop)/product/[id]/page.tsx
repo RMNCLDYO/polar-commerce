@@ -46,12 +46,12 @@ async function CachedProductContent({ id }: { id: string }) {
     <main className="px-8 py-12">
       <div className="mx-auto max-w-7xl">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-          <div className="relative aspect-square bg-muted/50 overflow-hidden">
+          <div className="relative bg-muted/50 overflow-hidden" style={{ aspectRatio: '3/4' }}>
             <Image
               src={product.image}
               alt={product.name}
               fill
-              className="object-contain"
+              className="object-cover"
               sizes="(max-width: 1024px) 100vw, 50vw"
               priority
             />
@@ -141,12 +141,12 @@ async function CachedProductContent({ id }: { id: string }) {
                   prefetchStrategy="hover"
                   className="group cursor-pointer"
                 >
-                  <div className="relative aspect-square mb-4 overflow-hidden bg-muted/50">
+                  <div className="relative mb-4 overflow-hidden bg-muted/50" style={{ aspectRatio: '3/4' }}>
                     <Image
                       src={relatedProduct.image}
                       alt={relatedProduct.name}
                       fill
-                      className="object-contain transition-transform duration-300 group-hover:scale-105"
+                      className="object-cover transition-transform duration-300 group-hover:scale-105"
                       sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                     />
                   </div>
