@@ -1,0 +1,336 @@
+import { v } from "convex/values";
+import { internal } from "./_generated/api";
+import { action, internalMutation, internalQuery, mutation, query } from "./_generated/server";
+
+// Get all products with filters
+export const getProducts = query({
+  args: {
+    category: v.optional(v.string()),
+    search: v.optional(v.string()),
+    minPrice: v.optional(v.number()),
+    maxPrice: v.optional(v.number()),
+    sort: v.optional(v.union(
+      v.literal("price-asc"),
+      v.literal("price-desc"),
+      v.literal("name-asc"),
+      v.literal("name-desc")
+    )),
+  },
+  handler: async (ctx, args) => {
+    let products = await ctx.db
+      .query("products")
+      .filter((q) => q.eq(q.field("isActive"), true))
+      .collect();
+
+    // Category filter
+    if (args.category) {
+      const categoryFilter = args.category.toUpperCase();
+      products = products.filter((p) =>
+        p.category.toUpperCase().includes(categoryFilter)
+      );
+    }
+
+    // Search filter
+    if (args.search) {
+      const searchTerm = args.search.toLowerCase();
+      products = products.filter(
+        (p) =>
+          p.name.toLowerCase().includes(searchTerm) ||
+          p.description.toLowerCase().includes(searchTerm) ||
+          p.category.toLowerCase().includes(searchTerm)
+      );
+    }
+
+    // Price range filter
+    if (args.minPrice !== undefined || args.maxPrice !== undefined) {
+      products = products.filter((p) => {
+        if (args.minPrice !== undefined && p.price < args.minPrice * 100)
+          return false;
+        if (args.maxPrice !== undefined && p.price > args.maxPrice * 100)
+          return false;
+        return true;
+      });
+    }
+
+    // Sorting
+    if (args.sort) {
+      products.sort((a, b) => {
+        switch (args.sort) {
+          case "price-asc":
+            return a.price - b.price;
+          case "price-desc":
+            return b.price - a.price;
+          case "name-asc":
+            return a.name.localeCompare(b.name);
+          case "name-desc":
+            return b.name.localeCompare(a.name);
+          default:
+            return 0;
+        }
+      });
+    }
+
+    // Transform to match the expected format
+    return products.map((p) => ({
+      id: p._id,
+      name: p.name,
+      price: `$${(p.price / 100).toFixed(0)}`,
+      category: p.category,
+      image: p.polarImageUrl || p.imageUrl,
+      description: p.description,
+      polarProductId: p.polarProductId,
+    }));
+  },
+});
+
+// Get single product by ID
+export const getProduct = query({
+  args: { id: v.id("products") },
+  handler: async (ctx, args) => {
+    const product = await ctx.db.get(args.id);
+    if (!product || !product.isActive) {
+      return null;
+    }
+
+    return {
+      id: product._id,
+      name: product.name,
+      price: `$${(product.price / 100).toFixed(0)}`,
+      category: product.category,
+      image: product.polarImageUrl || product.imageUrl,
+      description: product.description,
+      polarProductId: product.polarProductId,
+    };
+  },
+});
+
+// Create a new product
+export const createProduct = mutation({
+  args: {
+    name: v.string(),
+    price: v.number(), // in cents
+    category: v.string(),
+    imageUrl: v.string(),
+    description: v.string(),
+    polarProductId: v.optional(v.string()),
+    polarImageUrl: v.optional(v.string()),
+    polarImageId: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const productId = await ctx.db.insert("products", {
+      ...args,
+      isActive: true,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    });
+    return productId;
+  },
+});
+
+// Update product with Polar product ID
+export const linkPolarProduct = mutation({
+  args: {
+    productId: v.id("products"),
+    polarProductId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.productId, {
+      polarProductId: args.polarProductId,
+      updatedAt: Date.now(),
+    });
+  },
+});
+
+// Internal query to get all products (for syncing)
+export const getAllProducts = internalQuery({
+  args: {},
+  handler: async (ctx) => {
+    return await ctx.db.query("products").collect();
+  },
+});
+
+// Public query to get all raw products (for scripts)
+export const getAllProductsRaw = query({
+  args: {},
+  handler: async (ctx) => {
+    return await ctx.db.query("products").collect();
+  },
+});
+
+// Sync all Convex products to Polar and link them
+export const syncProductsToPolar = action({
+  args: {},
+  handler: async (ctx): Promise<any[]> => {
+    const { Polar } = await import("@polar-sh/sdk");
+
+    const polarClient = new Polar({
+      accessToken: process.env.POLAR_ORGANIZATION_TOKEN as string,
+      server: (process.env.POLAR_SERVER as "sandbox" | "production") || "sandbox",
+    });
+
+    // Get all Convex products
+    const convexProducts = await ctx.runQuery(internal.products.getAllProducts);
+
+    // Get all Polar products - Polar API returns paginated response
+    const polarProductsIter = await polarClient.products.list({ limit: 100 });
+    const polarProducts: any[] = [];
+    for await (const response of polarProductsIter) {
+      const items = (response as any).result?.items || [];
+      polarProducts.push(...items);
+    }
+
+    const results = [];
+
+    for (const convexProduct of convexProducts) {
+      // Check if product already linked
+      if (convexProduct.polarProductId) {
+        results.push({
+          convexId: convexProduct._id,
+          name: convexProduct.name,
+          status: "already_linked",
+          polarProductId: convexProduct.polarProductId,
+        });
+        continue;
+      }
+
+      // Check if product exists in Polar by name
+      const existingPolarProduct = polarProducts.find(
+        (p: any) => p.name === convexProduct.name
+      );
+
+      let polarProductId: string;
+
+      if (existingPolarProduct) {
+        polarProductId = existingPolarProduct.id;
+        results.push({
+          convexId: convexProduct._id,
+          name: convexProduct.name,
+          status: "found_existing",
+          polarProductId,
+        });
+      } else {
+        // Create new product in Polar with fixed pricing
+        // Note: organizationId is omitted when using organization token
+        const newPolarProduct = await polarClient.products.create({
+          name: convexProduct.name,
+          description: convexProduct.description,
+          prices: [
+            {
+              amountType: "fixed",
+              priceAmount: convexProduct.price,
+              priceCurrency: "usd",
+            },
+          ],
+        });
+
+        polarProductId = newPolarProduct.id;
+        results.push({
+          convexId: convexProduct._id,
+          name: convexProduct.name,
+          status: "created_new",
+          polarProductId,
+        });
+      }
+
+      // Link the products
+      await ctx.runMutation(internal.products.linkProductInternal, {
+        productId: convexProduct._id,
+        polarProductId,
+      });
+    }
+
+    return results;
+  },
+});
+
+// Internal mutation to link products
+export const linkProductInternal = internalMutation({
+  args: {
+    productId: v.id("products"),
+    polarProductId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.productId, {
+      polarProductId: args.polarProductId,
+      updatedAt: Date.now(),
+    });
+  },
+});
+
+// Update product with partial data
+export const updateProduct = mutation({
+  args: {
+    productId: v.id("products"),
+    updates: v.object({
+      name: v.optional(v.string()),
+      price: v.optional(v.number()),
+      category: v.optional(v.string()),
+      imageUrl: v.optional(v.string()),
+      polarImageUrl: v.optional(v.string()),
+      polarImageId: v.optional(v.string()),
+      description: v.optional(v.string()),
+      polarProductId: v.optional(v.string()),
+      isActive: v.optional(v.boolean()),
+    }),
+  },
+  handler: async (ctx, args) => {
+    const { productId, updates } = args;
+
+    await ctx.db.patch(productId, {
+      ...updates,
+      updatedAt: Date.now(),
+    });
+
+    return { success: true };
+  },
+});
+
+// Public mutation to update Polar product ID (for external scripts)
+export const updatePolarProductId = mutation({
+  args: {
+    productId: v.id("products"),
+    polarProductId: v.union(v.string(), v.null()),
+  },
+  handler: async (ctx, args) => {
+    const updateData: any = {
+      updatedAt: Date.now(),
+    };
+
+    if (args.polarProductId === null || args.polarProductId === "") {
+      updateData.polarProductId = undefined;
+    } else {
+      updateData.polarProductId = args.polarProductId;
+    }
+
+    await ctx.db.patch(args.productId, updateData);
+  },
+});
+
+// Delete a product (for testing/cleanup)
+export const deleteProduct = mutation({
+  args: {
+    productId: v.id("products"),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.delete(args.productId);
+    return { success: true };
+  },
+});
+
+// Update product image URL with Polar S3 URL
+export const updateProductImageUrl = mutation({
+  args: {
+    productId: v.id("products"),
+    imageUrl: v.string(),
+    polarImageUrl: v.optional(v.string()),
+    polarImageId: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.productId, {
+      imageUrl: args.imageUrl,
+      polarImageUrl: args.polarImageUrl || args.imageUrl,
+      polarImageId: args.polarImageId,
+      updatedAt: Date.now(),
+    });
+  },
+});
