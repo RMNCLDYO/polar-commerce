@@ -14,12 +14,17 @@ export function Search() {
       className="hidden md:flex items-center border border-border bg-muted px-4 py-2 hover:bg-accent transition-colors"
     >
       <SearchIcon className="mr-3 size-4 text-muted-foreground" />
+      <label htmlFor="search" className="sr-only">
+        Search products
+      </label>
       <input
+        id="search"
         key={currentSearch}
         type="text"
         name="search"
         placeholder="SEARCH"
         defaultValue={currentSearch}
+        aria-label="Search products"
         className="w-24 bg-transparent text-xs font-mono tracking-wider outline-none placeholder:text-muted-foreground"
       />
     </Form>
