@@ -1,3 +1,5 @@
+'use client';
+
 import Image from 'next/image';
 import LogoImage from '@/public/logo.png';
 
@@ -18,7 +20,8 @@ export function Footer() {
           />
         </div>
         <p className="text-xs font-mono tracking-widest uppercase text-muted-foreground">
-          © 2025 BANANA SPORTSWEAR, INC. ALL RIGHTS RESERVED.
+          © {new Date().getFullYear()} BANANA SPORTSWEAR, INC. ALL RIGHTS
+          RESERVED.
         </p>
       </div>
     </footer>
