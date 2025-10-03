@@ -73,11 +73,11 @@ export function ProductCard({
           : `${600 + index * 150}ms`,
       }}
     >
-      <div className="relative mb-4 w-full overflow-hidden bg-muted/50">
+      <div className="relative mb-4 w-full overflow-hidden bg-muted/50" style={{ aspectRatio: '3/4' }}>
         {isLoading && !error && (
           <div
             className="w-full bg-muted animate-pulse"
-            style={{ aspectRatio: '1/1' }}
+            style={{ aspectRatio: '3/4' }}
           >
             <div className="w-full h-full bg-gradient-to-r from-muted via-accent to-muted animate-shimmer" />
           </div>
@@ -86,7 +86,7 @@ export function ProductCard({
         {error && (
           <div
             className="w-full bg-muted flex items-center justify-center"
-            style={{ aspectRatio: '1/1' }}
+            style={{ aspectRatio: '3/4' }}
           >
             <span className="text-muted-foreground text-xs">
               Failed to load image
@@ -104,7 +104,7 @@ export function ProductCard({
             fill
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             className={cn(
-              'object-contain transition-all duration-500 group-hover:scale-105',
+              'object-cover transition-all duration-500 group-hover:scale-105',
               isLoading ? 'opacity-0' : 'opacity-100',
             )}
             onLoad={handleImageLoad}
