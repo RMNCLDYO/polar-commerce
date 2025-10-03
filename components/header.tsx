@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { Link } from '@/components/link';
 import { ModeToggle } from '@/components/mode-toggle';
 import { Search } from '@/components/search';
+import { UserMenu } from '@/components/user-menu';
 import LogoImage from '@/public/logo.png';
 
 export function Header() {
@@ -41,6 +42,7 @@ export function Header() {
           <Search />
           <Heart className="size-4 cursor-pointer hover:text-muted-foreground transition-colors" />
           <ShoppingBag className="size-4 cursor-pointer hover:text-muted-foreground transition-colors" />
+          <UserMenu />
           <ModeToggle />
         </div>
       </div>

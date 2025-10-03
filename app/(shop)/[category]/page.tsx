@@ -127,12 +127,12 @@ async function CachedCategoryContent({
                 prefetchStrategy="hover"
                 className="group cursor-pointer"
               >
-                <div className="relative aspect-square mb-4 overflow-hidden bg-muted/50">
+                <div className="relative mb-4 overflow-hidden bg-muted/50" style={{ aspectRatio: '3/4' }}>
                   <Image
                     src={product.image}
                     alt={product.name}
                     fill
-                    className="object-contain transition-transform duration-300 group-hover:scale-105"
+                    className="object-cover transition-transform duration-300 group-hover:scale-105"
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
                   />
                 </div>

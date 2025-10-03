@@ -1,5 +1,6 @@
 import 'server-only';
 import { generateText } from 'ai';
+import { google } from '@ai-sdk/google';
 import { type NextRequest, NextResponse } from 'next/server';
 import { logger } from '@/lib/logger';
 
@@ -48,7 +49,7 @@ export async function POST(request: NextRequest) {
     const convertedImage2 = await convertImageToSupportedFormat(image2);
 
     const result = await generateText({
-      model: 'google/gemini-2.5-flash-image-preview',
+      model: google('gemini-2.5-flash-image-preview'),
       providerOptions: {
         google: {
           responseModalities: ['TEXT', 'IMAGE'],

@@ -3,8 +3,10 @@
 > **Learn Next.js 15 experimental features through a real working example** - PPR, modern caching, ISR, smart prefetching, and more.
 
 [![Next.js 15 Canary](https://img.shields.io/badge/Next.js-15.6.0--canary.34-black?style=flat-square&logo=next.js)](https://nextjs.org)
-[![React 19](https://img.shields.io/badge/React-19.1.0-61DAFB?style=flat-square&logo=react)](https://react.dev)
-[![Vercel AI SDK](https://img.shields.io/badge/Vercel_AI_SDK-5.0.52-FF6B6B?style=flat-square&logo=vercel)](https://sdk.vercel.ai)
+[![React 19](https://img.shields.io/badge/React-19.2.0-61DAFB?style=flat-square&logo=react)](https://react.dev)
+[![Vercel AI SDK](https://img.shields.io/badge/Vercel_AI_SDK-5.0.59-FF6B6B?style=flat-square&logo=vercel)](https://sdk.vercel.ai)
+[![Convex](https://img.shields.io/badge/Convex-1.27.3-FF6B35?style=flat-square)](https://convex.dev)
+[![Better Auth](https://img.shields.io/badge/Better_Auth-1.3.8-7C3AED?style=flat-square)](https://better-auth.com)
 [![Tailwind CSS v4](https://img.shields.io/badge/Tailwind_CSS-v4-38B2AC?style=flat-square)](https://tailwindcss.com)
 [![MIT License](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)](LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](CONTRIBUTING.md)
@@ -23,7 +25,58 @@
 
 **Fork** of [v0 Storefront Template](https://v0.app/templates/storefront-w-nano-banana-ai-sdk-ai-gateway-XAMOoZPMUO5) by [@estebansuarez](https://github.com/estebansuarez) (DevRel at v0). All credit to Esteban for the original design and concept.
 
-**This Fork:** Upgraded from Next.js 14 → 15.6.0-canary.34, React 18 → 19, added PPR, modern caching, ISR, and all experimental features.
+**This Fork:** Upgraded from Next.js 14 → 15.6.0-canary.34, React 18 → 19.2, added PPR, modern caching, ISR, and all experimental features. Fully integrated with Convex real-time database, Better Auth, and Polar subscriptions - **a complete production-ready e-commerce platform**.
+
+## 🚀 Platform Capabilities
+
+This is a **fully functional e-commerce platform** showcasing Next.js 15 experimental features with real backend infrastructure:
+
+### 🛍️ E-Commerce Features
+- **Product Catalog** - Browse products by category (Men's, Women's, Kids, New Arrivals)
+- **Search & Filter** - Real-time search across product names, descriptions, and categories
+- **Product Details** - Individual product pages with images, pricing, and descriptions
+- **Dynamic Images** - Product images served from Polar S3 with Next.js optimization
+
+### 🔐 User Authentication
+- **Email/Password** - Secure authentication with email verification
+- **OAuth Login** - GitHub social authentication
+- **Two-Factor Auth** - Optional 2FA with QR code setup
+- **Password Reset** - Email-based password recovery
+- **Protected Routes** - Dashboard and settings require authentication
+- **User Profile** - Account management and settings
+
+### 💳 Payment & Subscriptions
+- **Polar Integration** - Full payment and subscription processing
+- **Product Sync** - Automatic synchronization between Convex and Polar
+- **Webhook Events** - Real-time event processing for product/subscription updates
+- **Multi-Environment** - Support for both sandbox and production
+
+### 🗄️ Database & Real-time
+- **Convex Backend** - Real-time database with auto-generated types
+- **Live Queries** - Data updates without page refresh
+- **Type Safety** - End-to-end TypeScript from database to UI
+- **Server-Side Caching** - Optimized performance with `use cache` directive
+
+### 🤖 AI-Powered Features
+- **Virtual Try-On** - Upload a photo and see yourself wearing products
+- **Product Imaging** - AI-generated product photography
+- **Google Gemini** - Powered by Gemini 2.5 Flash for fast, high-quality generation
+
+### 📦 Product Management
+- **JSON-Based** - Define products in `products.json`
+- **Automated Seeding** - One command to populate database and Polar
+- **Image Upload** - Automatic upload to Polar S3 with checksums
+- **Idempotent** - Updates existing products instead of duplicating
+- **Testing Suite** - 10 automated tests validate integrity
+
+### 🛠️ Developer Experience
+- **Parallel Dev Servers** - Frontend (Next.js) and Backend (Convex) run simultaneously
+- **HTTPS Development** - WebSocket support with self-signed certificates
+- **Type Generation** - Auto-generated types from Convex schema
+- **CLI Tools** - Product management, testing, and debugging commands
+- **Hot Reload** - Instant updates for both frontend and backend code
+
+**See [CHANGELOG.md](CHANGELOG.md) for detailed changes and migration guide.**
 
 ## Quick Start
 
@@ -32,9 +85,22 @@ git clone https://github.com/RMNCLDYO/aisdk-storefront.git
 cd aisdk-storefront
 npm install
 cp .env.example .env.local
-# Add your GOOGLE_GENERATIVE_AI_API_KEY to .env.local
+
+# Configure environment variables
+# Add your API keys to .env.local:
+# - GOOGLE_GENERATIVE_AI_API_KEY
+# - POLAR_ORGANIZATION_TOKEN
+# - POLAR_WEBHOOK_SECRET
+# - GITHUB_CLIENT_ID/SECRET (for auth)
+
+# Seed products from JSON
+npm run products:seed
+
+# Start development
 npm run dev
 ```
+
+Visit `https://localhost:3000` (HTTPS required for Convex WebSockets)
 
 ## Features Demonstrated
 
@@ -75,6 +141,21 @@ npm run dev
 - ✅ **Google Gemini 2.5 Flash** - AI image generation and virtual try-on
 - ✅ **Streaming Responses** - Real-time AI content generation
 - ✅ **Type-Safe API** - Full TypeScript support
+
+### Product Management System
+- ✅ **JSON-based Seeding** - Define products in `products.json`, seed with one command
+- ✅ **Idempotent Operations** - Updates existing products instead of duplicating
+- ✅ **Polar Integration** - Automatic sync to Polar for subscriptions/payments
+- ✅ **Image Upload** - Automatic upload to Polar S3 with checksums
+- ✅ **Comprehensive Testing** - 10 automated tests (uniqueness, sync, images)
+- ✅ **CLI Commands** - `products:seed`, `products:reset`, `products:verify`
+
+### Database & Backend
+- ✅ **Convex Real-time Database** - Server-side database with live queries
+- ✅ **Better Auth** - Email/password + OAuth (GitHub) authentication
+- ✅ **Polar Subscriptions** - Payment processing and subscription management
+- ✅ **Webhook Handling** - Polar event processing for real-time sync
+- ✅ **Type-Safe API** - Auto-generated types from Convex schema
 
 ## Major Upgrades from v0 Template
 
@@ -117,6 +198,11 @@ npm run dev
 - ✅ Dark mode with system detection
 - ✅ 404 handling
 - ✅ Cache revalidation utilities
+- ✅ Convex real-time database integration
+- ✅ Better Auth (email + OAuth)
+- ✅ Polar subscription system
+- ✅ Product management with JSON seeding
+- ✅ Automated testing suite (10 tests)
 
 ## Project Structure
 
@@ -128,10 +214,25 @@ app/
 │   ├── [category]/      # Category pages (PPR + cached)
 │   ├── product/[id]/    # Product pages (PPR + cached)
 │   └── products/        # All products (PPR + cached)
+├── (auth)/              # Authentication routes (sign-in, sign-up)
 ├── api/                 # AI image generation endpoints
 ├── layout.tsx           # Root layout
 ├── sitemap.ts           # Dynamic sitemap
 └── robots.ts            # SEO configuration
+
+convex/
+├── schema.ts            # Database schema definition
+├── products.ts          # Product CRUD operations
+├── polar.ts             # Polar client configuration
+├── http.ts              # Webhook handlers
+├── auth.ts              # Better Auth integration
+└── [other functions]    # Todos, etc.
+
+scripts/
+├── seedFromJson.ts      # Seed products from JSON (idempotent)
+├── completeReset.ts     # Reset all products
+├── testCompleteFlow.ts  # 10 automated tests
+└── testPolarConnection.ts # Polar API test
 
 components/
 ├── link.tsx             # Smart prefetching wrapper
@@ -141,7 +242,11 @@ components/
 lib/
 ├── products.ts          # Server-only data with "use cache"
 ├── revalidate.ts        # Cache invalidation utilities
+├── auth-client.ts       # Client-side auth utilities
+├── auth-server.ts       # Server-side auth utilities
 └── [other utilities]    # Types, utils, logger, etc.
+
+products.json            # Product definitions for seeding
 ```
 
 ## Implementation Examples
@@ -226,6 +331,56 @@ export function Link({ prefetchStrategy = 'visible', ...props }) {
 }
 ```
 
+### Product Management with Convex & Polar
+
+```tsx
+// convex/schema.ts
+export default defineSchema({
+  products: defineTable({
+    name: v.string(),
+    price: v.number(),
+    category: v.string(),
+    imageUrl: v.string(),
+    description: v.string(),
+    polarProductId: v.optional(v.string()),
+    polarImageUrl: v.optional(v.string()),
+    polarImageId: v.optional(v.string()),
+    isActive: v.boolean(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("category", ["category"])
+    .index("polarProductId", ["polarProductId"]),
+});
+```
+
+```typescript
+// scripts/seedFromJson.ts - Idempotent seeding
+// 1. Reads products.json
+// 2. Checks if products exist in Polar/Convex by name
+// 3. Updates if exists, creates if new
+// 4. Uploads images to Polar S3
+// 5. Links everything together
+
+// Usage:
+// npm run products:seed    # Seed/update from JSON
+// npm run products:reset   # Delete all products
+// npm run products:verify  # Run 10 validation tests
+```
+
+```json
+// products.json
+[
+  {
+    "name": "Nike ZoomX Vomero Plus",
+    "price": 18000,
+    "category": "running-shoes",
+    "imageUrl": "/products/nike-vomero.jpeg",
+    "description": "Premium running shoes with ZoomX foam technology"
+  }
+]
+```
+
 ## Configuration
 
 ### next.config.ts
@@ -245,6 +400,18 @@ const nextConfig: NextConfig = {
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     formats: ['image/avif', 'image/webp'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'polar-public-sandbox-files.s3.amazonaws.com',
+        pathname: '/product_media/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'polar-public-production-files.s3.amazonaws.com',
+        pathname: '/product_media/**',
+      },
+    ],
   },
 };
 ```
@@ -252,12 +419,31 @@ const nextConfig: NextConfig = {
 ### Environment Variables
 
 ```env
-# Required for AI features
+# AI Features
 GOOGLE_GENERATIVE_AI_API_KEY=your_api_key_here
 
-# Optional for metadata
-NEXT_PUBLIC_BASE_URL=http://localhost:3000
+# Convex Database
+CONVEX_DEPLOYMENT=dev:your-deployment
+NEXT_PUBLIC_CONVEX_URL=https://your-deployment.convex.cloud
+NEXT_PUBLIC_CONVEX_SITE_URL=https://your-deployment.convex.site
+
+# Better Auth
+BETTER_AUTH_URL=https://localhost:3000
+BETTER_AUTH_SECRET=your_secret_here
+GITHUB_CLIENT_ID=your_github_client_id
+GITHUB_CLIENT_SECRET=your_github_client_secret
+
+# Polar Subscriptions
+POLAR_ORGANIZATION_TOKEN=your_polar_org_token
+POLAR_WEBHOOK_SECRET=your_polar_webhook_secret
+POLAR_SERVER=sandbox  # or production
+
+# App Configuration
+NEXT_PUBLIC_BASE_URL=https://localhost:3000
+SITE_URL=https://localhost:3000
 ```
+
+See [SETUP.md](SETUP.md) for detailed setup instructions.
 
 ## Build Output
 
@@ -327,21 +513,30 @@ Perfect for:
 ## Scripts
 
 ```bash
-npm run dev        # Development with Turbopack
-npm run build      # Production build
-npm run lint       # Biome linting
-npm run format     # Biome formatting
-npm run typecheck  # TypeScript validation
+# Development
+npm run dev                    # Development with Turbopack
+npm run build                  # Production build
+npm run lint                   # Biome linting
+npm run format                 # Biome formatting
+
+# Product Management
+npm run products:seed          # Seed/update products from products.json (idempotent)
+npm run products:reset         # Delete all products from Convex and Polar
+npm run products:verify        # Run 10 validation tests
+npm run polar:test-connection  # Test Polar API connection
 ```
 
 ## Tech Stack
 
 - **Next.js** 15.6.0-canary.34
-- **React** 19.1.0
+- **React** 19.2.0
 - **TypeScript** 5
 - **Tailwind CSS** v4
-- **Vercel AI SDK** 5.0.52
-- **Biome** 2.2.0
+- **Vercel AI SDK** 5.0.59
+- **Convex** 1.27.3 - Real-time database with type-safe queries
+- **Better Auth** 1.3.8 - Modern authentication (email + OAuth)
+- **Polar SDK** 0.35.4 - Subscription and payment processing
+- **Biome** 2.2.5
 - **shadcn/ui** components
 
 ## Contributing
