@@ -1,6 +1,6 @@
 import type { NextConfig } from 'next';
 
-const nextConfig: NextConfig = {
+const nextConfig = {
   logging: {
     fetches: {
       fullUrl: true,
@@ -27,7 +27,18 @@ const nextConfig: NextConfig = {
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     formats: ['image/avif', 'image/webp'],
     dangerouslyAllowSVG: false,
-    remotePatterns: [],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'polar-public-sandbox-files.s3.amazonaws.com',
+        pathname: '/product_media/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'polar-public-production-files.s3.amazonaws.com',
+        pathname: '/product_media/**',
+      },
+    ],
   },
   async headers() {
     return [
@@ -38,11 +49,11 @@ const nextConfig: NextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
+              "script-src 'self' 'unsafe-inline'",
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: blob: https:",
               "font-src 'self' data:",
-              "connect-src 'self' https://generativelanguage.googleapis.com",
+              "connect-src 'self' https://generativelanguage.googleapis.com https://*.convex.cloud https://*.convex.site wss://*.convex.cloud wss://*.convex.site",
               "frame-ancestors 'none'",
               "base-uri 'self'",
               "form-action 'self'",
@@ -68,6 +79,6 @@ const nextConfig: NextConfig = {
       },
     ];
   },
-};
+} satisfies NextConfig;
 
 export default nextConfig;
