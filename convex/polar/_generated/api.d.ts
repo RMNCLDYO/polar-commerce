@@ -8,14 +8,14 @@
  * @module
  */
 
-import type * as lib from "../lib.js";
-import type * as util from "../util.js";
+import type * as lib from '../lib.js';
+import type * as util from '../util.js';
 
 import type {
   ApiFromModules,
   FilterApi,
   FunctionReference,
-} from "convex/server";
+} from 'convex/server';
 
 /**
  * A utility for referencing Convex functions in your app's API.
@@ -32,14 +32,14 @@ declare const fullApi: ApiFromModules<{
 export type Mounts = {
   lib: {
     clearAllData: FunctionReference<
-      "mutation",
-      "public",
+      'mutation',
+      'public',
       {},
       { customers: number; products: number; subscriptions: number }
     >;
     createProduct: FunctionReference<
-      "mutation",
-      "public",
+      'mutation',
+      'public',
       {
         product: {
           createdAt: string;
@@ -79,17 +79,17 @@ export type Mounts = {
             priceAmount?: number;
             priceCurrency?: string;
             productId: string;
-            recurringInterval?: "month" | "year" | null;
+            recurringInterval?: 'month' | 'year' | null;
             type?: string;
           }>;
-          recurringInterval?: "month" | "year" | null;
+          recurringInterval?: 'month' | 'year' | null;
         };
       },
       any
     >;
     createSubscription: FunctionReference<
-      "mutation",
-      "public",
+      'mutation',
+      'public',
       {
         subscription: {
           amount: number | null;
@@ -108,7 +108,7 @@ export type Mounts = {
           modifiedAt: string | null;
           priceId?: string;
           productId: string;
-          recurringInterval: "month" | "year" | null;
+          recurringInterval: 'month' | 'year' | null;
           startedAt: string | null;
           status: string;
         };
@@ -116,8 +116,8 @@ export type Mounts = {
       any
     >;
     getCurrentSubscription: FunctionReference<
-      "query",
-      "public",
+      'query',
+      'public',
       { userId: string },
       {
         amount: number | null;
@@ -173,26 +173,26 @@ export type Mounts = {
             priceAmount?: number;
             priceCurrency?: string;
             productId: string;
-            recurringInterval?: "month" | "year" | null;
+            recurringInterval?: 'month' | 'year' | null;
             type?: string;
           }>;
-          recurringInterval?: "month" | "year" | null;
+          recurringInterval?: 'month' | 'year' | null;
         };
         productId: string;
-        recurringInterval: "month" | "year" | null;
+        recurringInterval: 'month' | 'year' | null;
         startedAt: string | null;
         status: string;
       } | null
     >;
     getCustomerByUserId: FunctionReference<
-      "query",
-      "public",
+      'query',
+      'public',
       { userId: string },
       { id: string; metadata?: Record<string, any>; userId: string } | null
     >;
     getProduct: FunctionReference<
-      "query",
-      "public",
+      'query',
+      'public',
       { id: string },
       {
         createdAt: string;
@@ -232,15 +232,15 @@ export type Mounts = {
           priceAmount?: number;
           priceCurrency?: string;
           productId: string;
-          recurringInterval?: "month" | "year" | null;
+          recurringInterval?: 'month' | 'year' | null;
           type?: string;
         }>;
-        recurringInterval?: "month" | "year" | null;
+        recurringInterval?: 'month' | 'year' | null;
       } | null
     >;
     getSubscription: FunctionReference<
-      "query",
-      "public",
+      'query',
+      'public',
       { id: string },
       {
         amount: number | null;
@@ -259,20 +259,20 @@ export type Mounts = {
         modifiedAt: string | null;
         priceId?: string;
         productId: string;
-        recurringInterval: "month" | "year" | null;
+        recurringInterval: 'month' | 'year' | null;
         startedAt: string | null;
         status: string;
       } | null
     >;
     insertCustomer: FunctionReference<
-      "mutation",
-      "public",
+      'mutation',
+      'public',
       { id: string; metadata?: Record<string, any>; userId: string },
       string
     >;
     listCustomerSubscriptions: FunctionReference<
-      "query",
-      "public",
+      'query',
+      'public',
       { customerId: string },
       Array<{
         amount: number | null;
@@ -291,14 +291,14 @@ export type Mounts = {
         modifiedAt: string | null;
         priceId?: string;
         productId: string;
-        recurringInterval: "month" | "year" | null;
+        recurringInterval: 'month' | 'year' | null;
         startedAt: string | null;
         status: string;
       }>
     >;
     listProducts: FunctionReference<
-      "query",
-      "public",
+      'query',
+      'public',
       { includeArchived?: boolean },
       Array<{
         createdAt: string;
@@ -339,15 +339,15 @@ export type Mounts = {
           priceAmount?: number;
           priceCurrency?: string;
           productId: string;
-          recurringInterval?: "month" | "year" | null;
+          recurringInterval?: 'month' | 'year' | null;
           type?: string;
         }>;
-        recurringInterval?: "month" | "year" | null;
+        recurringInterval?: 'month' | 'year' | null;
       }>
     >;
     listUserSubscriptions: FunctionReference<
-      "query",
-      "public",
+      'query',
+      'public',
       { userId: string },
       Array<{
         amount: number | null;
@@ -403,26 +403,26 @@ export type Mounts = {
             priceAmount?: number;
             priceCurrency?: string;
             productId: string;
-            recurringInterval?: "month" | "year" | null;
+            recurringInterval?: 'month' | 'year' | null;
             type?: string;
           }>;
-          recurringInterval?: "month" | "year" | null;
+          recurringInterval?: 'month' | 'year' | null;
         } | null;
         productId: string;
-        recurringInterval: "month" | "year" | null;
+        recurringInterval: 'month' | 'year' | null;
         startedAt: string | null;
         status: string;
       }>
     >;
     syncProducts: FunctionReference<
-      "action",
-      "public",
-      { polarAccessToken: string; server: "sandbox" | "production" },
+      'action',
+      'public',
+      { polarAccessToken: string; server: 'sandbox' | 'production' },
       any
     >;
     updateProduct: FunctionReference<
-      "mutation",
-      "public",
+      'mutation',
+      'public',
       {
         product: {
           createdAt: string;
@@ -462,17 +462,17 @@ export type Mounts = {
             priceAmount?: number;
             priceCurrency?: string;
             productId: string;
-            recurringInterval?: "month" | "year" | null;
+            recurringInterval?: 'month' | 'year' | null;
             type?: string;
           }>;
-          recurringInterval?: "month" | "year" | null;
+          recurringInterval?: 'month' | 'year' | null;
         };
       },
       any
     >;
     updateProducts: FunctionReference<
-      "mutation",
-      "public",
+      'mutation',
+      'public',
       {
         polarAccessToken: string;
         products: Array<{
@@ -513,17 +513,17 @@ export type Mounts = {
             priceAmount?: number;
             priceCurrency?: string;
             productId: string;
-            recurringInterval?: "month" | "year" | null;
+            recurringInterval?: 'month' | 'year' | null;
             type?: string;
           }>;
-          recurringInterval?: "month" | "year" | null;
+          recurringInterval?: 'month' | 'year' | null;
         }>;
       },
       any
     >;
     updateSubscription: FunctionReference<
-      "mutation",
-      "public",
+      'mutation',
+      'public',
       {
         subscription: {
           amount: number | null;
@@ -542,7 +542,7 @@ export type Mounts = {
           modifiedAt: string | null;
           priceId?: string;
           productId: string;
-          recurringInterval: "month" | "year" | null;
+          recurringInterval: 'month' | 'year' | null;
           startedAt: string | null;
           status: string;
         };
@@ -550,14 +550,14 @@ export type Mounts = {
       any
     >;
     upsertCustomer: FunctionReference<
-      "mutation",
-      "public",
+      'mutation',
+      'public',
       { id: string; metadata?: Record<string, any>; userId: string },
       string
     >;
     upsertProduct: FunctionReference<
-      "mutation",
-      "public",
+      'mutation',
+      'public',
       {
         product: {
           createdAt: string;
@@ -597,10 +597,10 @@ export type Mounts = {
             priceAmount?: number;
             priceCurrency?: string;
             productId: string;
-            recurringInterval?: "month" | "year" | null;
+            recurringInterval?: 'month' | 'year' | null;
             type?: string;
           }>;
-          recurringInterval?: "month" | "year" | null;
+          recurringInterval?: 'month' | 'year' | null;
         };
       },
       any
@@ -614,11 +614,11 @@ declare const fullApiWithMounts: typeof fullApi;
 
 export declare const api: FilterApi<
   typeof fullApiWithMounts,
-  FunctionReference<any, "public">
+  FunctionReference<any, 'public'>
 >;
 export declare const internal: FilterApi<
   typeof fullApiWithMounts,
-  FunctionReference<any, "internal">
+  FunctionReference<any, 'internal'>
 >;
 
 export declare const components: {};

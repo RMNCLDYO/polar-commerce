@@ -8,8 +8,6 @@ import { Check } from 'lucide-react';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import subscriptionsData from '@/subscriptions.json';
-import { EnsurePolarCustomer } from '@/components/ensure-polar-customer';
-
 type BillingCycle = 'monthly' | 'yearly';
 
 export default function PricingPage() {
@@ -63,7 +61,6 @@ export default function PricingPage() {
 
   return (
     <>
-      <EnsurePolarCustomer />
       <div className="container mx-auto px-4 py-16">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold mb-4">Choose Your Plan</h1>
