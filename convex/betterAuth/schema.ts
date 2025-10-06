@@ -1,5 +1,5 @@
-import { defineSchema } from "convex/server";
-import { tables } from "./generatedSchema";
+import { defineSchema } from 'convex/server';
+import { tables } from './generatedSchema';
 
 // Don't add custom fields or change types to the generated schema
 // here, use Better Auth's schema config for that:
@@ -11,7 +11,7 @@ import { tables } from "./generatedSchema";
 const schema = defineSchema({
   ...tables,
   // Spread the generated schema and add a custom index
-  user: tables.user.index("custom_index", ["foo"]),
+  user: tables.user.index('custom_index', ['foo']),
 });
 
 export default schema;

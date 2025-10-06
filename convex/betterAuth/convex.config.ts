@@ -1,5 +1,5 @@
-import { defineComponent } from "convex/server";
+import { defineComponent } from 'convex/server';
 
-const component = defineComponent("betterAuth");
+const component = defineComponent('betterAuth');
 
 export default component;
