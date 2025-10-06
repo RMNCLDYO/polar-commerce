@@ -2,28 +2,28 @@
   {
     "name": "Nike ZoomX Vomero Plus",
     "price": 18000,
-    "category": "running-shoes",
+    "category": "MEN",
     "imageUrl": "/products/nike-vomero.jpeg",
     "description": "Premium running shoes with ZoomX foam technology"
   },
   {
     "name": "Nike Club Cap",
     "price": 2500,
-    "category": "accessories",
+    "category": "ACCESSORIES",
     "imageUrl": "/products/nike-cap.jpeg",
     "description": "Classic baseball cap with Nike logo"
   },
   {
     "name": "Nike Tech Woven Pants",
     "price": 12000,
-    "category": "mens-pants",
+    "category": "MEN",
     "imageUrl": "/products/nike-tech-set.jpeg",
     "description": "Camo tracksuit with modern tech fabric"
   },
   {
     "name": "Jordan Fleece Hoodie",
     "price": 8500,
-    "category": "mens-hoodie",
+    "category": "MEN",
     "imageUrl": "/products/jordan-hoodie.jpeg",
     "description": "Premium hoodie with signature graphics"
   }
