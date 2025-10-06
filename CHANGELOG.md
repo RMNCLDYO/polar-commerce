@@ -5,6 +5,97 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.1] - 2025-10-06 - Polar Customer Duplication Fix
+
+**PR #25** - Fix duplicate customer creation and update dependencies
+
+### Fixed
+- Removed redundant EnsurePolarCustomer component causing duplicate customers
+- Customer creation now handled solely by user signup trigger
+- Prevents race condition between component mount and signup trigger
+
+### Changed
+- Downgraded better-auth from 1.3.26 to 1.3.8 (resolves Convex telemetry error)
+- Updated @convex-dev/better-auth to 0.8.9
+- Updated @react-email/components to 0.5.6
+- Updated ai to 5.0.60
+- Updated convex to 1.27.4
+- Updated lucide-react to 0.545.0
+- Updated gitignore patterns for build artifacts
+- Added next.js type definitions
+
+### Removed
+- `components/ensure-polar-customer.tsx` - Redundant with signup trigger
+- Component usage from pricing page
+
+## [0.3.0] - 2025-10-06 - Subscription System with Polar Integration
+
+**PR #23** - Complete subscription system implementation with 3-tier pricing
+
+### Added
+
+#### Subscription System
+- 3-tier subscription system (Free, Starter $9.99/mo, Premium $19.99/mo)
+- Interactive pricing page with monthly/yearly billing toggle
+- Automatic Polar customer provisioning on user signup
+- User subscription tier detection in authentication
+- Subscription status tracking and display
+
+#### Polar Integration
+- Local Polar component fork (`convex/polar/`)
+- Bi-directional product and subscription sync
+- Webhook handling for real-time updates
+- Customer management with sync recovery
+- Automatic user-to-customer mapping
+
+#### Frontend
+- `app/(shop)/pricing/page.tsx` - Interactive pricing page (251 lines)
+- `components/ensure-polar-customer.tsx` - Customer provisioning component (92 lines)
+- `components/pricing-card.tsx` - Pricing tier cards (79 lines)
+- `subscriptions.json` - Subscription tier definitions (120 lines)
+- `public/products/subscription.png` - Subscription product image
+
+#### Backend - Polar Component
+- `convex/polar/lib.ts` - Core Polar operations (419 lines)
+- `convex/polar/util.ts` - Checkout and webhook utilities (184 lines)
+- `convex/polar/schema.ts` - Polar data schema (99 lines)
+- `convex/polar/convex.config.ts` - Component configuration
+- `convex/polar/_generated/` - Auto-generated types and API
+
+#### Backend - Integration
+- `convex/polarCustomer.ts` - Customer management (134 lines)
+- `convex/productsSync.ts` - Bi-directional product sync (299 lines)
+- `convex/userSync.ts` - User-to-customer sync (168 lines)
+- `convex/crons.ts` - Scheduled sync jobs
+
+#### Development Utilities
+- `convex/factoryReset.ts` - Complete system reset (363 lines)
+- `convex/inspectData.ts` - Data inspection utility (66 lines)
+
+#### Seeding Scripts
+- `scripts/seedAll.ts` - Master seeding orchestrator (215 lines)
+- `scripts/seedProducts.ts` - Product seeding (402 lines)
+- `scripts/seedSubscriptions.ts` - Subscription seeding (491 lines)
+- `scripts/verifySeeding.ts` - Seeding verification (369 lines)
+
+### Changed
+- Enhanced `convex/auth.ts` with subscription tier detection
+- Added user signup trigger for automatic Polar customer creation
+- Updated `CHANGELOG.md` with 1,647 lines of project history
+- Updated `README.md` with subscription features
+- Applied code formatting across all app routes
+- Applied code formatting across all components
+- Applied code formatting across all backend files
+- Applied code formatting to lib and middleware
+- Updated `tsconfig.json` with path mappings
+- Updated `.gitignore` with dev directories
+
+### Removed
+- `scripts/completeReset.ts` - Replaced by factoryReset.ts
+- `scripts/seedFromJson.ts` - Replaced by specialized scripts
+- `scripts/testCompleteFlow.ts` - Replaced by verifySeeding.ts
+- `scripts/testPolarConnection.ts` - Replaced by polar component
+
 ## [0.2.0] - 2025-10-03 - Complete Backend Integration
 
 **PR #22** - This release represents a **major milestone** - complete transformation from static demo to production-ready application with real database, authentication, and payment processing.
