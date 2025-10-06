@@ -1,7 +1,7 @@
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Check, Settings, Trash2, X } from "lucide-react";
-import { FormEvent, PropsWithChildren } from "react";
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Check, Settings, Trash2, X } from 'lucide-react';
+import { FormEvent, PropsWithChildren } from 'react';
 
 export const UserProfile = ({
   user,
@@ -96,11 +96,11 @@ export const TodoListContainer = ({ children }: PropsWithChildren) => {
 
 export const TodoCompleteButton = ({
   completed,
-  type = "button",
+  type = 'button',
   onClick,
 }: {
   completed: boolean;
-  type?: "button" | "submit";
+  type?: 'button' | 'submit';
   onClick?: () => any;
 }) => (
   <Button
@@ -139,8 +139,8 @@ export const TodoText = ({
   <span
     className={
       completed
-        ? "flex-1 line-through text-muted-foreground"
-        : "flex-1 text-foreground"
+        ? 'flex-1 line-through text-muted-foreground'
+        : 'flex-1 text-foreground'
     }
   >
     {text}

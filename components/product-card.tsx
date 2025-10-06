@@ -73,7 +73,10 @@ export function ProductCard({
           : `${600 + index * 150}ms`,
       }}
     >
-      <div className="relative mb-4 w-full overflow-hidden bg-muted/50" style={{ aspectRatio: '3/4' }}>
+      <div
+        className="relative mb-4 w-full overflow-hidden bg-muted/50"
+        style={{ aspectRatio: '3/4' }}
+      >
         {isLoading && !error && (
           <div
             className="w-full bg-muted animate-pulse"
