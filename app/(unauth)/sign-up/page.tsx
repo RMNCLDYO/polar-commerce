@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import SignUp from "@/app/(unauth)/sign-up/SignUp";
-import Link from "next/link";
+import SignUp from '@/app/(unauth)/sign-up/SignUp';
+import Link from 'next/link';
 
 export default function SignUpPage() {
   return (
@@ -9,7 +9,7 @@ export default function SignUpPage() {
       <div className="w-full max-w-md">
         <SignUp />
         <p className="text-center mt-4 text-sm text-muted-foreground">
-          Already have an account?{" "}
+          Already have an account?{' '}
           <Link
             href="/sign-in"
             className="text-foreground hover:underline font-medium"

@@ -42,11 +42,18 @@ const categoryConfig: Record<string, CategoryConfig> = {
     metaTitle: "Kids' Collection - BANANA SPORTSWEAR",
     metaDescription: "Shop our kids' premium athletic gear and sportswear",
   },
+  accessories: {
+    title: 'Accessories',
+    description: 'Premium accessories to complete your athletic look',
+    filter: 'ACCESSORIES',
+    metaTitle: 'Accessories - BANANA SPORTSWEAR',
+    metaDescription: 'Shop our premium athletic accessories and gear',
+  },
   new: {
     title: 'New Arrivals',
     description: 'Fresh additions to our premium sportswear collection',
     filter: null,
-    defaultSort: 'name-desc',
+    defaultSort: 'newest',
     metaTitle: 'New Arrivals - BANANA SPORTSWEAR',
     metaDescription:
       'Discover the latest additions to our premium sportswear collection',
@@ -87,6 +94,7 @@ async function CachedCategoryContent({
     ...(config.filter && { category: config.filter }),
     search,
     sort: sort || config.defaultSort,
+    ...(category === 'new' && { limit: 12, excludeSubscriptions: true }),
   };
 
   const products = await getProducts(filters);
@@ -127,7 +135,10 @@ async function CachedCategoryContent({
                 prefetchStrategy="hover"
                 className="group cursor-pointer"
               >
-                <div className="relative mb-4 overflow-hidden bg-muted/50" style={{ aspectRatio: '3/4' }}>
+                <div
+                  className="relative mb-4 overflow-hidden bg-muted/50"
+                  style={{ aspectRatio: '3/4' }}
+                >
                   <Image
                     src={product.image}
                     alt={product.name}

@@ -1,34 +1,34 @@
-"use client";
+'use client';
 
-import { Button } from "@/components/ui/button";
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
   CardDescription,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useState } from "react";
-import { Loader2 } from "lucide-react";
-import { authClient } from "@/lib/auth-client";
-import { useSearchParams } from "next/navigation";
-import { redirect } from "next/navigation";
+} from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useState } from 'react';
+import { Loader2 } from 'lucide-react';
+import { authClient } from '@/lib/auth-client';
+import { useSearchParams } from 'next/navigation';
+import { redirect } from 'next/navigation';
 
 export default function ResetPassword() {
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const searchParams = useSearchParams();
-  const token = searchParams.get("token");
+  const token = searchParams.get('token');
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!token) return;
 
     if (password !== confirmPassword) {
-      alert("Passwords do not match");
+      alert('Passwords do not match');
       return;
     }
 
@@ -43,7 +43,7 @@ export default function ResetPassword() {
         },
         onSuccess: () => {
           setLoading(false);
-          redirect("/");
+          redirect('/');
         },
         onError: (ctx) => {
           setLoading(false);
@@ -108,7 +108,7 @@ export default function ResetPassword() {
               {loading ? (
                 <Loader2 size={16} className="animate-spin" />
               ) : (
-                "Reset Password"
+                'Reset Password'
               )}
             </Button>
           </form>

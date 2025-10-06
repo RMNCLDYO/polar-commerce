@@ -1,6 +1,12 @@
-import { v } from "convex/values";
-import { internal } from "./_generated/api";
-import { action, internalMutation, internalQuery, mutation, query } from "./_generated/server";
+import { v } from 'convex/values';
+import { internal } from './_generated/api';
+import {
+  action,
+  internalMutation,
+  internalQuery,
+  mutation,
+  query,
+} from './_generated/server';
 
 // Get all products with filters
 export const getProducts = query({
@@ -9,24 +15,34 @@ export const getProducts = query({
     search: v.optional(v.string()),
     minPrice: v.optional(v.number()),
     maxPrice: v.optional(v.number()),
-    sort: v.optional(v.union(
-      v.literal("price-asc"),
-      v.literal("price-desc"),
-      v.literal("name-asc"),
-      v.literal("name-desc")
-    )),
+    sort: v.optional(
+      v.union(
+        v.literal('price-asc'),
+        v.literal('price-desc'),
+        v.literal('name-asc'),
+        v.literal('name-desc'),
+        v.literal('newest'),
+      ),
+    ),
+    limit: v.optional(v.number()),
+    excludeSubscriptions: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     let products = await ctx.db
-      .query("products")
-      .filter((q) => q.eq(q.field("isActive"), true))
+      .query('products')
+      .filter((q) => q.eq(q.field('isActive'), true))
       .collect();
+
+    // Exclude subscriptions if requested
+    if (args.excludeSubscriptions) {
+      products = products.filter((p) => p.category !== 'subscription');
+    }
 
     // Category filter
     if (args.category) {
       const categoryFilter = args.category.toUpperCase();
       products = products.filter((p) =>
-        p.category.toUpperCase().includes(categoryFilter)
+        p.category.toUpperCase().includes(categoryFilter),
       );
     }
 
@@ -37,7 +53,7 @@ export const getProducts = query({
         (p) =>
           p.name.toLowerCase().includes(searchTerm) ||
           p.description.toLowerCase().includes(searchTerm) ||
-          p.category.toLowerCase().includes(searchTerm)
+          p.category.toLowerCase().includes(searchTerm),
       );
     }
 
@@ -56,18 +72,25 @@ export const getProducts = query({
     if (args.sort) {
       products.sort((a, b) => {
         switch (args.sort) {
-          case "price-asc":
+          case 'price-asc':
             return a.price - b.price;
-          case "price-desc":
+          case 'price-desc':
             return b.price - a.price;
-          case "name-asc":
+          case 'name-asc':
             return a.name.localeCompare(b.name);
-          case "name-desc":
+          case 'name-desc':
             return b.name.localeCompare(a.name);
+          case 'newest':
+            return b.createdAt - a.createdAt;
           default:
             return 0;
         }
       });
+    }
+
+    // Apply limit if specified
+    if (args.limit !== undefined) {
+      products = products.slice(0, args.limit);
     }
 
     // Transform to match the expected format
@@ -85,7 +108,7 @@ export const getProducts = query({
 
 // Get single product by ID
 export const getProduct = query({
-  args: { id: v.id("products") },
+  args: { id: v.id('products') },
   handler: async (ctx, args) => {
     const product = await ctx.db.get(args.id);
     if (!product || !product.isActive) {
@@ -117,7 +140,7 @@ export const createProduct = mutation({
     polarImageId: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const productId = await ctx.db.insert("products", {
+    const productId = await ctx.db.insert('products', {
       ...args,
       isActive: true,
       createdAt: Date.now(),
@@ -130,7 +153,7 @@ export const createProduct = mutation({
 // Update product with Polar product ID
 export const linkPolarProduct = mutation({
   args: {
-    productId: v.id("products"),
+    productId: v.id('products'),
     polarProductId: v.string(),
   },
   handler: async (ctx, args) => {
@@ -145,7 +168,7 @@ export const linkPolarProduct = mutation({
 export const getAllProducts = internalQuery({
   args: {},
   handler: async (ctx) => {
-    return await ctx.db.query("products").collect();
+    return await ctx.db.query('products').collect();
   },
 });
 
@@ -153,7 +176,15 @@ export const getAllProducts = internalQuery({
 export const getAllProductsRaw = query({
   args: {},
   handler: async (ctx) => {
-    return await ctx.db.query("products").collect();
+    return await ctx.db.query('products').collect();
+  },
+});
+
+// Simple list query (alias for getAllProductsRaw)
+export const list = query({
+  args: {},
+  handler: async (ctx) => {
+    return await ctx.db.query('products').collect();
   },
 });
 
@@ -161,11 +192,12 @@ export const getAllProductsRaw = query({
 export const syncProductsToPolar = action({
   args: {},
   handler: async (ctx): Promise<any[]> => {
-    const { Polar } = await import("@polar-sh/sdk");
+    const { Polar } = await import('@polar-sh/sdk');
 
     const polarClient = new Polar({
       accessToken: process.env.POLAR_ORGANIZATION_TOKEN as string,
-      server: (process.env.POLAR_SERVER as "sandbox" | "production") || "sandbox",
+      server:
+        (process.env.POLAR_SERVER as 'sandbox' | 'production') || 'sandbox',
     });
 
     // Get all Convex products
@@ -187,7 +219,7 @@ export const syncProductsToPolar = action({
         results.push({
           convexId: convexProduct._id,
           name: convexProduct.name,
-          status: "already_linked",
+          status: 'already_linked',
           polarProductId: convexProduct.polarProductId,
         });
         continue;
@@ -195,7 +227,7 @@ export const syncProductsToPolar = action({
 
       // Check if product exists in Polar by name
       const existingPolarProduct = polarProducts.find(
-        (p: any) => p.name === convexProduct.name
+        (p: any) => p.name === convexProduct.name,
       );
 
       let polarProductId: string;
@@ -205,7 +237,7 @@ export const syncProductsToPolar = action({
         results.push({
           convexId: convexProduct._id,
           name: convexProduct.name,
-          status: "found_existing",
+          status: 'found_existing',
           polarProductId,
         });
       } else {
@@ -216,9 +248,9 @@ export const syncProductsToPolar = action({
           description: convexProduct.description,
           prices: [
             {
-              amountType: "fixed",
+              amountType: 'fixed',
               priceAmount: convexProduct.price,
-              priceCurrency: "usd",
+              priceCurrency: 'usd',
             },
           ],
         });
@@ -227,7 +259,7 @@ export const syncProductsToPolar = action({
         results.push({
           convexId: convexProduct._id,
           name: convexProduct.name,
-          status: "created_new",
+          status: 'created_new',
           polarProductId,
         });
       }
@@ -246,7 +278,7 @@ export const syncProductsToPolar = action({
 // Internal mutation to link products
 export const linkProductInternal = internalMutation({
   args: {
-    productId: v.id("products"),
+    productId: v.id('products'),
     polarProductId: v.string(),
   },
   handler: async (ctx, args) => {
@@ -260,7 +292,7 @@ export const linkProductInternal = internalMutation({
 // Update product with partial data
 export const updateProduct = mutation({
   args: {
-    productId: v.id("products"),
+    productId: v.id('products'),
     updates: v.object({
       name: v.optional(v.string()),
       price: v.optional(v.number()),
@@ -288,7 +320,7 @@ export const updateProduct = mutation({
 // Public mutation to update Polar product ID (for external scripts)
 export const updatePolarProductId = mutation({
   args: {
-    productId: v.id("products"),
+    productId: v.id('products'),
     polarProductId: v.union(v.string(), v.null()),
   },
   handler: async (ctx, args) => {
@@ -296,7 +328,7 @@ export const updatePolarProductId = mutation({
       updatedAt: Date.now(),
     };
 
-    if (args.polarProductId === null || args.polarProductId === "") {
+    if (args.polarProductId === null || args.polarProductId === '') {
       updateData.polarProductId = undefined;
     } else {
       updateData.polarProductId = args.polarProductId;
@@ -309,7 +341,7 @@ export const updatePolarProductId = mutation({
 // Delete a product (for testing/cleanup)
 export const deleteProduct = mutation({
   args: {
-    productId: v.id("products"),
+    productId: v.id('products'),
   },
   handler: async (ctx, args) => {
     await ctx.db.delete(args.productId);
@@ -320,7 +352,7 @@ export const deleteProduct = mutation({
 // Update product image URL with Polar S3 URL
 export const updateProductImageUrl = mutation({
   args: {
-    productId: v.id("products"),
+    productId: v.id('products'),
     imageUrl: v.string(),
     polarImageUrl: v.optional(v.string()),
     polarImageId: v.optional(v.string()),

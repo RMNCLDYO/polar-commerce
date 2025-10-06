@@ -22,17 +22,19 @@ export function Header() {
         </div>
 
         <nav className="hidden md:flex items-center gap-x-12">
-          {['NEW', 'MEN', 'WOMEN', 'KIDS'].map((item, index) => (
-            <Link
-              key={item}
-              href={`/${item.toLowerCase()}`}
-              prefetchStrategy="hover"
-              className="text-xs font-semibold tracking-widest uppercase hover:text-muted-foreground animate-slide-up transition-colors"
-              style={{ animationDelay: `${300 + index * 100}ms` }}
-            >
-              {item}
-            </Link>
-          ))}
+          {['NEW', 'MEN', 'WOMEN', 'KIDS', 'ACCESSORIES', 'PRICING'].map(
+            (item, index) => (
+              <Link
+                key={item}
+                href={`/${item.toLowerCase()}`}
+                prefetchStrategy="hover"
+                className="text-xs font-semibold tracking-widest uppercase hover:text-muted-foreground animate-slide-up transition-colors"
+                style={{ animationDelay: `${300 + index * 100}ms` }}
+              >
+                {item}
+              </Link>
+            ),
+          )}
         </nav>
 
         <div

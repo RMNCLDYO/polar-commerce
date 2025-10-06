@@ -1,7 +1,7 @@
-import { defineApp } from "convex/server";
-import betterAuth from "./betterAuth/convex.config";
-import resend from "@convex-dev/resend/convex.config";
-import polar from "@convex-dev/polar/convex.config";
+import { defineApp } from 'convex/server';
+import betterAuth from './betterAuth/convex.config';
+import resend from '@convex-dev/resend/convex.config';
+import polar from './polar/convex.config';
 
 const app = defineApp();
 app.use(betterAuth);

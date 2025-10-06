@@ -7,8 +7,8 @@ import {
   Text,
   Img,
   Preview,
-} from "@react-email/components";
-import React from "react";
+} from '@react-email/components';
+import React from 'react';
 
 export interface BaseEmailProps {
   children: React.ReactNode;
@@ -22,53 +22,53 @@ export interface BaseEmailProps {
 
 export const styles = {
   main: {
-    backgroundColor: "#ffffff",
+    backgroundColor: '#ffffff',
   },
   container: {
-    paddingLeft: "12px",
-    paddingRight: "12px",
-    margin: "0 auto",
+    paddingLeft: '12px',
+    paddingRight: '12px',
+    margin: '0 auto',
   },
   h1: {
-    color: "#333",
+    color: '#333',
     fontFamily:
       "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif",
-    fontSize: "24px",
-    fontWeight: "bold",
-    margin: "40px 0",
-    padding: "0",
+    fontSize: '24px',
+    fontWeight: 'bold',
+    margin: '40px 0',
+    padding: '0',
   },
   link: {
-    color: "#2754C5",
+    color: '#2754C5',
     fontFamily:
       "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif",
-    fontSize: "14px",
-    textDecoration: "underline",
+    fontSize: '14px',
+    textDecoration: 'underline',
   },
   text: {
-    color: "#333",
+    color: '#333',
     fontFamily:
       "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif",
-    fontSize: "14px",
-    margin: "24px 0",
+    fontSize: '14px',
+    margin: '24px 0',
   },
   footer: {
-    color: "#898989",
+    color: '#898989',
     fontFamily:
       "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif",
-    fontSize: "12px",
-    lineHeight: "22px",
-    marginTop: "12px",
-    marginBottom: "24px",
+    fontSize: '12px',
+    lineHeight: '22px',
+    marginTop: '12px',
+    marginBottom: '24px',
   },
   code: {
-    display: "inline-block",
-    padding: "16px 4.5%",
-    width: "90.5%",
-    backgroundColor: "#f4f4f4",
-    borderRadius: "5px",
-    border: "1px solid #eee",
-    color: "#333",
+    display: 'inline-block',
+    padding: '16px 4.5%',
+    width: '90.5%',
+    backgroundColor: '#f4f4f4',
+    borderRadius: '5px',
+    border: '1px solid #eee',
+    color: '#333',
   },
 };
 
@@ -77,8 +77,8 @@ export function BaseEmail({
   previewText,
   footerLinks = [],
   footerText,
-  brandName = "Better Auth",
-  brandTagline = "Simple, secure authentication for your applications",
+  brandName = 'Better Auth',
+  brandTagline = 'Simple, secure authentication for your applications',
   brandLogoUrl,
 }: BaseEmailProps) {
   return (
@@ -104,11 +104,11 @@ export function BaseEmail({
                 <Link
                   href={link.href}
                   target="_blank"
-                  style={{ ...styles.link, color: "#898989" }}
+                  style={{ ...styles.link, color: '#898989' }}
                 >
                   {link.text}
                 </Link>
-                {i < footerLinks.length - 1 && " • "}
+                {i < footerLinks.length - 1 && ' • '}
               </React.Fragment>
             ))}
             {footerLinks.length > 0 && <br />}

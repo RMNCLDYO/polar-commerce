@@ -1,5 +1,5 @@
 // polyfill MessageChannel without using node:events
-if (typeof MessageChannel === "undefined") {
+if (typeof MessageChannel === 'undefined') {
   class MockMessagePort {
     onmessage: ((ev: MessageEvent) => void) | undefined;
     onmessageerror: ((ev: MessageEvent) => void) | undefined;

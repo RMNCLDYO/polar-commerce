@@ -1,8 +1,8 @@
 {
   "name": "aisdk-storefront",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
-  "description": "Vercel AI SDK showcase - v0 template demonstrating AI-powered features with Next.js 15, React 19, and Tailwind CSS v4",
+  "description": "Production-ready e-commerce platform demonstrating Next.js 15 experimental features (PPR, Server Components, modern caching) with Convex real-time database, Better Auth, Polar payments, and AI virtual try-on",
   "author": "Ray <hi@rmncldyo.com> (https://github.com/RMNCLDYO)",
   "license": "MIT",
   "private": false,
@@ -23,10 +23,11 @@
     "start": "next start",
     "lint": "biome format --write && tsc -p convex",
     "clean": "rm -rf .next && rm -rf node_modules && rm -rf dist && npm install",
-    "products:reset": "npx tsx scripts/completeReset.ts",
-    "products:seed": "npx tsx scripts/seedFromJson.ts",
-    "products:verify": "npx tsx scripts/testCompleteFlow.ts",
-    "polar:test-connection": "npx tsx scripts/testPolarConnection.ts"
+    "db:reset": "npx convex run factoryReset:factoryReset",
+    "polar:seed": "npx tsx scripts/seedAll.ts",
+    "polar:seed-products": "npx tsx scripts/seedProducts.ts",
+    "polar:seed-subscriptions": "npx tsx scripts/seedSubscriptions.ts",
+    "polar:verify-seed": "npx tsx scripts/verifySeeding.ts"
   },
   "dependencies": {
     "@ai-sdk/google": "^2.0.17",

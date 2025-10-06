@@ -1,18 +1,18 @@
-import { Toaster } from "sonner";
-import Link from "next/link";
+import { Toaster } from 'sonner';
+import Link from 'next/link';
 import {
   AppContainer,
   AppHeader,
   AppNav,
   SettingsButton,
   SettingsButtonContent,
-} from "@/components/server";
-import { preloadQuery } from "convex/nextjs";
-import { api } from "@/convex/_generated/api";
-import { SignOut, UserProfile } from "./client";
-import { TodoList } from "./todo-list";
-import { ModeToggle } from "@/app/mode-toggle";
-import { getToken } from "@/lib/auth-server";
+} from '@/components/server';
+import { preloadQuery } from 'convex/nextjs';
+import { api } from '@/convex/_generated/api';
+import { SignOut, UserProfile } from './client';
+import { TodoList } from './todo-list';
+import { ModeToggle } from '@/app/mode-toggle';
+import { getToken } from '@/lib/auth-server';
 
 const Header = async () => {
   const token = await getToken();

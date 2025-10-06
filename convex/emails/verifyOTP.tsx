@@ -1,6 +1,6 @@
-import React from "react";
-import { Heading, Text } from "@react-email/components";
-import { BaseEmail, styles } from "./components/BaseEmail";
+import React from 'react';
+import { Heading, Text } from '@react-email/components';
+import { BaseEmail, styles } from './components/BaseEmail';
 
 interface VerifyOTPProps {
   code: string;
@@ -30,9 +30,9 @@ export default function VerifyOTP({
       <Text
         style={{
           ...styles.text,
-          color: "#ababab",
-          marginTop: "14px",
-          marginBottom: "16px",
+          color: '#ababab',
+          marginTop: '14px',
+          marginBottom: '16px',
         }}
       >
         If you didn&apos;t create an account, you can safely ignore this email.

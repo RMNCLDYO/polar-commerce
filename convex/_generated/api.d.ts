@@ -14,16 +14,26 @@ import type * as betterAuth__generated_server from "../betterAuth/_generated/ser
 import type * as betterAuth_adapter from "../betterAuth/adapter.js";
 import type * as betterAuth_auth from "../betterAuth/auth.js";
 import type * as betterAuth_generatedSchema from "../betterAuth/generatedSchema.js";
+import type * as crons from "../crons.js";
 import type * as email from "../email.js";
 import type * as emails_components_BaseEmail from "../emails/components/BaseEmail.js";
 import type * as emails_magicLink from "../emails/magicLink.js";
 import type * as emails_resetPassword from "../emails/resetPassword.js";
 import type * as emails_verifyEmail from "../emails/verifyEmail.js";
 import type * as emails_verifyOTP from "../emails/verifyOTP.js";
+import type * as factoryReset from "../factoryReset.js";
 import type * as http from "../http.js";
+import type * as inspectData from "../inspectData.js";
+import type * as polar__generated_api from "../polar/_generated/api.js";
+import type * as polar__generated_server from "../polar/_generated/server.js";
+import type * as polar_lib from "../polar/lib.js";
+import type * as polar_util from "../polar/util.js";
 import type * as polar from "../polar.js";
+import type * as polarCustomer from "../polarCustomer.js";
 import type * as products from "../products.js";
+import type * as productsSync from "../productsSync.js";
 import type * as todos from "../todos.js";
+import type * as userSync from "../userSync.js";
 
 import type {
   ApiFromModules,
@@ -46,16 +56,26 @@ declare const fullApi: ApiFromModules<{
   "betterAuth/adapter": typeof betterAuth_adapter;
   "betterAuth/auth": typeof betterAuth_auth;
   "betterAuth/generatedSchema": typeof betterAuth_generatedSchema;
+  crons: typeof crons;
   email: typeof email;
   "emails/components/BaseEmail": typeof emails_components_BaseEmail;
   "emails/magicLink": typeof emails_magicLink;
   "emails/resetPassword": typeof emails_resetPassword;
   "emails/verifyEmail": typeof emails_verifyEmail;
   "emails/verifyOTP": typeof emails_verifyOTP;
+  factoryReset: typeof factoryReset;
   http: typeof http;
+  inspectData: typeof inspectData;
+  "polar/_generated/api": typeof polar__generated_api;
+  "polar/_generated/server": typeof polar__generated_server;
+  "polar/lib": typeof polar_lib;
+  "polar/util": typeof polar_util;
   polar: typeof polar;
+  polarCustomer: typeof polarCustomer;
   products: typeof products;
+  productsSync: typeof productsSync;
   todos: typeof todos;
+  userSync: typeof userSync;
 }>;
 declare const fullApiWithMounts: typeof fullApi;
 
@@ -1309,6 +1329,12 @@ export declare const components: {
   };
   polar: {
     lib: {
+      clearAllData: FunctionReference<
+        "mutation",
+        "internal",
+        {},
+        { customers: number; products: number; subscriptions: number }
+      >;
       createProduct: FunctionReference<
         "mutation",
         "internal",
@@ -1826,6 +1852,56 @@ export declare const components: {
         "internal",
         { id: string; metadata?: Record<string, any>; userId: string },
         string
+      >;
+      upsertProduct: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          product: {
+            createdAt: string;
+            description: string | null;
+            id: string;
+            isArchived: boolean;
+            isRecurring: boolean;
+            medias: Array<{
+              checksumEtag: string | null;
+              checksumSha256Base64: string | null;
+              checksumSha256Hex: string | null;
+              createdAt: string;
+              id: string;
+              isUploaded: boolean;
+              lastModifiedAt: string | null;
+              mimeType: string;
+              name: string;
+              organizationId: string;
+              path: string;
+              publicUrl: string;
+              service?: string;
+              size: number;
+              sizeReadable: string;
+              storageVersion: string | null;
+              version: string | null;
+            }>;
+            metadata?: Record<string, any>;
+            modifiedAt: string | null;
+            name: string;
+            organizationId: string;
+            prices: Array<{
+              amountType?: string;
+              createdAt: string;
+              id: string;
+              isArchived: boolean;
+              modifiedAt: string | null;
+              priceAmount?: number;
+              priceCurrency?: string;
+              productId: string;
+              recurringInterval?: "month" | "year" | null;
+              type?: string;
+            }>;
+            recurringInterval?: "month" | "year" | null;
+          };
+        },
+        any
       >;
     };
   };

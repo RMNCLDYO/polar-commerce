@@ -1,29 +1,29 @@
-"use client";
+'use client';
 
-import { Button } from "@/components/ui/button";
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
   CardDescription,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useState } from "react";
-import { Loader2 } from "lucide-react";
-import { authClient } from "@/lib/auth-client";
-import { useRouter } from "next/navigation";
+} from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useState } from 'react';
+import { Loader2 } from 'lucide-react';
+import { authClient } from '@/lib/auth-client';
+import { useRouter } from 'next/navigation';
 
 export default function SignIn() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [magicLinkLoading, setMagicLinkLoading] = useState(false);
   const [otpLoading, setOtpLoading] = useState(false);
   const [forgotLoading, setForgotLoading] = useState(false);
-  const [signInMethod, setSignInMethod] = useState<"password" | "passwordless">(
-    "passwordless",
+  const [signInMethod, setSignInMethod] = useState<'password' | 'passwordless'>(
+    'passwordless',
   );
 
   const handleSignIn = async () => {
@@ -39,9 +39,9 @@ export default function SignIn() {
         onSuccess: (ctx) => {
           setOtpLoading(false);
           if (ctx.data.twoFactorRedirect) {
-            router.push("/verify-2fa");
+            router.push('/verify-2fa');
           } else {
-            router.push("/");
+            router.push('/');
           }
         },
         onError: (ctx) => {
@@ -59,9 +59,9 @@ export default function SignIn() {
         email,
         redirectTo: `${window.location.origin}/reset-password`,
       });
-      alert("Check your email for the reset password link!");
+      alert('Check your email for the reset password link!');
     } catch {
-      alert("Failed to send reset password link. Please try again.");
+      alert('Failed to send reset password link. Please try again.');
     } finally {
       setForgotLoading(false);
     }
@@ -78,7 +78,7 @@ export default function SignIn() {
         },
         onSuccess: () => {
           setMagicLinkLoading(false);
-          alert("Check your email for the magic link!");
+          alert('Check your email for the magic link!');
         },
         onError: (ctx) => {
           setMagicLinkLoading(false);
@@ -91,7 +91,7 @@ export default function SignIn() {
   const handleGithubSignIn = async () => {
     await authClient.signIn.social(
       {
-        provider: "github",
+        provider: 'github',
       },
       {
         onRequest: () => {
@@ -117,7 +117,7 @@ export default function SignIn() {
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            if (signInMethod === "password") {
+            if (signInMethod === 'password') {
               handleSignIn();
             }
           }}
@@ -137,7 +137,7 @@ export default function SignIn() {
             />
           </div>
 
-          {signInMethod === "password" && (
+          {signInMethod === 'password' && (
             <div className="grid gap-2">
               <div className="flex items-center justify-between">
                 <Label htmlFor="password">Password</Label>
@@ -168,12 +168,12 @@ export default function SignIn() {
           )}
 
           <div className="flex flex-col gap-2">
-            {signInMethod === "password" && (
+            {signInMethod === 'password' && (
               <Button type="submit" className="w-full" disabled={otpLoading}>
                 Sign in with Password
               </Button>
             )}
-            {signInMethod === "passwordless" && (
+            {signInMethod === 'passwordless' && (
               <Button
                 type="button"
                 className="w-full"
@@ -183,7 +183,7 @@ export default function SignIn() {
                 {magicLinkLoading ? (
                   <Loader2 size={16} className="animate-spin" />
                 ) : (
-                  "Send Magic Link"
+                  'Send Magic Link'
                 )}
               </Button>
             )}
@@ -194,14 +194,14 @@ export default function SignIn() {
               className="text-sm"
               onClick={() => {
                 setSignInMethod(
-                  signInMethod === "password" ? "passwordless" : "password",
+                  signInMethod === 'password' ? 'passwordless' : 'password',
                 );
-                setPassword("");
+                setPassword('');
               }}
             >
-              {signInMethod === "passwordless"
-                ? "Sign in with password instead"
-                : "Sign in with magic link instead"}
+              {signInMethod === 'passwordless'
+                ? 'Sign in with password instead'
+                : 'Sign in with magic link instead'}
             </Button>
           </div>
 

@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { TodoList } from "./todo-list";
+import { TodoList } from './todo-list';
 
 export default function DashboardPage() {
   return (

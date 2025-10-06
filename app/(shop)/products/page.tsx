@@ -36,6 +36,7 @@ async function CachedProductsContent({
     sort,
     minPrice,
     maxPrice,
+    excludeSubscriptions: true,
   };
 
   const products = await getProducts(filters);
@@ -68,7 +69,10 @@ async function CachedProductsContent({
               prefetchStrategy="hover"
               className="group cursor-pointer"
             >
-              <div className="relative mb-4 overflow-hidden bg-muted/50" style={{ aspectRatio: '3/4' }}>
+              <div
+                className="relative mb-4 overflow-hidden bg-muted/50"
+                style={{ aspectRatio: '3/4' }}
+              >
                 <Image
                   src={product.image}
                   alt={product.name}

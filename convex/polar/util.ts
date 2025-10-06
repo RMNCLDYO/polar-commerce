@@ -1,0 +1,184 @@
+import type {
+  FunctionHandle,
+  FunctionType,
+  WithoutSystemFields,
+  Expand,
+  FunctionReference,
+  GenericMutationCtx,
+  GenericActionCtx,
+  GenericQueryCtx,
+  GenericDataModel,
+} from 'convex/server';
+import { GenericId } from 'convex/values';
+import type { api } from './_generated/api';
+import type { Doc } from './_generated/dataModel';
+import type { Subscription } from '@polar-sh/sdk/models/components/subscription.js';
+import type { Product } from '@polar-sh/sdk/models/components/product.js';
+
+export const omitSystemFields = <
+  T extends { _id: string; _creationTime: number } | null | undefined,
+>(
+  doc: T,
+) => {
+  if (!doc) {
+    return doc;
+  }
+  const { _id, _creationTime, ...rest } = doc;
+  return rest;
+};
+
+export type RunQueryCtx = {
+  runQuery: GenericQueryCtx<GenericDataModel>['runQuery'];
+};
+export type RunMutationCtx = {
+  runQuery: GenericQueryCtx<GenericDataModel>['runQuery'];
+  runMutation: GenericMutationCtx<GenericDataModel>['runMutation'];
+};
+export type RunActionCtx = {
+  runQuery: GenericQueryCtx<GenericDataModel>['runQuery'];
+  runMutation: GenericMutationCtx<GenericDataModel>['runMutation'];
+  runAction: GenericActionCtx<GenericDataModel>['runAction'];
+};
+
+export type OpaqueIds<T> = T extends GenericId<infer _T>
+  ? string
+  : T extends FunctionHandle<FunctionType>
+    ? string
+    : T extends (infer U)[]
+      ? OpaqueIds<U>[]
+      : T extends object
+        ? { [K in keyof T]: OpaqueIds<T[K]> }
+        : T;
+
+export type UseApi<API> = Expand<{
+  [mod in keyof API]: API[mod] extends FunctionReference<
+    infer FType,
+    'public',
+    infer FArgs,
+    infer FReturnType,
+    infer FComponentPath
+  >
+    ? FunctionReference<
+        FType,
+        'internal',
+        OpaqueIds<FArgs>,
+        OpaqueIds<FReturnType>,
+        FComponentPath
+      >
+    : UseApi<API[mod]>;
+}>;
+
+export type ComponentApi = UseApi<typeof api>;
+
+export const convertToDatabaseSubscription = (
+  subscription: Subscription,
+): WithoutSystemFields<Doc<'subscriptions'>> => {
+  return {
+    id: subscription.id,
+    customerId: subscription.customerId,
+    createdAt: subscription.createdAt.toISOString(),
+    modifiedAt: subscription.modifiedAt?.toISOString() ?? null,
+    productId: subscription.productId,
+    checkoutId: subscription.checkoutId,
+    amount: subscription.amount,
+    currency: subscription.currency,
+    recurringInterval:
+      subscription.recurringInterval === 'day' ||
+      subscription.recurringInterval === 'week'
+        ? null
+        : subscription.recurringInterval,
+    status: subscription.status,
+    currentPeriodStart: subscription.currentPeriodStart.toISOString(),
+    currentPeriodEnd: subscription.currentPeriodEnd?.toISOString() ?? null,
+    cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
+    customerCancellationReason: subscription.customerCancellationReason,
+    customerCancellationComment: subscription.customerCancellationComment,
+    startedAt: subscription.startedAt?.toISOString() ?? null,
+    endedAt: subscription.endedAt?.toISOString() ?? null,
+    metadata: subscription.metadata,
+  };
+};
+
+export const convertToDatabaseProduct = (
+  product: Product,
+): WithoutSystemFields<Doc<'products'>> => {
+  // Detect if this is a subscription product by checking:
+  // 1. If any price is recurring
+  // 2. If the product has a recurring interval
+  // 3. If the product name contains "Monthly" or "Yearly" (fallback for Polar API issues)
+  const hasRecurringPrice = product.prices.some(
+    (price) => price.type === 'recurring',
+  );
+  const hasRecurringInterval =
+    product.recurringInterval !== null &&
+    product.recurringInterval !== undefined;
+  const isSubscriptionByName =
+    product.name.includes('Monthly') || product.name.includes('Yearly');
+
+  return {
+    id: product.id,
+    organizationId: product.organizationId,
+    name: product.name,
+    description: product.description,
+    // Mark as recurring if any of our checks indicate it's a subscription
+    isRecurring:
+      product.isRecurring ||
+      hasRecurringPrice ||
+      hasRecurringInterval ||
+      isSubscriptionByName,
+    isArchived: product.isArchived,
+    createdAt: product.createdAt.toISOString(),
+    modifiedAt: product.modifiedAt?.toISOString() ?? null,
+    recurringInterval:
+      product.recurringInterval === 'day' ||
+      product.recurringInterval === 'week'
+        ? null
+        : product.recurringInterval,
+    metadata: product.metadata,
+    prices: product.prices.map((price) => ({
+      id: price.id,
+      productId: price.productId,
+      amountType: price.amountType,
+      isArchived: price.isArchived,
+      createdAt: price.createdAt.toISOString(),
+      modifiedAt: price.modifiedAt?.toISOString() ?? null,
+      recurringInterval:
+        price.type === 'recurring'
+          ? price.recurringInterval === 'day' ||
+            price.recurringInterval === 'week'
+            ? undefined
+            : (price.recurringInterval ?? undefined)
+          : undefined,
+      priceAmount: price.amountType === 'fixed' ? price.priceAmount : undefined,
+      priceCurrency:
+        price.amountType === 'fixed' || price.amountType === 'custom'
+          ? price.priceCurrency
+          : undefined,
+      minimumAmount:
+        price.amountType === 'custom' ? price.minimumAmount : undefined,
+      maximumAmount:
+        price.amountType === 'custom' ? price.maximumAmount : undefined,
+      presetAmount:
+        price.amountType === 'custom' ? price.presetAmount : undefined,
+      type: price.type,
+    })),
+    medias: product.medias.map((media) => ({
+      id: media.id,
+      organizationId: media.organizationId,
+      name: media.name,
+      path: media.path,
+      mimeType: media.mimeType,
+      size: media.size,
+      storageVersion: media.storageVersion,
+      checksumEtag: media.checksumEtag,
+      checksumSha256Base64: media.checksumSha256Base64,
+      checksumSha256Hex: media.checksumSha256Hex,
+      createdAt: media.createdAt.toISOString(),
+      lastModifiedAt: media.lastModifiedAt?.toISOString() ?? null,
+      version: media.version,
+      isUploaded: media.isUploaded,
+      sizeReadable: media.sizeReadable,
+      publicUrl: media.publicUrl,
+    })),
+  };
+};

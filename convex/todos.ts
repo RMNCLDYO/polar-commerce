@@ -1,5 +1,5 @@
-import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { v } from 'convex/values';
+import { mutation, query } from './_generated/server';
 
 export const get = query({
   args: {},
@@ -9,9 +9,9 @@ export const get = query({
       return [];
     }
     return await ctx.db
-      .query("todos")
-      .withIndex("userId", (q) => q.eq("userId", identity.subject))
-      .order("desc")
+      .query('todos')
+      .withIndex('userId', (q) => q.eq('userId', identity.subject))
+      .order('desc')
       .collect();
   },
 });
@@ -21,11 +21,11 @@ export const create = mutation({
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
-      throw new Error("Not authenticated");
+      throw new Error('Not authenticated');
     }
 
     const now = Date.now();
-    await ctx.db.insert("todos", {
+    await ctx.db.insert('todos', {
       text: args.text,
       completed: false,
       userId: identity.subject,
@@ -36,16 +36,16 @@ export const create = mutation({
 });
 
 export const toggle = mutation({
-  args: { id: v.id("todos") },
+  args: { id: v.id('todos') },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
-      throw new Error("Not authenticated");
+      throw new Error('Not authenticated');
     }
 
     const todo = await ctx.db.get(args.id);
     if (!todo || todo.userId !== (identity.userId ?? identity.subject)) {
-      throw new Error("Todo not found or unauthorized");
+      throw new Error('Todo not found or unauthorized');
     }
 
     await ctx.db.patch(args.id, {
@@ -56,16 +56,16 @@ export const toggle = mutation({
 });
 
 export const remove = mutation({
-  args: { id: v.id("todos") },
+  args: { id: v.id('todos') },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
-      throw new Error("Not authenticated");
+      throw new Error('Not authenticated');
     }
 
     const todo = await ctx.db.get(args.id);
     if (!todo || todo.userId !== (identity.userId ?? identity.subject)) {
-      throw new Error("Todo not found or unauthorized");
+      throw new Error('Todo not found or unauthorized');
     }
 
     await ctx.db.delete(args.id);

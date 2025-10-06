@@ -1,25 +1,25 @@
-"use client";
-import { Button } from "@/components/ui/button";
+'use client';
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useState } from "react";
-import { Loader2, X } from "lucide-react";
-import { authClient } from "@/lib/auth-client";
-import { toast } from "sonner";
+} from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useState } from 'react';
+import { Loader2, X } from 'lucide-react';
+import { authClient } from '@/lib/auth-client';
+import { toast } from 'sonner';
 
 export default function SignUp() {
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [passwordConfirmation, setPasswordConfirmation] = useState("");
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [passwordConfirmation, setPasswordConfirmation] = useState('');
   const [image, setImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -42,10 +42,10 @@ export default function SignUp() {
         email,
         password,
         name: `${firstName} ${lastName}`,
-        image: image ? await convertImageToBase64(image) : "",
+        image: image ? await convertImageToBase64(image) : '',
         // custom field configured via user.additionalFields in
         // lib/auth.ts
-        foo: "baz",
+        foo: 'baz',
       },
       {
         onRequest: () => {
@@ -57,7 +57,7 @@ export default function SignUp() {
         onError: async (ctx) => {
           setLoading(false);
           console.error(ctx.error);
-          console.error("response", ctx.response);
+          console.error('response', ctx.response);
           toast.error(ctx.error.message);
         },
       },
@@ -176,7 +176,7 @@ export default function SignUp() {
             {loading ? (
               <Loader2 size={16} className="animate-spin" />
             ) : (
-              "Create an account"
+              'Create an account'
             )}
           </Button>
         </div>

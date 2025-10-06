@@ -1,34 +1,34 @@
-"use client";
+'use client';
 
-import { Button } from "@/components/ui/button";
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
   CardDescription,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useState, useEffect } from "react";
-import { Loader2, Copy, Check, ArrowLeft } from "lucide-react";
-import { authClient } from "@/lib/auth-client";
-import QRCode from "react-qr-code";
-import { api } from "@/convex/_generated/api";
-import { useQuery } from "convex/react";
+} from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useState, useEffect } from 'react';
+import { Loader2, Copy, Check, ArrowLeft } from 'lucide-react';
+import { authClient } from '@/lib/auth-client';
+import QRCode from 'react-qr-code';
+import { api } from '@/convex/_generated/api';
+import { useQuery } from 'convex/react';
 
 type SetupStep =
-  | "loading"
-  | "need-password"
-  | "password"
-  | "qr-verify"
-  | "backup";
+  | 'loading'
+  | 'need-password'
+  | 'password'
+  | 'qr-verify'
+  | 'backup';
 
 export default function EnableTwoFactor() {
   const user = useQuery(api.auth.getCurrentUser);
-  const [step, setStep] = useState<SetupStep>("loading");
-  const [password, setPassword] = useState("");
-  const [code, setCode] = useState("");
+  const [step, setStep] = useState<SetupStep>('loading');
+  const [password, setPassword] = useState('');
+  const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [totpUri, setTotpUri] = useState<string>();
   const [backupCodes, setBackupCodes] = useState<string[]>();
@@ -37,11 +37,11 @@ export default function EnableTwoFactor() {
   useEffect(() => {
     const checkAccounts = async () => {
       const accounts = await authClient.listAccounts();
-      if ("data" in accounts && accounts.data) {
+      if ('data' in accounts && accounts.data) {
         const hasCredential = accounts.data.some(
-          (account) => account.provider === "credential",
+          (account) => account.provider === 'credential',
         );
-        setStep(hasCredential ? "password" : "need-password");
+        setStep(hasCredential ? 'password' : 'need-password');
       }
     };
     checkAccounts();
@@ -58,10 +58,10 @@ export default function EnableTwoFactor() {
         if (data.backupCodes) {
           setBackupCodes(data.backupCodes);
         }
-        setStep("qr-verify");
+        setStep('qr-verify');
       }
     } catch {
-      alert("Failed to enable 2FA. Please check your password and try again.");
+      alert('Failed to enable 2FA. Please check your password and try again.');
     } finally {
       setLoading(false);
     }
@@ -73,9 +73,9 @@ export default function EnableTwoFactor() {
       await authClient.twoFactor.verifyTotp({
         code,
       });
-      setStep("backup");
+      setStep('backup');
     } catch {
-      alert("Failed to verify code. Please try again.");
+      alert('Failed to verify code. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -83,14 +83,14 @@ export default function EnableTwoFactor() {
 
   const copyBackupCodes = async () => {
     if (!backupCodes) return;
-    await navigator.clipboard.writeText(backupCodes.join("\n"));
+    await navigator.clipboard.writeText(backupCodes.join('\n'));
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
   const handleResetPassword = async () => {
     if (!user?.email) {
-      alert("User email not found");
+      alert('User email not found');
       return;
     }
     try {
@@ -99,9 +99,9 @@ export default function EnableTwoFactor() {
         email: user.email,
         redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/reset-password`,
       });
-      alert("Check your email for password reset instructions");
+      alert('Check your email for password reset instructions');
     } catch {
-      alert("Failed to send password reset email. Please try again.");
+      alert('Failed to send password reset email. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -110,7 +110,7 @@ export default function EnableTwoFactor() {
   return (
     <div className="min-h-screen w-full flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        {(step === "password" || step === "need-password") && (
+        {(step === 'password' || step === 'need-password') && (
           <Button
             variant="ghost"
             size="sm"
@@ -127,25 +127,25 @@ export default function EnableTwoFactor() {
               Enable Two-Factor Authentication
             </CardTitle>
             <CardDescription className="text-xs md:text-sm">
-              {step === "loading"
-                ? "Loading..."
-                : step === "need-password"
-                  ? "You need to set up a password before enabling 2FA"
-                  : step === "password"
-                    ? "Enter your password to begin setup"
-                    : step === "qr-verify"
-                      ? "Scan this QR code with your authenticator app"
-                      : "Save these backup codes in a secure place"}
+              {step === 'loading'
+                ? 'Loading...'
+                : step === 'need-password'
+                  ? 'You need to set up a password before enabling 2FA'
+                  : step === 'password'
+                    ? 'Enter your password to begin setup'
+                    : step === 'qr-verify'
+                      ? 'Scan this QR code with your authenticator app'
+                      : 'Save these backup codes in a secure place'}
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {step === "loading" && (
+            {step === 'loading' && (
               <div className="flex justify-center py-4">
                 <Loader2 size={24} className="animate-spin" />
               </div>
             )}
 
-            {step === "need-password" && (
+            {step === 'need-password' && (
               <div className="grid gap-4">
                 <p className="text-sm text-muted-foreground">
                   Two-factor authentication requires a password for additional
@@ -156,13 +156,13 @@ export default function EnableTwoFactor() {
                   {loading ? (
                     <Loader2 size={16} className="animate-spin" />
                   ) : (
-                    "Set Up Password"
+                    'Set Up Password'
                   )}
                 </Button>
               </div>
             )}
 
-            {step === "password" && (
+            {step === 'password' && (
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
@@ -185,13 +185,13 @@ export default function EnableTwoFactor() {
                   {loading ? (
                     <Loader2 size={16} className="animate-spin" />
                   ) : (
-                    "Continue"
+                    'Continue'
                   )}
                 </Button>
               </form>
             )}
 
-            {step === "qr-verify" && totpUri && (
+            {step === 'qr-verify' && totpUri && (
               <div className="grid gap-6">
                 <div className="flex justify-center p-4 bg-white rounded-lg">
                   <QRCode value={totpUri} />
@@ -222,18 +222,18 @@ export default function EnableTwoFactor() {
                     {loading ? (
                       <Loader2 size={16} className="animate-spin" />
                     ) : (
-                      "Verify"
+                      'Verify'
                     )}
                   </Button>
                 </form>
               </div>
             )}
 
-            {step === "backup" && backupCodes && (
+            {step === 'backup' && backupCodes && (
               <div className="grid gap-4">
                 <div className="relative p-4 bg-muted rounded-lg">
                   <pre className="text-sm font-mono whitespace-pre-line">
-                    {backupCodes.join("\n")}
+                    {backupCodes.join('\n')}
                   </pre>
                   <Button
                     variant="ghost"
