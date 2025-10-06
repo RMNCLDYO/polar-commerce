@@ -23,6 +23,8 @@ export async function getProducts(
     minPrice: filters?.minPrice,
     maxPrice: filters?.maxPrice,
     sort: filters?.sort,
+    limit: filters?.limit,
+    excludeSubscriptions: filters?.excludeSubscriptions,
   });
 
   return products;

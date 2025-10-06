@@ -13,7 +13,9 @@ export interface Product {
 export interface ProductFilters {
   category?: string;
   search?: string;
-  sort?: 'price-asc' | 'price-desc' | 'name-asc' | 'name-desc';
+  sort?: 'price-asc' | 'price-desc' | 'name-asc' | 'name-desc' | 'newest';
   minPrice?: number;
   maxPrice?: number;
+  limit?: number;
+  excludeSubscriptions?: boolean;
 }
