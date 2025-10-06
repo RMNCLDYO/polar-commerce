@@ -1,6 +1,6 @@
 # AI SDK Storefront - Next.js 15 Showcase
 
-> **Learn Next.js 15 experimental features through a real working example** - PPR, modern caching, ISR, smart prefetching, and more.
+> Production-ready e-commerce platform demonstrating Next.js 15 experimental features (PPR, Server Components, modern caching) with Convex real-time database, Better Auth, Polar payments, and AI virtual try-on.
 
 [![Next.js 15 Canary](https://img.shields.io/badge/Next.js-15.6.0--canary.34-black?style=flat-square&logo=next.js)](https://nextjs.org)
 [![React 19](https://img.shields.io/badge/React-19.2.0-61DAFB?style=flat-square&logo=react)](https://react.dev)
@@ -9,7 +9,7 @@
 [![Better Auth](https://img.shields.io/badge/Better_Auth-1.3.8-7C3AED?style=flat-square)](https://better-auth.com)
 [![Tailwind CSS v4](https://img.shields.io/badge/Tailwind_CSS-v4-38B2AC?style=flat-square)](https://tailwindcss.com)
 [![MIT License](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)](LICENSE)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](CONTRIBUTING.md)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](https://github.com/RMNCLDYO/aisdk-storefront/pulls)
 
 ## Why This Repo?
 
@@ -25,7 +25,7 @@
 
 **Fork** of [v0 Storefront Template](https://v0.app/templates/storefront-w-nano-banana-ai-sdk-ai-gateway-XAMOoZPMUO5) by [@estebansuarez](https://github.com/estebansuarez) (DevRel at v0). All credit to Esteban for the original design and concept.
 
-**This Fork:** Upgraded from Next.js 14 → 15.6.0-canary.34, React 18 → 19.2, added PPR, modern caching, ISR, and all experimental features. Fully integrated with Convex real-time database, Better Auth, and Polar subscriptions - **a complete production-ready e-commerce platform**.
+**This Fork:** Upgraded from Next.js 14 → 15.6.0-canary.34, React 18 → 19.2, added PPR, modern caching, ISR, and all experimental features. Fully integrated with Convex real-time database, Better Auth, and Polar subscriptions with 3-tier pricing system (Free, Starter, Premium) - **a complete production-ready e-commerce platform with subscription management**.
 
 ## 🚀 Platform Capabilities
 
@@ -46,8 +46,12 @@ This is a **fully functional e-commerce platform** showcasing Next.js 15 experim
 - **User Profile** - Account management and settings
 
 ### 💳 Payment & Subscriptions
+- **Subscription Tiers** - Three tiers (Free, Starter $9.99/mo, Premium $19.99/mo)
+- **Pricing Page** - Interactive `/pricing` page with tier comparison
+- **Auto-Customer Creation** - Polar customers created automatically on signup
+- **Tier Detection** - User authentication includes subscription tier info
 - **Polar Integration** - Full payment and subscription processing
-- **Product Sync** - Automatic synchronization between Convex and Polar
+- **Product Sync** - Bi-directional sync between Convex and Polar
 - **Webhook Events** - Real-time event processing for product/subscription updates
 - **Multi-Environment** - Support for both sandbox and production
 
@@ -63,11 +67,11 @@ This is a **fully functional e-commerce platform** showcasing Next.js 15 experim
 - **Google Gemini** - Powered by Gemini 2.5 Flash for fast, high-quality generation
 
 ### 📦 Product Management
-- **JSON-Based** - Define products in `products.json`
-- **Automated Seeding** - One command to populate database and Polar
+- **JSON-Based Seeding** - Define products in `products.json` and subscriptions in `subscriptions.json`
+- **Idempotent Operations** - Filters archived products, creates fresh on every seed
+- **Automated Seeding** - `npm run polar:sync` for subscriptions, separate scripts for products
 - **Image Upload** - Automatic upload to Polar S3 with checksums
-- **Idempotent** - Updates existing products instead of duplicating
-- **Testing Suite** - 10 automated tests validate integrity
+- **Bi-directional Sync** - Changes in Polar auto-sync to Convex via webhooks
 
 ### 🛠️ Developer Experience
 - **Parallel Dev Servers** - Frontend (Next.js) and Backend (Convex) run simultaneously
@@ -93,14 +97,19 @@ cp .env.example .env.local
 # - POLAR_WEBHOOK_SECRET
 # - GITHUB_CLIENT_ID/SECRET (for auth)
 
-# Seed products from JSON
-npm run products:seed
+# Seed subscription tiers and products
+npm run polar:sync              # Creates subscription tiers in Polar
+npx tsx scripts/seedProducts.ts # Seeds physical products
+# Or seed everything at once:
+npx tsx scripts/seedAll.ts
 
 # Start development
 npm run dev
 ```
 
 Visit `https://localhost:3000` (HTTPS required for Convex WebSockets)
+
+**Note:** Subscription seeding always creates fresh Polar products with `recurringInterval` at product level. Old products are never reused to prevent type mismatches.
 
 ## Features Demonstrated
 
@@ -116,6 +125,8 @@ Visit `https://localhost:3000` (HTTPS required for Convex WebSockets)
 
 ### Next.js 15 Core Features
 - ✅ **Server Components** - Default architecture (37% bundle reduction)
+- ✅ **Server Actions** - `"use server"` for authenticated mutations
+- ✅ **Middleware** - Auth-based route protection and redirects
 - ✅ **Async Request APIs** - `await params`, `await searchParams`
 - ✅ **Route Groups** - `(shop)` pattern for shared layouts
 - ✅ **Static Imports** - Automatic image optimization with width/height inference
@@ -142,13 +153,16 @@ Visit `https://localhost:3000` (HTTPS required for Convex WebSockets)
 - ✅ **Streaming Responses** - Real-time AI content generation
 - ✅ **Type-Safe API** - Full TypeScript support
 
-### Product Management System
-- ✅ **JSON-based Seeding** - Define products in `products.json`, seed with one command
-- ✅ **Idempotent Operations** - Updates existing products instead of duplicating
-- ✅ **Polar Integration** - Automatic sync to Polar for subscriptions/payments
-- ✅ **Image Upload** - Automatic upload to Polar S3 with checksums
-- ✅ **Comprehensive Testing** - 10 automated tests (uniqueness, sync, images)
-- ✅ **CLI Commands** - `products:seed`, `products:reset`, `products:verify`
+### Product & Subscription Management
+- ✅ **JSON-based Seeding** - `products.json` for physical products, `subscriptions.json` for tiers
+- ✅ **Fresh Product Creation** - Subscriptions always created as new products (never reuse old IDs)
+- ✅ **Correct Recurring Config** - `recurringInterval` set at product level per Polar schema
+- ✅ **Subscription Tiers** - Free, Starter ($9.99/mo), Premium ($19.99/mo)
+- ✅ **Polar Integration** - Automatic sync to Polar for payments and subscriptions
+- ✅ **Image Upload** - Automatic upload to Polar S3 with checksums and ETags
+- ✅ **Bi-directional Sync** - Webhooks + mutations for real-time sync
+- ✅ **Factory Reset** - Complete data wipe (Better Auth, Polar, Convex)
+- ✅ **CLI Commands** - `polar:sync`, `seedProducts.ts`, `seedAll.ts`, `factoryReset`
 
 ### Database & Backend
 - ✅ **Convex Real-time Database** - Server-side database with live queries
@@ -161,9 +175,9 @@ Visit `https://localhost:3000` (HTTPS required for Convex WebSockets)
 
 ### Infrastructure
 - ✅ Next.js 14 → 15.6.0-canary.34
-- ✅ React 18 → 19.1.0
+- ✅ React 18 → 19.2.0
 - ✅ Tailwind CSS v3 → v4
-- ✅ Added Biome 2.2 for linting/formatting
+- ✅ Biome 2.2.5 for linting/formatting
 - ✅ Strict TypeScript with ES modules
 - ✅ Turbopack integration
 
@@ -200,9 +214,15 @@ Visit `https://localhost:3000` (HTTPS required for Convex WebSockets)
 - ✅ Cache revalidation utilities
 - ✅ Convex real-time database integration
 - ✅ Better Auth (email + OAuth)
-- ✅ Polar subscription system
-- ✅ Product management with JSON seeding
-- ✅ Automated testing suite (10 tests)
+- ✅ Polar subscription system with 3 tiers
+- ✅ Interactive pricing page (`/pricing`)
+- ✅ Auto-customer creation on signup
+- ✅ Subscription tier detection in auth
+- ✅ Product & subscription management with JSON seeding
+- ✅ Correct Polar recurring product schema (`recurringInterval` at product level)
+- ✅ Fresh subscription product creation (prevents type mismatches)
+- ✅ Factory reset utility (complete data wipe)
+- ✅ Bi-directional Polar-Convex sync
 
 ## Project Structure
 
@@ -213,8 +233,9 @@ app/
 │   ├── page.tsx         # Home (PPR enabled)
 │   ├── [category]/      # Category pages (PPR + cached)
 │   ├── product/[id]/    # Product pages (PPR + cached)
-│   └── products/        # All products (PPR + cached)
-├── (auth)/              # Authentication routes (sign-in, sign-up)
+│   ├── products/        # All products (PPR + cached)
+│   └── pricing/         # Subscription pricing page
+├── (auth)/              # Authentication routes (sign-in, sign-up, dashboard, settings)
 ├── api/                 # AI image generation endpoints
 ├── layout.tsx           # Root layout
 ├── sitemap.ts           # Dynamic sitemap
@@ -223,16 +244,21 @@ app/
 convex/
 ├── schema.ts            # Database schema definition
 ├── products.ts          # Product CRUD operations
+├── productsSync.ts      # Bi-directional product sync
 ├── polar.ts             # Polar client configuration
+├── polar/               # Local Polar component fork (for factory reset)
+├── polarCustomer.ts     # Customer management
+├── userSync.ts          # Auto-create Polar customers on signup
 ├── http.ts              # Webhook handlers
-├── auth.ts              # Better Auth integration
-└── [other functions]    # Todos, etc.
+├── auth.ts              # Better Auth integration with subscription tiers
+├── factoryReset.ts      # Complete data reset (dev only)
+├── inspectData.ts       # Database inspection (dev only)
+└── [other functions]    # Todos, crons, etc.
 
 scripts/
-├── seedFromJson.ts      # Seed products from JSON (idempotent)
-├── completeReset.ts     # Reset all products
-├── testCompleteFlow.ts  # 10 automated tests
-└── testPolarConnection.ts # Polar API test
+├── seedAll.ts           # Seed both products and subscriptions
+├── seedProducts.ts      # Seed physical products from JSON
+└── seedSubscriptions.ts # Seed subscription tiers (creates fresh products)
 
 components/
 ├── link.tsx             # Smart prefetching wrapper
@@ -246,7 +272,8 @@ lib/
 ├── auth-server.ts       # Server-side auth utilities
 └── [other utilities]    # Types, utils, logger, etc.
 
-products.json            # Product definitions for seeding
+products.json            # Physical product definitions for seeding
+subscriptions.json       # Subscription tier definitions (Free, Starter, Premium)
 ```
 
 ## Implementation Examples
@@ -355,30 +382,110 @@ export default defineSchema({
 ```
 
 ```typescript
-// scripts/seedFromJson.ts - Idempotent seeding
-// 1. Reads products.json
-// 2. Checks if products exist in Polar/Convex by name
-// 3. Updates if exists, creates if new
-// 4. Uploads images to Polar S3
-// 5. Links everything together
+// scripts/seedSubscriptions.ts - Subscription seeding with correct Polar schema
+// 1. Reads subscriptions.json
+// 2. Always creates NEW products (never reuses old product IDs)
+// 3. Sets recurringInterval at PRODUCT level (not price level) per Polar schema
+// 4. Uploads images to Polar S3 with checksums
+// 5. Syncs to Convex polar.products table
+// 6. Creates entries in app.products table for storefront
+
+const newProduct = await polarClient.products.create({
+  name: plan.name,
+  description: plan.description,
+  recurringInterval: plan.recurringInterval, // ✅ Product level (not price!)
+  prices: [{
+    amountType: "fixed",
+    priceAmount: plan.priceAmount,
+    priceCurrency: "usd",
+  }],
+});
 
 // Usage:
-// npm run products:seed    # Seed/update from JSON
-// npm run products:reset   # Delete all products
-// npm run products:verify  # Run 10 validation tests
+// npm run polar:sync              # Seed subscription tiers
+// npx tsx scripts/seedProducts.ts # Seed physical products
+// npx tsx scripts/seedAll.ts      # Seed everything
+// npx convex run factoryReset:factoryReset  # Reset all data
 ```
 
 ```json
-// products.json
-[
-  {
-    "name": "Nike ZoomX Vomero Plus",
-    "price": 18000,
-    "category": "running-shoes",
-    "imageUrl": "/products/nike-vomero.jpeg",
-    "description": "Premium running shoes with ZoomX foam technology"
-  }
-]
+// subscriptions.json
+{
+  "subscriptions": [
+    {
+      "id": "starter",
+      "name": "Starter",
+      "tier": "starter",
+      "pricing": {
+        "monthly": { "amount": 9.99, "interval": "month" },
+        "yearly": { "amount": 99.99, "interval": "year" }
+      },
+      "features": [
+        "Unlimited saved items",
+        "20 AI generations per month",
+        "Priority email support"
+      ]
+    }
+  ]
+}
+```
+
+### Subscription System with Auto-Tier Detection
+
+```tsx
+// convex/auth.ts - Enhanced getCurrentUser with subscription tiers
+export const getCurrentUser = query({
+  args: {},
+  handler: async (ctx) => {
+    const user = await safeGetUser(ctx);
+    if (!user) return null;
+
+    // Get subscription data from Polar
+    const subscription = await polar.getCurrentSubscription(ctx, {
+      userId: user._id,
+    });
+
+    // Determine user tier
+    let tier: "free" | "starter" | "premium" = "free";
+    if (subscription?.productKey?.includes("starter")) tier = "starter";
+    if (subscription?.productKey?.includes("premium")) tier = "premium";
+
+    return {
+      ...user,
+      subscription,
+      tier,
+      isFree: tier === "free",
+      isStarter: tier === "starter",
+      isPremium: tier === "premium",
+    };
+  },
+});
+```
+
+```tsx
+// components/user-menu.tsx - Display tier in UI
+const user = useQuery(api.auth.getCurrentUser);
+
+<Badge variant={user.isPremium ? "default" : "secondary"}>
+  {user.tier.toUpperCase()}
+</Badge>
+```
+
+```tsx
+// convex/auth.ts - Auto-create Polar customer on signup
+export const authComponent = createClient({
+  triggers: {
+    user: {
+      onCreate: async (ctx, authUser) => {
+        await ctx.scheduler.runAfter(0, internal.userSync.onUserCreated, {
+          userId: authUser._id,
+          email: authUser.email,
+          name: authUser.name,
+        });
+      },
+    },
+  },
+});
 ```
 
 ## Configuration
@@ -519,11 +626,13 @@ npm run build                  # Production build
 npm run lint                   # Biome linting
 npm run format                 # Biome formatting
 
-# Product Management
-npm run products:seed          # Seed/update products from products.json (idempotent)
-npm run products:reset         # Delete all products from Convex and Polar
-npm run products:verify        # Run 10 validation tests
-npm run polar:test-connection  # Test Polar API connection
+# Product & Subscription Management
+npm run polar:sync                          # Seed subscription tiers (creates fresh products)
+npx tsx scripts/seedProducts.ts             # Seed physical products from products.json
+npx tsx scripts/seedAll.ts                  # Seed both products and subscriptions
+npx convex run factoryReset:factoryReset    # Factory reset (wipe Better Auth, Polar, Convex)
+npx convex run polar:listAllProducts        # Inspect Polar products in Convex
+npx convex run polar:getSubscriptionProducts # Verify subscription product configuration
 ```
 
 ## Tech Stack
@@ -547,13 +656,11 @@ Contributions welcome! Areas of interest:
 - Documentation improvements
 - Bug fixes and type safety improvements
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+Please open an issue or pull request to get started!
 
 ## Roadmap
 
 Potential future additions:
-- [ ] Server Actions examples
-- [ ] Middleware patterns with PPR
 - [ ] Advanced cache invalidation strategies
 - [ ] More AI SDK features (streaming, tool calling)
 - [ ] Performance comparison metrics
