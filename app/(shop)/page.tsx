@@ -8,23 +8,15 @@ import { getProducts, type ProductFilters } from '@/lib/products';
 
 export const experimental_ppr = true;
 
-async function CachedProductContent({
-  search,
-  category,
-  sort,
-}: {
-  search?: string;
-  category?: string;
-  sort?: ProductFilters['sort'];
-}) {
+async function CachedProductContent() {
   'use cache';
   cacheLife('hours');
   cacheTag('products');
 
   const filters: ProductFilters = {
-    search,
-    category,
-    sort,
+    excludeSubscriptions: true,
+    sort: 'newest',
+    limit: 4,
   };
 
   const products = await getProducts(filters);
@@ -32,20 +24,10 @@ async function CachedProductContent({
   return <ProductGrid products={products} />;
 }
 
-interface PageProps {
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
-}
-
-export default async function Page({ searchParams }: PageProps) {
-  const params = await searchParams;
-
+export default async function Page() {
   return (
     <div className="animate-page-in">
-      <CachedProductContent
-        search={params?.search as string | undefined}
-        category={params?.category as string | undefined}
-        sort={params?.sort as ProductFilters['sort']}
-      />
+      <CachedProductContent />
       <Uploader />
     </div>
   );

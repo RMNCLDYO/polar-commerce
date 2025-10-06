@@ -1,6 +1,6 @@
-import { useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
-import { useQuery } from "convex/react";
+import { useMutation } from 'convex/react';
+import { api } from '@/convex/_generated/api';
+import { useQuery } from 'convex/react';
 import {
   AddTodoForm,
   TodoListContainer,
@@ -10,7 +10,7 @@ import {
   TodoList as TodoListComponent,
   TodoRemoveButton,
   TodoText,
-} from "@/components/server";
+} from '@/components/server';
 
 export const TodoList = () => {
   const todos = useQuery(api.todos.get) ?? [];
@@ -21,7 +21,7 @@ export const TodoList = () => {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.target as HTMLFormElement);
-    const newTodo = formData.get("text") as string;
+    const newTodo = formData.get('text') as string;
     await create({ text: newTodo.trim() });
     (e.target as HTMLFormElement).reset();
   };

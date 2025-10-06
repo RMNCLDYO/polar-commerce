@@ -29,7 +29,7 @@ async function CachedProductContent({ id }: { id: string }) {
   cacheTag('products', `product-${id}`);
 
   const productData = getProduct(id);
-  const relatedProductsData = getProducts();
+  const relatedProductsData = getProducts({ excludeSubscriptions: true });
 
   const [product, relatedProducts] = await Promise.all([
     productData,
@@ -46,7 +46,10 @@ async function CachedProductContent({ id }: { id: string }) {
     <main className="px-8 py-12">
       <div className="mx-auto max-w-7xl">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-          <div className="relative bg-muted/50 overflow-hidden" style={{ aspectRatio: '3/4' }}>
+          <div
+            className="relative bg-muted/50 overflow-hidden"
+            style={{ aspectRatio: '3/4' }}
+          >
             <Image
               src={product.image}
               alt={product.name}
@@ -141,7 +144,10 @@ async function CachedProductContent({ id }: { id: string }) {
                   prefetchStrategy="hover"
                   className="group cursor-pointer"
                 >
-                  <div className="relative mb-4 overflow-hidden bg-muted/50" style={{ aspectRatio: '3/4' }}>
+                  <div
+                    className="relative mb-4 overflow-hidden bg-muted/50"
+                    style={{ aspectRatio: '3/4' }}
+                  >
                     <Image
                       src={relatedProduct.image}
                       alt={relatedProduct.name}
