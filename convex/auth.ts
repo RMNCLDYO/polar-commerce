@@ -1,7 +1,7 @@
-import { createClient, GenericCtx } from "@convex-dev/better-auth";
-import { convex } from "@convex-dev/better-auth/plugins";
-import { requireActionCtx } from "@convex-dev/better-auth/utils";
-import { betterAuth, BetterAuthOptions } from "better-auth";
+import { createClient, GenericCtx } from '@convex-dev/better-auth';
+import { convex } from '@convex-dev/better-auth/plugins';
+import { requireActionCtx } from '@convex-dev/better-auth/utils';
+import { betterAuth, BetterAuthOptions } from 'better-auth';
 import {
   anonymous,
   emailOTP,
@@ -9,17 +9,18 @@ import {
   magicLink,
   twoFactor,
   username,
-} from "better-auth/plugins";
+} from 'better-auth/plugins';
 import {
   sendEmailVerification,
   sendMagicLink,
   sendOTPVerification,
   sendResetPassword,
-} from "../convex/email";
-import { components } from "./_generated/api";
-import { DataModel } from "./_generated/dataModel";
-import { query, QueryCtx } from "./_generated/server";
-import authSchema from "./betterAuth/schema";
+} from '../convex/email';
+import { components, internal } from './_generated/api';
+import { DataModel } from './_generated/dataModel';
+import { query, QueryCtx } from './_generated/server';
+import authSchema from './betterAuth/schema';
+import { polar } from './polar';
 
 // This implementation uses Local Install as it would be in a new project.
 
@@ -32,6 +33,31 @@ export const authComponent = createClient<DataModel, typeof authSchema>(
       schema: authSchema,
     },
     verbose: false,
+    triggers: {
+      user: {
+        onCreate: async (ctx, authUser) => {
+          // Automatically create Polar customer when user signs up
+          console.log(`🔔 [TRIGGER] User created: ${authUser.email}`);
+
+          try {
+            await ctx.scheduler.runAfter(0, internal.userSync.onUserCreated, {
+              userId: authUser._id,
+              email: authUser.email,
+              name: authUser.name,
+            });
+            console.log(
+              `✅ [TRIGGER] Scheduled Polar customer creation for ${authUser.email}`,
+            );
+          } catch (error) {
+            console.error(
+              `❌ [TRIGGER] Failed to schedule Polar customer creation:`,
+              error,
+            );
+            // Don't throw - we don't want to block user creation
+          }
+        },
+      },
+    },
   },
 );
 
@@ -78,7 +104,7 @@ export const createAuth = (
     user: {
       additionalFields: {
         foo: {
-          type: "string",
+          type: 'string',
           required: false,
         },
       },
@@ -109,11 +135,11 @@ export const createAuth = (
       genericOAuth({
         config: [
           {
-            providerId: "slack",
+            providerId: 'slack',
             clientId: process.env.SLACK_CLIENT_ID as string,
             clientSecret: process.env.SLACK_CLIENT_SECRET as string,
-            discoveryUrl: "https://slack.com/.well-known/openid-configuration",
-            scopes: ["openid", "email", "profile"],
+            discoveryUrl: 'https://slack.com/.well-known/openid-configuration',
+            scopes: ['openid', 'email', 'profile'],
           },
         ],
       }),
@@ -134,6 +160,51 @@ export const getUser = async (ctx: QueryCtx) => {
 export const getCurrentUser = query({
   args: {},
   handler: async (ctx) => {
-    return safeGetUser(ctx);
+    const user = await safeGetUser(ctx);
+    if (!user) return null;
+
+    // Get subscription data from Polar
+    try {
+      const subscription = await polar.getCurrentSubscription(ctx, {
+        userId: user._id,
+      });
+
+      // Determine user tier based on subscription
+      let tier: 'free' | 'starter' | 'premium' = 'free';
+      const productKey = subscription?.productKey;
+
+      if (productKey) {
+        if (productKey === 'starterMonthly' || productKey === 'starterYearly') {
+          tier = 'starter';
+        } else if (
+          productKey === 'premiumMonthly' ||
+          productKey === 'premiumYearly'
+        ) {
+          tier = 'premium';
+        }
+      }
+
+      return {
+        ...user,
+        subscription,
+        tier,
+        isFree: tier === 'free',
+        isStarter: tier === 'starter',
+        isPremium: tier === 'premium',
+      };
+    } catch (error) {
+      // If subscription check fails, return user without subscription data
+      return {
+        ...user,
+        subscription: null,
+        tier: 'free' as const,
+        isFree: true,
+        isStarter: false,
+        isPremium: false,
+      };
+    }
   },
 });
+
+// Export trigger API functions
+export const { onCreate, onUpdate, onDelete } = authComponent.triggersApi();
