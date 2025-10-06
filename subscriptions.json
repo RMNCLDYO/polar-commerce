@@ -1,0 +1,120 @@
+{
+  "subscriptions": [
+    {
+      "id": "free",
+      "name": "Free",
+      "description": "Perfect for getting started with essential features",
+      "tier": "free",
+      "pricing": {
+        "monthly": {
+          "amount": 0,
+          "currency": "USD",
+          "interval": "month",
+          "polarProductId": null
+        },
+        "yearly": {
+          "amount": 0,
+          "currency": "USD",
+          "interval": "year",
+          "polarProductId": null
+        }
+      },
+      "features": [
+        "Browse all products",
+        "AI-powered virtual try-on",
+        "Basic product search",
+        "Community support",
+        "Up to 5 saved items"
+      ],
+      "limitations": {
+        "savedItems": 5,
+        "aiGenerations": 3,
+        "supportLevel": "community"
+      },
+      "highlighted": false
+    },
+    {
+      "id": "starter",
+      "name": "Starter",
+      "description": "Great for regular shoppers who want more features",
+      "tier": "starter",
+      "pricing": {
+        "monthly": {
+          "amount": 9.99,
+          "currency": "USD",
+          "interval": "month",
+          "polarProductId": "POLAR_PRODUCT_STARTER_MONTHLY"
+        },
+        "yearly": {
+          "amount": 99.99,
+          "currency": "USD",
+          "interval": "year",
+          "polarProductId": "POLAR_PRODUCT_STARTER_YEARLY",
+          "savings": "Save $20/year"
+        }
+      },
+      "features": [
+        "Everything in Free",
+        "Unlimited saved items",
+        "Priority email support",
+        "20 AI generations per month",
+        "Early access to sales",
+        "Exclusive Starter discounts (5%)",
+        "Monthly style recommendations"
+      ],
+      "limitations": {
+        "savedItems": -1,
+        "aiGenerations": 20,
+        "supportLevel": "email"
+      },
+      "highlighted": true,
+      "badge": "Most Popular"
+    },
+    {
+      "id": "premium",
+      "name": "Premium",
+      "description": "The ultimate experience for power shoppers",
+      "tier": "premium",
+      "pricing": {
+        "monthly": {
+          "amount": 19.99,
+          "currency": "USD",
+          "interval": "month",
+          "polarProductId": "POLAR_PRODUCT_PREMIUM_MONTHLY"
+        },
+        "yearly": {
+          "amount": 199.99,
+          "currency": "USD",
+          "interval": "year",
+          "polarProductId": "POLAR_PRODUCT_PREMIUM_YEARLY",
+          "savings": "Save $40/year"
+        }
+      },
+      "features": [
+        "Everything in Starter",
+        "Unlimited AI generations",
+        "24/7 priority chat support",
+        "Personal stylist consultation (monthly)",
+        "Exclusive Premium discounts (10%)",
+        "Free expedited shipping",
+        "Access to private collections",
+        "VIP early product launches",
+        "Birthday special rewards"
+      ],
+      "limitations": {
+        "savedItems": -1,
+        "aiGenerations": -1,
+        "supportLevel": "priority"
+      },
+      "highlighted": false,
+      "badge": "Best Value"
+    }
+  ],
+  "metadata": {
+    "version": "1.0.0",
+    "lastUpdated": "2025-10-06",
+    "currency": "USD",
+    "taxInclusive": false,
+    "billingCycles": ["monthly", "yearly"]
+  }
+}
