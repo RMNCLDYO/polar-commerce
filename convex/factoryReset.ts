@@ -3,13 +3,21 @@
  *
  * This action performs a complete factory reset by:
  * 1. Deleting all Better Auth data (sessions, accounts, users, etc.)
- * 2. Deleting all Polar customers and archiving products from Polar API
+ * 2. Deleting all Polar data from both Convex and Polar API
  * 3. Deleting all Convex app data (products, todos)
  *
- * NOTE: Polar component tables (customers, products, subscriptions) cannot be
- * deleted programmatically due to Convex component isolation. These will
- * auto-sync when the Polar API data changes, or can be manually cleared via
- * the Convex dashboard.
+ * Polar component deletion approach:
+ * - Uses list queries to get all records:
+ *   - components.polar.lib.listSubscriptions({ includeEnded: true })
+ *   - components.polar.lib.listCustomers()
+ *   - components.polar.lib.listProducts({ includeArchived: true })
+ * - Then calls individual delete mutations:
+ *   - components.polar.lib.deleteSubscription({ id })
+ *   - components.polar.lib.deleteCustomer({ userId })
+ *   - components.polar.lib.deleteProduct({ id })
+ *
+ * This keeps the Polar fork minimal - consistent CRUD operations following
+ * the existing listProducts pattern, no special bulk delete functions.
  *
  * WARNING: THIS IS IRREVERSIBLE!
  */
@@ -58,8 +66,8 @@ export const factoryReset = action({
     console.log('\n🐻 STEP 2: Deleting Polar data...');
     try {
       // Delete from Polar component in Convex first
-      const polarComponentResults = await ctx.runMutation(
-        components.polar.lib.clearAllData,
+      const polarComponentResults = await ctx.runAction(
+        internal.factoryReset.clearPolarComponentData,
       );
 
       // Delete from Polar API
@@ -232,6 +240,61 @@ export const clearBetterAuthData = internalMutation({
     }
 
     console.log('✅ Better Auth data cleared from Convex');
+    return results;
+  },
+});
+
+/**
+ * Clear Polar component data from Convex
+ * Uses list queries + individual delete mutations from the Polar component
+ */
+export const clearPolarComponentData = internalAction({
+  args: {},
+  handler: async (ctx) => {
+    console.log('🐻 Clearing Polar component data from Convex...');
+
+    const results = {
+      subscriptions: 0,
+      customers: 0,
+      products: 0,
+    };
+
+    // Delete subscriptions first (they reference customers and products)
+    const subscriptions = await ctx.runQuery(
+      components.polar.lib.listSubscriptions,
+      { includeEnded: true },
+    );
+    for (const subscription of subscriptions) {
+      await ctx.runMutation(components.polar.lib.deleteSubscription, {
+        id: subscription.id,
+      });
+      results.subscriptions++;
+    }
+    console.log(`  ✅ Deleted ${results.subscriptions} subscriptions`);
+
+    // Delete customers
+    const customers = await ctx.runQuery(components.polar.lib.listCustomers);
+    for (const customer of customers) {
+      await ctx.runMutation(components.polar.lib.deleteCustomer, {
+        userId: customer.userId,
+      });
+      results.customers++;
+    }
+    console.log(`  ✅ Deleted ${results.customers} customers`);
+
+    // Delete products
+    const products = await ctx.runQuery(components.polar.lib.listProducts, {
+      includeArchived: true,
+    });
+    for (const product of products) {
+      await ctx.runMutation(components.polar.lib.deleteProduct, {
+        id: product.id,
+      });
+      results.products++;
+    }
+    console.log(`  ✅ Deleted ${results.products} products`);
+
+    console.log('✅ Polar component data cleared from Convex');
     return results;
   },
 });
