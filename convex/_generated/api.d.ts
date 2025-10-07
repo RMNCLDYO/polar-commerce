@@ -9,11 +9,6 @@
  */
 
 import type * as auth from '../auth.js';
-import type * as betterAuth__generated_api from '../betterAuth/_generated/api.js';
-import type * as betterAuth__generated_server from '../betterAuth/_generated/server.js';
-import type * as betterAuth_adapter from '../betterAuth/adapter.js';
-import type * as betterAuth_auth from '../betterAuth/auth.js';
-import type * as betterAuth_generatedSchema from '../betterAuth/generatedSchema.js';
 import type * as crons from '../crons.js';
 import type * as email from '../email.js';
 import type * as emails_components_BaseEmail from '../emails/components/BaseEmail.js';
@@ -51,11 +46,6 @@ import type {
  */
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
-  'betterAuth/_generated/api': typeof betterAuth__generated_api;
-  'betterAuth/_generated/server': typeof betterAuth__generated_server;
-  'betterAuth/adapter': typeof betterAuth_adapter;
-  'betterAuth/auth': typeof betterAuth_auth;
-  'betterAuth/generatedSchema': typeof betterAuth_generatedSchema;
   crons: typeof crons;
   email: typeof email;
   'emails/components/BaseEmail': typeof emails_components_BaseEmail;
@@ -102,10 +92,11 @@ export declare const components: {
                   displayUsername?: null | string;
                   email: string;
                   emailVerified: boolean;
-                  foo?: null | string;
                   image?: null | string;
                   isAnonymous?: null | boolean;
                   name: string;
+                  phoneNumber?: null | string;
+                  phoneNumberVerified?: null | boolean;
                   twoFactorEnabled?: null | boolean;
                   updatedAt: number;
                   userId?: null | string;
@@ -158,11 +149,165 @@ export declare const components: {
               }
             | {
                 data: {
+                  aaguid?: null | string;
+                  backedUp: boolean;
+                  counter: number;
+                  createdAt?: null | number;
+                  credentialID: string;
+                  deviceType: string;
+                  name?: null | string;
+                  publicKey: string;
+                  transports?: null | string;
+                  userId: string;
+                };
+                model: 'passkey';
+              }
+            | {
+                data: {
+                  clientId?: null | string;
+                  clientSecret?: null | string;
+                  createdAt?: null | number;
+                  disabled?: null | boolean;
+                  icon?: null | string;
+                  metadata?: null | string;
+                  name?: null | string;
+                  redirectURLs?: null | string;
+                  type?: null | string;
+                  updatedAt?: null | number;
+                  userId?: null | string;
+                };
+                model: 'oauthApplication';
+              }
+            | {
+                data: {
+                  accessToken?: null | string;
+                  accessTokenExpiresAt?: null | number;
+                  clientId?: null | string;
+                  createdAt?: null | number;
+                  refreshToken?: null | string;
+                  refreshTokenExpiresAt?: null | number;
+                  scopes?: null | string;
+                  updatedAt?: null | number;
+                  userId?: null | string;
+                };
+                model: 'oauthAccessToken';
+              }
+            | {
+                data: {
+                  clientId?: null | string;
+                  consentGiven?: null | boolean;
+                  createdAt?: null | number;
+                  scopes?: null | string;
+                  updatedAt?: null | number;
+                  userId?: null | string;
+                };
+                model: 'oauthConsent';
+              }
+            | {
+                data: {
+                  createdAt: number;
+                  name: string;
+                  organizationId: string;
+                  updatedAt?: null | number;
+                };
+                model: 'team';
+              }
+            | {
+                data: {
+                  createdAt?: null | number;
+                  teamId: string;
+                  userId: string;
+                };
+                model: 'teamMember';
+              }
+            | {
+                data: {
+                  createdAt: number;
+                  logo?: null | string;
+                  metadata?: null | string;
+                  name: string;
+                  slug?: null | string;
+                };
+                model: 'organization';
+              }
+            | {
+                data: {
+                  createdAt: number;
+                  organizationId: string;
+                  role: string;
+                  userId: string;
+                };
+                model: 'member';
+              }
+            | {
+                data: {
+                  email: string;
+                  expiresAt: number;
+                  inviterId: string;
+                  organizationId: string;
+                  role?: null | string;
+                  status: string;
+                  teamId?: null | string;
+                };
+                model: 'invitation';
+              }
+            | {
+                data: {
+                  domain: string;
+                  issuer: string;
+                  oidcConfig?: null | string;
+                  organizationId?: null | string;
+                  providerId: string;
+                  samlConfig?: null | string;
+                  userId?: null | string;
+                };
+                model: 'ssoProvider';
+              }
+            | {
+                data: {
                   createdAt: number;
                   privateKey: string;
                   publicKey: string;
                 };
                 model: 'jwks';
+              }
+            | {
+                data: {
+                  cancelAtPeriodEnd?: null | boolean;
+                  periodEnd?: null | number;
+                  periodStart?: null | number;
+                  plan: string;
+                  referenceId: string;
+                  seats?: null | number;
+                  status?: null | string;
+                  stripeCustomerId?: null | string;
+                  stripeSubscriptionId?: null | string;
+                  trialEnd?: null | number;
+                  trialStart?: null | number;
+                };
+                model: 'subscription';
+              }
+            | {
+                data: {
+                  address: string;
+                  chainId: number;
+                  createdAt: number;
+                  isPrimary?: null | boolean;
+                  userId: string;
+                };
+                model: 'walletAddress';
+              }
+            | {
+                data: {
+                  count?: null | number;
+                  key?: null | string;
+                  lastRequest?: null | number;
+                };
+                model: 'rateLimit';
+              }
+            | {
+                data: { count: number; key: string; lastRequest: number };
+                model: 'ratelimit';
               };
           onCreateHandle?: string;
           select?: Array<string>;
@@ -185,12 +330,13 @@ export declare const components: {
                     | 'image'
                     | 'createdAt'
                     | 'updatedAt'
+                    | 'twoFactorEnabled'
                     | 'isAnonymous'
                     | 'username'
                     | 'displayUsername'
-                    | 'twoFactorEnabled'
+                    | 'phoneNumber'
+                    | 'phoneNumberVerified'
                     | 'userId'
-                    | 'foo'
                     | 'id';
                   operator?:
                     | 'lt'
@@ -340,10 +486,450 @@ export declare const components: {
                 }>;
               }
             | {
+                model: 'passkey';
+                where?: Array<{
+                  connector?: 'AND' | 'OR';
+                  field:
+                    | 'name'
+                    | 'publicKey'
+                    | 'userId'
+                    | 'credentialID'
+                    | 'counter'
+                    | 'deviceType'
+                    | 'backedUp'
+                    | 'transports'
+                    | 'createdAt'
+                    | 'aaguid'
+                    | 'id';
+                  operator?:
+                    | 'lt'
+                    | 'lte'
+                    | 'gt'
+                    | 'gte'
+                    | 'eq'
+                    | 'in'
+                    | 'ne'
+                    | 'contains'
+                    | 'starts_with'
+                    | 'ends_with';
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
+              }
+            | {
+                model: 'oauthApplication';
+                where?: Array<{
+                  connector?: 'AND' | 'OR';
+                  field:
+                    | 'name'
+                    | 'icon'
+                    | 'metadata'
+                    | 'clientId'
+                    | 'clientSecret'
+                    | 'redirectURLs'
+                    | 'type'
+                    | 'disabled'
+                    | 'userId'
+                    | 'createdAt'
+                    | 'updatedAt'
+                    | 'id';
+                  operator?:
+                    | 'lt'
+                    | 'lte'
+                    | 'gt'
+                    | 'gte'
+                    | 'eq'
+                    | 'in'
+                    | 'ne'
+                    | 'contains'
+                    | 'starts_with'
+                    | 'ends_with';
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
+              }
+            | {
+                model: 'oauthAccessToken';
+                where?: Array<{
+                  connector?: 'AND' | 'OR';
+                  field:
+                    | 'accessToken'
+                    | 'refreshToken'
+                    | 'accessTokenExpiresAt'
+                    | 'refreshTokenExpiresAt'
+                    | 'clientId'
+                    | 'userId'
+                    | 'scopes'
+                    | 'createdAt'
+                    | 'updatedAt'
+                    | 'id';
+                  operator?:
+                    | 'lt'
+                    | 'lte'
+                    | 'gt'
+                    | 'gte'
+                    | 'eq'
+                    | 'in'
+                    | 'ne'
+                    | 'contains'
+                    | 'starts_with'
+                    | 'ends_with';
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
+              }
+            | {
+                model: 'oauthConsent';
+                where?: Array<{
+                  connector?: 'AND' | 'OR';
+                  field:
+                    | 'clientId'
+                    | 'userId'
+                    | 'scopes'
+                    | 'createdAt'
+                    | 'updatedAt'
+                    | 'consentGiven'
+                    | 'id';
+                  operator?:
+                    | 'lt'
+                    | 'lte'
+                    | 'gt'
+                    | 'gte'
+                    | 'eq'
+                    | 'in'
+                    | 'ne'
+                    | 'contains'
+                    | 'starts_with'
+                    | 'ends_with';
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
+              }
+            | {
+                model: 'team';
+                where?: Array<{
+                  connector?: 'AND' | 'OR';
+                  field:
+                    | 'name'
+                    | 'organizationId'
+                    | 'createdAt'
+                    | 'updatedAt'
+                    | 'id';
+                  operator?:
+                    | 'lt'
+                    | 'lte'
+                    | 'gt'
+                    | 'gte'
+                    | 'eq'
+                    | 'in'
+                    | 'ne'
+                    | 'contains'
+                    | 'starts_with'
+                    | 'ends_with';
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
+              }
+            | {
+                model: 'teamMember';
+                where?: Array<{
+                  connector?: 'AND' | 'OR';
+                  field: 'teamId' | 'userId' | 'createdAt' | 'id';
+                  operator?:
+                    | 'lt'
+                    | 'lte'
+                    | 'gt'
+                    | 'gte'
+                    | 'eq'
+                    | 'in'
+                    | 'ne'
+                    | 'contains'
+                    | 'starts_with'
+                    | 'ends_with';
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
+              }
+            | {
+                model: 'organization';
+                where?: Array<{
+                  connector?: 'AND' | 'OR';
+                  field:
+                    | 'name'
+                    | 'slug'
+                    | 'logo'
+                    | 'createdAt'
+                    | 'metadata'
+                    | 'id';
+                  operator?:
+                    | 'lt'
+                    | 'lte'
+                    | 'gt'
+                    | 'gte'
+                    | 'eq'
+                    | 'in'
+                    | 'ne'
+                    | 'contains'
+                    | 'starts_with'
+                    | 'ends_with';
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
+              }
+            | {
+                model: 'member';
+                where?: Array<{
+                  connector?: 'AND' | 'OR';
+                  field:
+                    | 'organizationId'
+                    | 'userId'
+                    | 'role'
+                    | 'createdAt'
+                    | 'id';
+                  operator?:
+                    | 'lt'
+                    | 'lte'
+                    | 'gt'
+                    | 'gte'
+                    | 'eq'
+                    | 'in'
+                    | 'ne'
+                    | 'contains'
+                    | 'starts_with'
+                    | 'ends_with';
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
+              }
+            | {
+                model: 'invitation';
+                where?: Array<{
+                  connector?: 'AND' | 'OR';
+                  field:
+                    | 'organizationId'
+                    | 'email'
+                    | 'role'
+                    | 'teamId'
+                    | 'status'
+                    | 'expiresAt'
+                    | 'inviterId'
+                    | 'id';
+                  operator?:
+                    | 'lt'
+                    | 'lte'
+                    | 'gt'
+                    | 'gte'
+                    | 'eq'
+                    | 'in'
+                    | 'ne'
+                    | 'contains'
+                    | 'starts_with'
+                    | 'ends_with';
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
+              }
+            | {
+                model: 'ssoProvider';
+                where?: Array<{
+                  connector?: 'AND' | 'OR';
+                  field:
+                    | 'issuer'
+                    | 'oidcConfig'
+                    | 'samlConfig'
+                    | 'userId'
+                    | 'providerId'
+                    | 'organizationId'
+                    | 'domain'
+                    | 'id';
+                  operator?:
+                    | 'lt'
+                    | 'lte'
+                    | 'gt'
+                    | 'gte'
+                    | 'eq'
+                    | 'in'
+                    | 'ne'
+                    | 'contains'
+                    | 'starts_with'
+                    | 'ends_with';
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
+              }
+            | {
                 model: 'jwks';
                 where?: Array<{
                   connector?: 'AND' | 'OR';
                   field: 'publicKey' | 'privateKey' | 'createdAt' | 'id';
+                  operator?:
+                    | 'lt'
+                    | 'lte'
+                    | 'gt'
+                    | 'gte'
+                    | 'eq'
+                    | 'in'
+                    | 'ne'
+                    | 'contains'
+                    | 'starts_with'
+                    | 'ends_with';
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
+              }
+            | {
+                model: 'subscription';
+                where?: Array<{
+                  connector?: 'AND' | 'OR';
+                  field:
+                    | 'plan'
+                    | 'referenceId'
+                    | 'stripeCustomerId'
+                    | 'stripeSubscriptionId'
+                    | 'status'
+                    | 'periodStart'
+                    | 'periodEnd'
+                    | 'trialStart'
+                    | 'trialEnd'
+                    | 'cancelAtPeriodEnd'
+                    | 'seats'
+                    | 'id';
+                  operator?:
+                    | 'lt'
+                    | 'lte'
+                    | 'gt'
+                    | 'gte'
+                    | 'eq'
+                    | 'in'
+                    | 'ne'
+                    | 'contains'
+                    | 'starts_with'
+                    | 'ends_with';
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
+              }
+            | {
+                model: 'walletAddress';
+                where?: Array<{
+                  connector?: 'AND' | 'OR';
+                  field:
+                    | 'userId'
+                    | 'address'
+                    | 'chainId'
+                    | 'isPrimary'
+                    | 'createdAt'
+                    | 'id';
+                  operator?:
+                    | 'lt'
+                    | 'lte'
+                    | 'gt'
+                    | 'gte'
+                    | 'eq'
+                    | 'in'
+                    | 'ne'
+                    | 'contains'
+                    | 'starts_with'
+                    | 'ends_with';
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
+              }
+            | {
+                model: 'rateLimit';
+                where?: Array<{
+                  connector?: 'AND' | 'OR';
+                  field: 'key' | 'count' | 'lastRequest' | 'id';
+                  operator?:
+                    | 'lt'
+                    | 'lte'
+                    | 'gt'
+                    | 'gte'
+                    | 'eq'
+                    | 'in'
+                    | 'ne'
+                    | 'contains'
+                    | 'starts_with'
+                    | 'ends_with';
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
+              }
+            | {
+                model: 'ratelimit';
+                where?: Array<{
+                  connector?: 'AND' | 'OR';
+                  field: 'key' | 'count' | 'lastRequest' | 'id';
                   operator?:
                     | 'lt'
                     | 'lte'
@@ -392,12 +978,13 @@ export declare const components: {
                     | 'image'
                     | 'createdAt'
                     | 'updatedAt'
+                    | 'twoFactorEnabled'
                     | 'isAnonymous'
                     | 'username'
                     | 'displayUsername'
-                    | 'twoFactorEnabled'
+                    | 'phoneNumber'
+                    | 'phoneNumberVerified'
                     | 'userId'
-                    | 'foo'
                     | 'id';
                   operator?:
                     | 'lt'
@@ -547,10 +1134,450 @@ export declare const components: {
                 }>;
               }
             | {
+                model: 'passkey';
+                where?: Array<{
+                  connector?: 'AND' | 'OR';
+                  field:
+                    | 'name'
+                    | 'publicKey'
+                    | 'userId'
+                    | 'credentialID'
+                    | 'counter'
+                    | 'deviceType'
+                    | 'backedUp'
+                    | 'transports'
+                    | 'createdAt'
+                    | 'aaguid'
+                    | 'id';
+                  operator?:
+                    | 'lt'
+                    | 'lte'
+                    | 'gt'
+                    | 'gte'
+                    | 'eq'
+                    | 'in'
+                    | 'ne'
+                    | 'contains'
+                    | 'starts_with'
+                    | 'ends_with';
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
+              }
+            | {
+                model: 'oauthApplication';
+                where?: Array<{
+                  connector?: 'AND' | 'OR';
+                  field:
+                    | 'name'
+                    | 'icon'
+                    | 'metadata'
+                    | 'clientId'
+                    | 'clientSecret'
+                    | 'redirectURLs'
+                    | 'type'
+                    | 'disabled'
+                    | 'userId'
+                    | 'createdAt'
+                    | 'updatedAt'
+                    | 'id';
+                  operator?:
+                    | 'lt'
+                    | 'lte'
+                    | 'gt'
+                    | 'gte'
+                    | 'eq'
+                    | 'in'
+                    | 'ne'
+                    | 'contains'
+                    | 'starts_with'
+                    | 'ends_with';
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
+              }
+            | {
+                model: 'oauthAccessToken';
+                where?: Array<{
+                  connector?: 'AND' | 'OR';
+                  field:
+                    | 'accessToken'
+                    | 'refreshToken'
+                    | 'accessTokenExpiresAt'
+                    | 'refreshTokenExpiresAt'
+                    | 'clientId'
+                    | 'userId'
+                    | 'scopes'
+                    | 'createdAt'
+                    | 'updatedAt'
+                    | 'id';
+                  operator?:
+                    | 'lt'
+                    | 'lte'
+                    | 'gt'
+                    | 'gte'
+                    | 'eq'
+                    | 'in'
+                    | 'ne'
+                    | 'contains'
+                    | 'starts_with'
+                    | 'ends_with';
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
+              }
+            | {
+                model: 'oauthConsent';
+                where?: Array<{
+                  connector?: 'AND' | 'OR';
+                  field:
+                    | 'clientId'
+                    | 'userId'
+                    | 'scopes'
+                    | 'createdAt'
+                    | 'updatedAt'
+                    | 'consentGiven'
+                    | 'id';
+                  operator?:
+                    | 'lt'
+                    | 'lte'
+                    | 'gt'
+                    | 'gte'
+                    | 'eq'
+                    | 'in'
+                    | 'ne'
+                    | 'contains'
+                    | 'starts_with'
+                    | 'ends_with';
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
+              }
+            | {
+                model: 'team';
+                where?: Array<{
+                  connector?: 'AND' | 'OR';
+                  field:
+                    | 'name'
+                    | 'organizationId'
+                    | 'createdAt'
+                    | 'updatedAt'
+                    | 'id';
+                  operator?:
+                    | 'lt'
+                    | 'lte'
+                    | 'gt'
+                    | 'gte'
+                    | 'eq'
+                    | 'in'
+                    | 'ne'
+                    | 'contains'
+                    | 'starts_with'
+                    | 'ends_with';
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
+              }
+            | {
+                model: 'teamMember';
+                where?: Array<{
+                  connector?: 'AND' | 'OR';
+                  field: 'teamId' | 'userId' | 'createdAt' | 'id';
+                  operator?:
+                    | 'lt'
+                    | 'lte'
+                    | 'gt'
+                    | 'gte'
+                    | 'eq'
+                    | 'in'
+                    | 'ne'
+                    | 'contains'
+                    | 'starts_with'
+                    | 'ends_with';
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
+              }
+            | {
+                model: 'organization';
+                where?: Array<{
+                  connector?: 'AND' | 'OR';
+                  field:
+                    | 'name'
+                    | 'slug'
+                    | 'logo'
+                    | 'createdAt'
+                    | 'metadata'
+                    | 'id';
+                  operator?:
+                    | 'lt'
+                    | 'lte'
+                    | 'gt'
+                    | 'gte'
+                    | 'eq'
+                    | 'in'
+                    | 'ne'
+                    | 'contains'
+                    | 'starts_with'
+                    | 'ends_with';
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
+              }
+            | {
+                model: 'member';
+                where?: Array<{
+                  connector?: 'AND' | 'OR';
+                  field:
+                    | 'organizationId'
+                    | 'userId'
+                    | 'role'
+                    | 'createdAt'
+                    | 'id';
+                  operator?:
+                    | 'lt'
+                    | 'lte'
+                    | 'gt'
+                    | 'gte'
+                    | 'eq'
+                    | 'in'
+                    | 'ne'
+                    | 'contains'
+                    | 'starts_with'
+                    | 'ends_with';
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
+              }
+            | {
+                model: 'invitation';
+                where?: Array<{
+                  connector?: 'AND' | 'OR';
+                  field:
+                    | 'organizationId'
+                    | 'email'
+                    | 'role'
+                    | 'teamId'
+                    | 'status'
+                    | 'expiresAt'
+                    | 'inviterId'
+                    | 'id';
+                  operator?:
+                    | 'lt'
+                    | 'lte'
+                    | 'gt'
+                    | 'gte'
+                    | 'eq'
+                    | 'in'
+                    | 'ne'
+                    | 'contains'
+                    | 'starts_with'
+                    | 'ends_with';
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
+              }
+            | {
+                model: 'ssoProvider';
+                where?: Array<{
+                  connector?: 'AND' | 'OR';
+                  field:
+                    | 'issuer'
+                    | 'oidcConfig'
+                    | 'samlConfig'
+                    | 'userId'
+                    | 'providerId'
+                    | 'organizationId'
+                    | 'domain'
+                    | 'id';
+                  operator?:
+                    | 'lt'
+                    | 'lte'
+                    | 'gt'
+                    | 'gte'
+                    | 'eq'
+                    | 'in'
+                    | 'ne'
+                    | 'contains'
+                    | 'starts_with'
+                    | 'ends_with';
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
+              }
+            | {
                 model: 'jwks';
                 where?: Array<{
                   connector?: 'AND' | 'OR';
                   field: 'publicKey' | 'privateKey' | 'createdAt' | 'id';
+                  operator?:
+                    | 'lt'
+                    | 'lte'
+                    | 'gt'
+                    | 'gte'
+                    | 'eq'
+                    | 'in'
+                    | 'ne'
+                    | 'contains'
+                    | 'starts_with'
+                    | 'ends_with';
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
+              }
+            | {
+                model: 'subscription';
+                where?: Array<{
+                  connector?: 'AND' | 'OR';
+                  field:
+                    | 'plan'
+                    | 'referenceId'
+                    | 'stripeCustomerId'
+                    | 'stripeSubscriptionId'
+                    | 'status'
+                    | 'periodStart'
+                    | 'periodEnd'
+                    | 'trialStart'
+                    | 'trialEnd'
+                    | 'cancelAtPeriodEnd'
+                    | 'seats'
+                    | 'id';
+                  operator?:
+                    | 'lt'
+                    | 'lte'
+                    | 'gt'
+                    | 'gte'
+                    | 'eq'
+                    | 'in'
+                    | 'ne'
+                    | 'contains'
+                    | 'starts_with'
+                    | 'ends_with';
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
+              }
+            | {
+                model: 'walletAddress';
+                where?: Array<{
+                  connector?: 'AND' | 'OR';
+                  field:
+                    | 'userId'
+                    | 'address'
+                    | 'chainId'
+                    | 'isPrimary'
+                    | 'createdAt'
+                    | 'id';
+                  operator?:
+                    | 'lt'
+                    | 'lte'
+                    | 'gt'
+                    | 'gte'
+                    | 'eq'
+                    | 'in'
+                    | 'ne'
+                    | 'contains'
+                    | 'starts_with'
+                    | 'ends_with';
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
+              }
+            | {
+                model: 'rateLimit';
+                where?: Array<{
+                  connector?: 'AND' | 'OR';
+                  field: 'key' | 'count' | 'lastRequest' | 'id';
+                  operator?:
+                    | 'lt'
+                    | 'lte'
+                    | 'gt'
+                    | 'gte'
+                    | 'eq'
+                    | 'in'
+                    | 'ne'
+                    | 'contains'
+                    | 'starts_with'
+                    | 'ends_with';
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
+              }
+            | {
+                model: 'ratelimit';
+                where?: Array<{
+                  connector?: 'AND' | 'OR';
+                  field: 'key' | 'count' | 'lastRequest' | 'id';
                   operator?:
                     | 'lt'
                     | 'lte'
@@ -586,7 +1613,21 @@ export declare const components: {
             | 'account'
             | 'verification'
             | 'twoFactor'
-            | 'jwks';
+            | 'passkey'
+            | 'oauthApplication'
+            | 'oauthAccessToken'
+            | 'oauthConsent'
+            | 'team'
+            | 'teamMember'
+            | 'organization'
+            | 'member'
+            | 'invitation'
+            | 'ssoProvider'
+            | 'jwks'
+            | 'subscription'
+            | 'walletAddress'
+            | 'rateLimit'
+            | 'ratelimit';
           offset?: number;
           paginationOpts: {
             cursor: string | null;
@@ -632,7 +1673,21 @@ export declare const components: {
             | 'account'
             | 'verification'
             | 'twoFactor'
-            | 'jwks';
+            | 'passkey'
+            | 'oauthApplication'
+            | 'oauthAccessToken'
+            | 'oauthConsent'
+            | 'team'
+            | 'teamMember'
+            | 'organization'
+            | 'member'
+            | 'invitation'
+            | 'ssoProvider'
+            | 'jwks'
+            | 'subscription'
+            | 'walletAddress'
+            | 'rateLimit'
+            | 'ratelimit';
           select?: Array<string>;
           where?: Array<{
             connector?: 'AND' | 'OR';
@@ -671,10 +1726,11 @@ export declare const components: {
                   displayUsername?: null | string;
                   email?: string;
                   emailVerified?: boolean;
-                  foo?: null | string;
                   image?: null | string;
                   isAnonymous?: null | boolean;
                   name?: string;
+                  phoneNumber?: null | string;
+                  phoneNumberVerified?: null | boolean;
                   twoFactorEnabled?: null | boolean;
                   updatedAt?: number;
                   userId?: null | string;
@@ -689,12 +1745,13 @@ export declare const components: {
                     | 'image'
                     | 'createdAt'
                     | 'updatedAt'
+                    | 'twoFactorEnabled'
                     | 'isAnonymous'
                     | 'username'
                     | 'displayUsername'
-                    | 'twoFactorEnabled'
+                    | 'phoneNumber'
+                    | 'phoneNumberVerified'
                     | 'userId'
-                    | 'foo'
                     | 'id';
                   operator?:
                     | 'lt'
@@ -879,6 +1936,414 @@ export declare const components: {
                 }>;
               }
             | {
+                model: 'passkey';
+                update: {
+                  aaguid?: null | string;
+                  backedUp?: boolean;
+                  counter?: number;
+                  createdAt?: null | number;
+                  credentialID?: string;
+                  deviceType?: string;
+                  name?: null | string;
+                  publicKey?: string;
+                  transports?: null | string;
+                  userId?: string;
+                };
+                where?: Array<{
+                  connector?: 'AND' | 'OR';
+                  field:
+                    | 'name'
+                    | 'publicKey'
+                    | 'userId'
+                    | 'credentialID'
+                    | 'counter'
+                    | 'deviceType'
+                    | 'backedUp'
+                    | 'transports'
+                    | 'createdAt'
+                    | 'aaguid'
+                    | 'id';
+                  operator?:
+                    | 'lt'
+                    | 'lte'
+                    | 'gt'
+                    | 'gte'
+                    | 'eq'
+                    | 'in'
+                    | 'ne'
+                    | 'contains'
+                    | 'starts_with'
+                    | 'ends_with';
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
+              }
+            | {
+                model: 'oauthApplication';
+                update: {
+                  clientId?: null | string;
+                  clientSecret?: null | string;
+                  createdAt?: null | number;
+                  disabled?: null | boolean;
+                  icon?: null | string;
+                  metadata?: null | string;
+                  name?: null | string;
+                  redirectURLs?: null | string;
+                  type?: null | string;
+                  updatedAt?: null | number;
+                  userId?: null | string;
+                };
+                where?: Array<{
+                  connector?: 'AND' | 'OR';
+                  field:
+                    | 'name'
+                    | 'icon'
+                    | 'metadata'
+                    | 'clientId'
+                    | 'clientSecret'
+                    | 'redirectURLs'
+                    | 'type'
+                    | 'disabled'
+                    | 'userId'
+                    | 'createdAt'
+                    | 'updatedAt'
+                    | 'id';
+                  operator?:
+                    | 'lt'
+                    | 'lte'
+                    | 'gt'
+                    | 'gte'
+                    | 'eq'
+                    | 'in'
+                    | 'ne'
+                    | 'contains'
+                    | 'starts_with'
+                    | 'ends_with';
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
+              }
+            | {
+                model: 'oauthAccessToken';
+                update: {
+                  accessToken?: null | string;
+                  accessTokenExpiresAt?: null | number;
+                  clientId?: null | string;
+                  createdAt?: null | number;
+                  refreshToken?: null | string;
+                  refreshTokenExpiresAt?: null | number;
+                  scopes?: null | string;
+                  updatedAt?: null | number;
+                  userId?: null | string;
+                };
+                where?: Array<{
+                  connector?: 'AND' | 'OR';
+                  field:
+                    | 'accessToken'
+                    | 'refreshToken'
+                    | 'accessTokenExpiresAt'
+                    | 'refreshTokenExpiresAt'
+                    | 'clientId'
+                    | 'userId'
+                    | 'scopes'
+                    | 'createdAt'
+                    | 'updatedAt'
+                    | 'id';
+                  operator?:
+                    | 'lt'
+                    | 'lte'
+                    | 'gt'
+                    | 'gte'
+                    | 'eq'
+                    | 'in'
+                    | 'ne'
+                    | 'contains'
+                    | 'starts_with'
+                    | 'ends_with';
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
+              }
+            | {
+                model: 'oauthConsent';
+                update: {
+                  clientId?: null | string;
+                  consentGiven?: null | boolean;
+                  createdAt?: null | number;
+                  scopes?: null | string;
+                  updatedAt?: null | number;
+                  userId?: null | string;
+                };
+                where?: Array<{
+                  connector?: 'AND' | 'OR';
+                  field:
+                    | 'clientId'
+                    | 'userId'
+                    | 'scopes'
+                    | 'createdAt'
+                    | 'updatedAt'
+                    | 'consentGiven'
+                    | 'id';
+                  operator?:
+                    | 'lt'
+                    | 'lte'
+                    | 'gt'
+                    | 'gte'
+                    | 'eq'
+                    | 'in'
+                    | 'ne'
+                    | 'contains'
+                    | 'starts_with'
+                    | 'ends_with';
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
+              }
+            | {
+                model: 'team';
+                update: {
+                  createdAt?: number;
+                  name?: string;
+                  organizationId?: string;
+                  updatedAt?: null | number;
+                };
+                where?: Array<{
+                  connector?: 'AND' | 'OR';
+                  field:
+                    | 'name'
+                    | 'organizationId'
+                    | 'createdAt'
+                    | 'updatedAt'
+                    | 'id';
+                  operator?:
+                    | 'lt'
+                    | 'lte'
+                    | 'gt'
+                    | 'gte'
+                    | 'eq'
+                    | 'in'
+                    | 'ne'
+                    | 'contains'
+                    | 'starts_with'
+                    | 'ends_with';
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
+              }
+            | {
+                model: 'teamMember';
+                update: {
+                  createdAt?: null | number;
+                  teamId?: string;
+                  userId?: string;
+                };
+                where?: Array<{
+                  connector?: 'AND' | 'OR';
+                  field: 'teamId' | 'userId' | 'createdAt' | 'id';
+                  operator?:
+                    | 'lt'
+                    | 'lte'
+                    | 'gt'
+                    | 'gte'
+                    | 'eq'
+                    | 'in'
+                    | 'ne'
+                    | 'contains'
+                    | 'starts_with'
+                    | 'ends_with';
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
+              }
+            | {
+                model: 'organization';
+                update: {
+                  createdAt?: number;
+                  logo?: null | string;
+                  metadata?: null | string;
+                  name?: string;
+                  slug?: null | string;
+                };
+                where?: Array<{
+                  connector?: 'AND' | 'OR';
+                  field:
+                    | 'name'
+                    | 'slug'
+                    | 'logo'
+                    | 'createdAt'
+                    | 'metadata'
+                    | 'id';
+                  operator?:
+                    | 'lt'
+                    | 'lte'
+                    | 'gt'
+                    | 'gte'
+                    | 'eq'
+                    | 'in'
+                    | 'ne'
+                    | 'contains'
+                    | 'starts_with'
+                    | 'ends_with';
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
+              }
+            | {
+                model: 'member';
+                update: {
+                  createdAt?: number;
+                  organizationId?: string;
+                  role?: string;
+                  userId?: string;
+                };
+                where?: Array<{
+                  connector?: 'AND' | 'OR';
+                  field:
+                    | 'organizationId'
+                    | 'userId'
+                    | 'role'
+                    | 'createdAt'
+                    | 'id';
+                  operator?:
+                    | 'lt'
+                    | 'lte'
+                    | 'gt'
+                    | 'gte'
+                    | 'eq'
+                    | 'in'
+                    | 'ne'
+                    | 'contains'
+                    | 'starts_with'
+                    | 'ends_with';
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
+              }
+            | {
+                model: 'invitation';
+                update: {
+                  email?: string;
+                  expiresAt?: number;
+                  inviterId?: string;
+                  organizationId?: string;
+                  role?: null | string;
+                  status?: string;
+                  teamId?: null | string;
+                };
+                where?: Array<{
+                  connector?: 'AND' | 'OR';
+                  field:
+                    | 'organizationId'
+                    | 'email'
+                    | 'role'
+                    | 'teamId'
+                    | 'status'
+                    | 'expiresAt'
+                    | 'inviterId'
+                    | 'id';
+                  operator?:
+                    | 'lt'
+                    | 'lte'
+                    | 'gt'
+                    | 'gte'
+                    | 'eq'
+                    | 'in'
+                    | 'ne'
+                    | 'contains'
+                    | 'starts_with'
+                    | 'ends_with';
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
+              }
+            | {
+                model: 'ssoProvider';
+                update: {
+                  domain?: string;
+                  issuer?: string;
+                  oidcConfig?: null | string;
+                  organizationId?: null | string;
+                  providerId?: string;
+                  samlConfig?: null | string;
+                  userId?: null | string;
+                };
+                where?: Array<{
+                  connector?: 'AND' | 'OR';
+                  field:
+                    | 'issuer'
+                    | 'oidcConfig'
+                    | 'samlConfig'
+                    | 'userId'
+                    | 'providerId'
+                    | 'organizationId'
+                    | 'domain'
+                    | 'id';
+                  operator?:
+                    | 'lt'
+                    | 'lte'
+                    | 'gt'
+                    | 'gte'
+                    | 'eq'
+                    | 'in'
+                    | 'ne'
+                    | 'contains'
+                    | 'starts_with'
+                    | 'ends_with';
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
+              }
+            | {
                 model: 'jwks';
                 update: {
                   createdAt?: number;
@@ -888,6 +2353,150 @@ export declare const components: {
                 where?: Array<{
                   connector?: 'AND' | 'OR';
                   field: 'publicKey' | 'privateKey' | 'createdAt' | 'id';
+                  operator?:
+                    | 'lt'
+                    | 'lte'
+                    | 'gt'
+                    | 'gte'
+                    | 'eq'
+                    | 'in'
+                    | 'ne'
+                    | 'contains'
+                    | 'starts_with'
+                    | 'ends_with';
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
+              }
+            | {
+                model: 'subscription';
+                update: {
+                  cancelAtPeriodEnd?: null | boolean;
+                  periodEnd?: null | number;
+                  periodStart?: null | number;
+                  plan?: string;
+                  referenceId?: string;
+                  seats?: null | number;
+                  status?: null | string;
+                  stripeCustomerId?: null | string;
+                  stripeSubscriptionId?: null | string;
+                  trialEnd?: null | number;
+                  trialStart?: null | number;
+                };
+                where?: Array<{
+                  connector?: 'AND' | 'OR';
+                  field:
+                    | 'plan'
+                    | 'referenceId'
+                    | 'stripeCustomerId'
+                    | 'stripeSubscriptionId'
+                    | 'status'
+                    | 'periodStart'
+                    | 'periodEnd'
+                    | 'trialStart'
+                    | 'trialEnd'
+                    | 'cancelAtPeriodEnd'
+                    | 'seats'
+                    | 'id';
+                  operator?:
+                    | 'lt'
+                    | 'lte'
+                    | 'gt'
+                    | 'gte'
+                    | 'eq'
+                    | 'in'
+                    | 'ne'
+                    | 'contains'
+                    | 'starts_with'
+                    | 'ends_with';
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
+              }
+            | {
+                model: 'walletAddress';
+                update: {
+                  address?: string;
+                  chainId?: number;
+                  createdAt?: number;
+                  isPrimary?: null | boolean;
+                  userId?: string;
+                };
+                where?: Array<{
+                  connector?: 'AND' | 'OR';
+                  field:
+                    | 'userId'
+                    | 'address'
+                    | 'chainId'
+                    | 'isPrimary'
+                    | 'createdAt'
+                    | 'id';
+                  operator?:
+                    | 'lt'
+                    | 'lte'
+                    | 'gt'
+                    | 'gte'
+                    | 'eq'
+                    | 'in'
+                    | 'ne'
+                    | 'contains'
+                    | 'starts_with'
+                    | 'ends_with';
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
+              }
+            | {
+                model: 'rateLimit';
+                update: {
+                  count?: null | number;
+                  key?: null | string;
+                  lastRequest?: null | number;
+                };
+                where?: Array<{
+                  connector?: 'AND' | 'OR';
+                  field: 'key' | 'count' | 'lastRequest' | 'id';
+                  operator?:
+                    | 'lt'
+                    | 'lte'
+                    | 'gt'
+                    | 'gte'
+                    | 'eq'
+                    | 'in'
+                    | 'ne'
+                    | 'contains'
+                    | 'starts_with'
+                    | 'ends_with';
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
+              }
+            | {
+                model: 'ratelimit';
+                update: { count?: number; key?: string; lastRequest?: number };
+                where?: Array<{
+                  connector?: 'AND' | 'OR';
+                  field: 'key' | 'count' | 'lastRequest' | 'id';
                   operator?:
                     | 'lt'
                     | 'lte'
@@ -932,10 +2541,11 @@ export declare const components: {
                   displayUsername?: null | string;
                   email?: string;
                   emailVerified?: boolean;
-                  foo?: null | string;
                   image?: null | string;
                   isAnonymous?: null | boolean;
                   name?: string;
+                  phoneNumber?: null | string;
+                  phoneNumberVerified?: null | boolean;
                   twoFactorEnabled?: null | boolean;
                   updatedAt?: number;
                   userId?: null | string;
@@ -950,12 +2560,13 @@ export declare const components: {
                     | 'image'
                     | 'createdAt'
                     | 'updatedAt'
+                    | 'twoFactorEnabled'
                     | 'isAnonymous'
                     | 'username'
                     | 'displayUsername'
-                    | 'twoFactorEnabled'
+                    | 'phoneNumber'
+                    | 'phoneNumberVerified'
                     | 'userId'
-                    | 'foo'
                     | 'id';
                   operator?:
                     | 'lt'
@@ -1140,6 +2751,414 @@ export declare const components: {
                 }>;
               }
             | {
+                model: 'passkey';
+                update: {
+                  aaguid?: null | string;
+                  backedUp?: boolean;
+                  counter?: number;
+                  createdAt?: null | number;
+                  credentialID?: string;
+                  deviceType?: string;
+                  name?: null | string;
+                  publicKey?: string;
+                  transports?: null | string;
+                  userId?: string;
+                };
+                where?: Array<{
+                  connector?: 'AND' | 'OR';
+                  field:
+                    | 'name'
+                    | 'publicKey'
+                    | 'userId'
+                    | 'credentialID'
+                    | 'counter'
+                    | 'deviceType'
+                    | 'backedUp'
+                    | 'transports'
+                    | 'createdAt'
+                    | 'aaguid'
+                    | 'id';
+                  operator?:
+                    | 'lt'
+                    | 'lte'
+                    | 'gt'
+                    | 'gte'
+                    | 'eq'
+                    | 'in'
+                    | 'ne'
+                    | 'contains'
+                    | 'starts_with'
+                    | 'ends_with';
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
+              }
+            | {
+                model: 'oauthApplication';
+                update: {
+                  clientId?: null | string;
+                  clientSecret?: null | string;
+                  createdAt?: null | number;
+                  disabled?: null | boolean;
+                  icon?: null | string;
+                  metadata?: null | string;
+                  name?: null | string;
+                  redirectURLs?: null | string;
+                  type?: null | string;
+                  updatedAt?: null | number;
+                  userId?: null | string;
+                };
+                where?: Array<{
+                  connector?: 'AND' | 'OR';
+                  field:
+                    | 'name'
+                    | 'icon'
+                    | 'metadata'
+                    | 'clientId'
+                    | 'clientSecret'
+                    | 'redirectURLs'
+                    | 'type'
+                    | 'disabled'
+                    | 'userId'
+                    | 'createdAt'
+                    | 'updatedAt'
+                    | 'id';
+                  operator?:
+                    | 'lt'
+                    | 'lte'
+                    | 'gt'
+                    | 'gte'
+                    | 'eq'
+                    | 'in'
+                    | 'ne'
+                    | 'contains'
+                    | 'starts_with'
+                    | 'ends_with';
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
+              }
+            | {
+                model: 'oauthAccessToken';
+                update: {
+                  accessToken?: null | string;
+                  accessTokenExpiresAt?: null | number;
+                  clientId?: null | string;
+                  createdAt?: null | number;
+                  refreshToken?: null | string;
+                  refreshTokenExpiresAt?: null | number;
+                  scopes?: null | string;
+                  updatedAt?: null | number;
+                  userId?: null | string;
+                };
+                where?: Array<{
+                  connector?: 'AND' | 'OR';
+                  field:
+                    | 'accessToken'
+                    | 'refreshToken'
+                    | 'accessTokenExpiresAt'
+                    | 'refreshTokenExpiresAt'
+                    | 'clientId'
+                    | 'userId'
+                    | 'scopes'
+                    | 'createdAt'
+                    | 'updatedAt'
+                    | 'id';
+                  operator?:
+                    | 'lt'
+                    | 'lte'
+                    | 'gt'
+                    | 'gte'
+                    | 'eq'
+                    | 'in'
+                    | 'ne'
+                    | 'contains'
+                    | 'starts_with'
+                    | 'ends_with';
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
+              }
+            | {
+                model: 'oauthConsent';
+                update: {
+                  clientId?: null | string;
+                  consentGiven?: null | boolean;
+                  createdAt?: null | number;
+                  scopes?: null | string;
+                  updatedAt?: null | number;
+                  userId?: null | string;
+                };
+                where?: Array<{
+                  connector?: 'AND' | 'OR';
+                  field:
+                    | 'clientId'
+                    | 'userId'
+                    | 'scopes'
+                    | 'createdAt'
+                    | 'updatedAt'
+                    | 'consentGiven'
+                    | 'id';
+                  operator?:
+                    | 'lt'
+                    | 'lte'
+                    | 'gt'
+                    | 'gte'
+                    | 'eq'
+                    | 'in'
+                    | 'ne'
+                    | 'contains'
+                    | 'starts_with'
+                    | 'ends_with';
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
+              }
+            | {
+                model: 'team';
+                update: {
+                  createdAt?: number;
+                  name?: string;
+                  organizationId?: string;
+                  updatedAt?: null | number;
+                };
+                where?: Array<{
+                  connector?: 'AND' | 'OR';
+                  field:
+                    | 'name'
+                    | 'organizationId'
+                    | 'createdAt'
+                    | 'updatedAt'
+                    | 'id';
+                  operator?:
+                    | 'lt'
+                    | 'lte'
+                    | 'gt'
+                    | 'gte'
+                    | 'eq'
+                    | 'in'
+                    | 'ne'
+                    | 'contains'
+                    | 'starts_with'
+                    | 'ends_with';
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
+              }
+            | {
+                model: 'teamMember';
+                update: {
+                  createdAt?: null | number;
+                  teamId?: string;
+                  userId?: string;
+                };
+                where?: Array<{
+                  connector?: 'AND' | 'OR';
+                  field: 'teamId' | 'userId' | 'createdAt' | 'id';
+                  operator?:
+                    | 'lt'
+                    | 'lte'
+                    | 'gt'
+                    | 'gte'
+                    | 'eq'
+                    | 'in'
+                    | 'ne'
+                    | 'contains'
+                    | 'starts_with'
+                    | 'ends_with';
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
+              }
+            | {
+                model: 'organization';
+                update: {
+                  createdAt?: number;
+                  logo?: null | string;
+                  metadata?: null | string;
+                  name?: string;
+                  slug?: null | string;
+                };
+                where?: Array<{
+                  connector?: 'AND' | 'OR';
+                  field:
+                    | 'name'
+                    | 'slug'
+                    | 'logo'
+                    | 'createdAt'
+                    | 'metadata'
+                    | 'id';
+                  operator?:
+                    | 'lt'
+                    | 'lte'
+                    | 'gt'
+                    | 'gte'
+                    | 'eq'
+                    | 'in'
+                    | 'ne'
+                    | 'contains'
+                    | 'starts_with'
+                    | 'ends_with';
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
+              }
+            | {
+                model: 'member';
+                update: {
+                  createdAt?: number;
+                  organizationId?: string;
+                  role?: string;
+                  userId?: string;
+                };
+                where?: Array<{
+                  connector?: 'AND' | 'OR';
+                  field:
+                    | 'organizationId'
+                    | 'userId'
+                    | 'role'
+                    | 'createdAt'
+                    | 'id';
+                  operator?:
+                    | 'lt'
+                    | 'lte'
+                    | 'gt'
+                    | 'gte'
+                    | 'eq'
+                    | 'in'
+                    | 'ne'
+                    | 'contains'
+                    | 'starts_with'
+                    | 'ends_with';
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
+              }
+            | {
+                model: 'invitation';
+                update: {
+                  email?: string;
+                  expiresAt?: number;
+                  inviterId?: string;
+                  organizationId?: string;
+                  role?: null | string;
+                  status?: string;
+                  teamId?: null | string;
+                };
+                where?: Array<{
+                  connector?: 'AND' | 'OR';
+                  field:
+                    | 'organizationId'
+                    | 'email'
+                    | 'role'
+                    | 'teamId'
+                    | 'status'
+                    | 'expiresAt'
+                    | 'inviterId'
+                    | 'id';
+                  operator?:
+                    | 'lt'
+                    | 'lte'
+                    | 'gt'
+                    | 'gte'
+                    | 'eq'
+                    | 'in'
+                    | 'ne'
+                    | 'contains'
+                    | 'starts_with'
+                    | 'ends_with';
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
+              }
+            | {
+                model: 'ssoProvider';
+                update: {
+                  domain?: string;
+                  issuer?: string;
+                  oidcConfig?: null | string;
+                  organizationId?: null | string;
+                  providerId?: string;
+                  samlConfig?: null | string;
+                  userId?: null | string;
+                };
+                where?: Array<{
+                  connector?: 'AND' | 'OR';
+                  field:
+                    | 'issuer'
+                    | 'oidcConfig'
+                    | 'samlConfig'
+                    | 'userId'
+                    | 'providerId'
+                    | 'organizationId'
+                    | 'domain'
+                    | 'id';
+                  operator?:
+                    | 'lt'
+                    | 'lte'
+                    | 'gt'
+                    | 'gte'
+                    | 'eq'
+                    | 'in'
+                    | 'ne'
+                    | 'contains'
+                    | 'starts_with'
+                    | 'ends_with';
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
+              }
+            | {
                 model: 'jwks';
                 update: {
                   createdAt?: number;
@@ -1168,34 +3187,165 @@ export declare const components: {
                     | Array<number>
                     | null;
                 }>;
+              }
+            | {
+                model: 'subscription';
+                update: {
+                  cancelAtPeriodEnd?: null | boolean;
+                  periodEnd?: null | number;
+                  periodStart?: null | number;
+                  plan?: string;
+                  referenceId?: string;
+                  seats?: null | number;
+                  status?: null | string;
+                  stripeCustomerId?: null | string;
+                  stripeSubscriptionId?: null | string;
+                  trialEnd?: null | number;
+                  trialStart?: null | number;
+                };
+                where?: Array<{
+                  connector?: 'AND' | 'OR';
+                  field:
+                    | 'plan'
+                    | 'referenceId'
+                    | 'stripeCustomerId'
+                    | 'stripeSubscriptionId'
+                    | 'status'
+                    | 'periodStart'
+                    | 'periodEnd'
+                    | 'trialStart'
+                    | 'trialEnd'
+                    | 'cancelAtPeriodEnd'
+                    | 'seats'
+                    | 'id';
+                  operator?:
+                    | 'lt'
+                    | 'lte'
+                    | 'gt'
+                    | 'gte'
+                    | 'eq'
+                    | 'in'
+                    | 'ne'
+                    | 'contains'
+                    | 'starts_with'
+                    | 'ends_with';
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
+              }
+            | {
+                model: 'walletAddress';
+                update: {
+                  address?: string;
+                  chainId?: number;
+                  createdAt?: number;
+                  isPrimary?: null | boolean;
+                  userId?: string;
+                };
+                where?: Array<{
+                  connector?: 'AND' | 'OR';
+                  field:
+                    | 'userId'
+                    | 'address'
+                    | 'chainId'
+                    | 'isPrimary'
+                    | 'createdAt'
+                    | 'id';
+                  operator?:
+                    | 'lt'
+                    | 'lte'
+                    | 'gt'
+                    | 'gte'
+                    | 'eq'
+                    | 'in'
+                    | 'ne'
+                    | 'contains'
+                    | 'starts_with'
+                    | 'ends_with';
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
+              }
+            | {
+                model: 'rateLimit';
+                update: {
+                  count?: null | number;
+                  key?: null | string;
+                  lastRequest?: null | number;
+                };
+                where?: Array<{
+                  connector?: 'AND' | 'OR';
+                  field: 'key' | 'count' | 'lastRequest' | 'id';
+                  operator?:
+                    | 'lt'
+                    | 'lte'
+                    | 'gt'
+                    | 'gte'
+                    | 'eq'
+                    | 'in'
+                    | 'ne'
+                    | 'contains'
+                    | 'starts_with'
+                    | 'ends_with';
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
+              }
+            | {
+                model: 'ratelimit';
+                update: { count?: number; key?: string; lastRequest?: number };
+                where?: Array<{
+                  connector?: 'AND' | 'OR';
+                  field: 'key' | 'count' | 'lastRequest' | 'id';
+                  operator?:
+                    | 'lt'
+                    | 'lte'
+                    | 'gt'
+                    | 'gte'
+                    | 'eq'
+                    | 'in'
+                    | 'ne'
+                    | 'contains'
+                    | 'starts_with'
+                    | 'ends_with';
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
               };
           onUpdateHandle?: string;
         },
         any
       >;
     };
-    auth: {
-      getCurrentUser: FunctionReference<
-        'query',
-        'internal',
-        {},
-        null | {
-          _creationTime: number;
-          _id: string;
-          createdAt: number;
-          displayUsername?: null | string;
-          email: string;
-          emailVerified: boolean;
-          foo?: null | string;
-          image?: null | string;
-          isAnonymous?: null | boolean;
-          name: string;
-          twoFactorEnabled?: null | boolean;
-          updatedAt: number;
-          userId?: null | string;
-          username?: null | string;
-        }
-      >;
+    adapterTest: {
+      count: FunctionReference<'query', 'internal', any, any>;
+      create: FunctionReference<'mutation', 'internal', any, any>;
+      delete: FunctionReference<'mutation', 'internal', any, any>;
+      deleteMany: FunctionReference<'mutation', 'internal', any, any>;
+      findMany: FunctionReference<'query', 'internal', any, any>;
+      findOne: FunctionReference<'query', 'internal', any, any>;
+      update: FunctionReference<'mutation', 'internal', any, any>;
+      updateMany: FunctionReference<'mutation', 'internal', any, any>;
     };
   };
   resend: {
@@ -1329,12 +3479,6 @@ export declare const components: {
   };
   polar: {
     lib: {
-      clearAllData: FunctionReference<
-        'mutation',
-        'internal',
-        {},
-        { customers: number; products: number; subscriptions: number }
-      >;
       createProduct: FunctionReference<
         'mutation',
         'internal',
@@ -1411,6 +3555,24 @@ export declare const components: {
             status: string;
           };
         },
+        any
+      >;
+      deleteCustomer: FunctionReference<
+        'mutation',
+        'internal',
+        { userId: string },
+        any
+      >;
+      deleteProduct: FunctionReference<
+        'mutation',
+        'internal',
+        { id: string },
+        any
+      >;
+      deleteSubscription: FunctionReference<
+        'mutation',
+        'internal',
+        { id: string },
         any
       >;
       getCurrentSubscription: FunctionReference<
@@ -1594,6 +3756,12 @@ export declare const components: {
           status: string;
         }>
       >;
+      listCustomers: FunctionReference<
+        'query',
+        'internal',
+        {},
+        Array<{ id: string; metadata?: Record<string, any>; userId: string }>
+      >;
       listProducts: FunctionReference<
         'query',
         'internal',
@@ -1641,6 +3809,32 @@ export declare const components: {
             type?: string;
           }>;
           recurringInterval?: 'month' | 'year' | null;
+        }>
+      >;
+      listSubscriptions: FunctionReference<
+        'query',
+        'internal',
+        { includeEnded?: boolean },
+        Array<{
+          amount: number | null;
+          cancelAtPeriodEnd: boolean;
+          checkoutId: string | null;
+          createdAt: string;
+          currency: string | null;
+          currentPeriodEnd: string | null;
+          currentPeriodStart: string;
+          customerCancellationComment?: string | null;
+          customerCancellationReason?: string | null;
+          customerId: string;
+          endedAt: string | null;
+          id: string;
+          metadata: Record<string, any>;
+          modifiedAt: string | null;
+          priceId?: string;
+          productId: string;
+          recurringInterval: 'month' | 'year' | null;
+          startedAt: string | null;
+          status: string;
         }>
       >;
       listUserSubscriptions: FunctionReference<
@@ -1852,56 +4046,6 @@ export declare const components: {
         'internal',
         { id: string; metadata?: Record<string, any>; userId: string },
         string
-      >;
-      upsertProduct: FunctionReference<
-        'mutation',
-        'internal',
-        {
-          product: {
-            createdAt: string;
-            description: string | null;
-            id: string;
-            isArchived: boolean;
-            isRecurring: boolean;
-            medias: Array<{
-              checksumEtag: string | null;
-              checksumSha256Base64: string | null;
-              checksumSha256Hex: string | null;
-              createdAt: string;
-              id: string;
-              isUploaded: boolean;
-              lastModifiedAt: string | null;
-              mimeType: string;
-              name: string;
-              organizationId: string;
-              path: string;
-              publicUrl: string;
-              service?: string;
-              size: number;
-              sizeReadable: string;
-              storageVersion: string | null;
-              version: string | null;
-            }>;
-            metadata?: Record<string, any>;
-            modifiedAt: string | null;
-            name: string;
-            organizationId: string;
-            prices: Array<{
-              amountType?: string;
-              createdAt: string;
-              id: string;
-              isArchived: boolean;
-              modifiedAt: string | null;
-              priceAmount?: number;
-              priceCurrency?: string;
-              productId: string;
-              recurringInterval?: 'month' | 'year' | null;
-              type?: string;
-            }>;
-            recurringInterval?: 'month' | 'year' | null;
-          };
-        },
-        any
       >;
     };
   };
