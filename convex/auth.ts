@@ -1,4 +1,9 @@
-import { createClient, GenericCtx } from '@convex-dev/better-auth';
+import {
+  createClient,
+  GenericCtx,
+  getStaticAuth,
+  type AuthFunctions,
+} from '@convex-dev/better-auth';
 import { convex } from '@convex-dev/better-auth/plugins';
 import { requireActionCtx } from '@convex-dev/better-auth/utils';
 import { betterAuth, BetterAuthOptions } from 'better-auth';
@@ -19,47 +24,41 @@ import {
 import { components, internal } from './_generated/api';
 import { DataModel } from './_generated/dataModel';
 import { query, QueryCtx } from './_generated/server';
-import authSchema from './betterAuth/schema';
 import { polar } from './polar';
-
-// This implementation uses Local Install as it would be in a new project.
 
 const siteUrl = process.env.SITE_URL;
 
-export const authComponent = createClient<DataModel, typeof authSchema>(
-  components.betterAuth,
-  {
-    local: {
-      schema: authSchema,
-    },
-    verbose: false,
-    triggers: {
-      user: {
-        onCreate: async (ctx, authUser) => {
-          // Automatically create Polar customer when user signs up
-          console.log(`🔔 [TRIGGER] User created: ${authUser.email}`);
+const authFunctions: AuthFunctions = internal.auth;
 
-          try {
-            await ctx.scheduler.runAfter(0, internal.userSync.onUserCreated, {
-              userId: authUser._id,
-              email: authUser.email,
-              name: authUser.name,
-            });
-            console.log(
-              `✅ [TRIGGER] Scheduled Polar customer creation for ${authUser.email}`,
-            );
-          } catch (error) {
-            console.error(
-              `❌ [TRIGGER] Failed to schedule Polar customer creation:`,
-              error,
-            );
-            // Don't throw - we don't want to block user creation
-          }
-        },
+export const authComponent = createClient<DataModel>(components.betterAuth, {
+  authFunctions,
+  verbose: false,
+  triggers: {
+    user: {
+      onCreate: async (ctx, authUser) => {
+        // Automatically create Polar customer when user signs up
+        console.log(`🔔 [TRIGGER] User created: ${authUser.email}`);
+
+        try {
+          await ctx.scheduler.runAfter(0, internal.userSync.onUserCreated, {
+            userId: authUser._id,
+            email: authUser.email,
+            name: authUser.name,
+          });
+          console.log(
+            `✅ [TRIGGER] Scheduled Polar customer creation for ${authUser.email}`,
+          );
+        } catch (error) {
+          console.error(
+            `❌ [TRIGGER] Failed to schedule Polar customer creation:`,
+            error,
+          );
+          // Don't throw - we don't want to block user creation
+        }
       },
     },
   },
-);
+});
 
 export const createAuth = (
   ctx: GenericCtx<DataModel>,
@@ -146,6 +145,9 @@ export const createAuth = (
       convex(),
     ],
   } satisfies BetterAuthOptions);
+
+// Export a static instance for Better Auth schema generation and type inference
+export const auth = getStaticAuth(createAuth);
 
 // Below are example helpers and functions for getting the current user
 // Feel free to edit, omit, etc.

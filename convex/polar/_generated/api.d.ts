@@ -31,12 +31,6 @@ declare const fullApi: ApiFromModules<{
 }>;
 export type Mounts = {
   lib: {
-    clearAllData: FunctionReference<
-      'mutation',
-      'public',
-      {},
-      { customers: number; products: number; subscriptions: number }
-    >;
     createProduct: FunctionReference<
       'mutation',
       'public',
@@ -113,6 +107,19 @@ export type Mounts = {
           status: string;
         };
       },
+      any
+    >;
+    deleteCustomer: FunctionReference<
+      'mutation',
+      'public',
+      { userId: string },
+      any
+    >;
+    deleteProduct: FunctionReference<'mutation', 'public', { id: string }, any>;
+    deleteSubscription: FunctionReference<
+      'mutation',
+      'public',
+      { id: string },
       any
     >;
     getCurrentSubscription: FunctionReference<
@@ -296,6 +303,12 @@ export type Mounts = {
         status: string;
       }>
     >;
+    listCustomers: FunctionReference<
+      'query',
+      'public',
+      {},
+      Array<{ id: string; metadata?: Record<string, any>; userId: string }>
+    >;
     listProducts: FunctionReference<
       'query',
       'public',
@@ -343,6 +356,32 @@ export type Mounts = {
           type?: string;
         }>;
         recurringInterval?: 'month' | 'year' | null;
+      }>
+    >;
+    listSubscriptions: FunctionReference<
+      'query',
+      'public',
+      { includeEnded?: boolean },
+      Array<{
+        amount: number | null;
+        cancelAtPeriodEnd: boolean;
+        checkoutId: string | null;
+        createdAt: string;
+        currency: string | null;
+        currentPeriodEnd: string | null;
+        currentPeriodStart: string;
+        customerCancellationComment?: string | null;
+        customerCancellationReason?: string | null;
+        customerId: string;
+        endedAt: string | null;
+        id: string;
+        metadata: Record<string, any>;
+        modifiedAt: string | null;
+        priceId?: string;
+        productId: string;
+        recurringInterval: 'month' | 'year' | null;
+        startedAt: string | null;
+        status: string;
       }>
     >;
     listUserSubscriptions: FunctionReference<
@@ -554,56 +593,6 @@ export type Mounts = {
       'public',
       { id: string; metadata?: Record<string, any>; userId: string },
       string
-    >;
-    upsertProduct: FunctionReference<
-      'mutation',
-      'public',
-      {
-        product: {
-          createdAt: string;
-          description: string | null;
-          id: string;
-          isArchived: boolean;
-          isRecurring: boolean;
-          medias: Array<{
-            checksumEtag: string | null;
-            checksumSha256Base64: string | null;
-            checksumSha256Hex: string | null;
-            createdAt: string;
-            id: string;
-            isUploaded: boolean;
-            lastModifiedAt: string | null;
-            mimeType: string;
-            name: string;
-            organizationId: string;
-            path: string;
-            publicUrl: string;
-            service?: string;
-            size: number;
-            sizeReadable: string;
-            storageVersion: string | null;
-            version: string | null;
-          }>;
-          metadata?: Record<string, any>;
-          modifiedAt: string | null;
-          name: string;
-          organizationId: string;
-          prices: Array<{
-            amountType?: string;
-            createdAt: string;
-            id: string;
-            isArchived: boolean;
-            modifiedAt: string | null;
-            priceAmount?: number;
-            priceCurrency?: string;
-            productId: string;
-            recurringInterval?: 'month' | 'year' | null;
-            type?: string;
-          }>;
-          recurringInterval?: 'month' | 'year' | null;
-        };
-      },
-      any
     >;
   };
 };

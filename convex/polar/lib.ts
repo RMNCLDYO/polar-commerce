@@ -1,11 +1,11 @@
 import { PolarCore } from '@polar-sh/sdk/core';
 import { productsList } from '@polar-sh/sdk/funcs/productsList.js';
 
+import { asyncMap } from 'convex-helpers';
 import { v } from 'convex/values';
+import { api } from './_generated/api';
 import { action, mutation, query } from './_generated/server';
 import schema from './schema';
-import { asyncMap } from 'convex-helpers';
-import { api } from './_generated/api';
 import { convertToDatabaseProduct, omitSystemFields } from './util';
 
 export const getCustomerByUserId = query({
@@ -205,6 +205,31 @@ export const listProducts = query({
   },
 });
 
+export const listCustomers = query({
+  args: {},
+  returns: v.array(schema.tables.customers.validator),
+  handler: async (ctx) => {
+    const customers = await ctx.db.query('customers').collect();
+    return customers.map((customer) => omitSystemFields(customer));
+  },
+});
+
+export const listSubscriptions = query({
+  args: {
+    includeEnded: v.optional(v.boolean()),
+  },
+  returns: v.array(schema.tables.subscriptions.validator),
+  handler: async (ctx, args) => {
+    const subscriptions = await ctx.db.query('subscriptions').collect();
+    const filtered = args.includeEnded
+      ? subscriptions
+      : subscriptions.filter(
+          (sub) => !sub.endedAt || sub.endedAt > new Date().toISOString(),
+        );
+    return filtered.map((sub) => omitSystemFields(sub));
+  },
+});
+
 export const createSubscription = mutation({
   args: {
     subscription: schema.tables.subscriptions.validator,
@@ -253,12 +278,7 @@ export const createProduct = mutation({
       .withIndex('id', (q) => q.eq('id', args.product.id))
       .unique();
     if (existingProduct) {
-      // Update if exists - handles webhook retries and race conditions
-      await ctx.db.patch(existingProduct._id, {
-        ...args.product,
-        metadata: args.product.metadata,
-      });
-      return;
+      throw new Error(`Product already exists: ${args.product.id}`);
     }
     await ctx.db.insert('products', {
       ...args.product,
@@ -283,31 +303,6 @@ export const updateProduct = mutation({
       ...args.product,
       metadata: args.product.metadata,
     });
-  },
-});
-
-export const upsertProduct = mutation({
-  args: {
-    product: schema.tables.products.validator,
-  },
-  handler: async (ctx, args) => {
-    const existingProduct = await ctx.db
-      .query('products')
-      .withIndex('id', (q) => q.eq('id', args.product.id))
-      .unique();
-    if (existingProduct) {
-      // Update existing product
-      await ctx.db.patch(existingProduct._id, {
-        ...args.product,
-        metadata: args.product.metadata,
-      });
-    } else {
-      // Create new product
-      await ctx.db.insert('products', {
-        ...args.product,
-        metadata: args.product.metadata,
-      });
-    }
   },
 });
 
@@ -375,45 +370,50 @@ export const updateProducts = mutation({
   },
 });
 
-/**
- * Clear all Polar component data (subscriptions, customers, products)
- * This is exposed as an internal mutation for factory reset purposes
- */
-export const clearAllData = mutation({
-  args: {},
-  returns: v.object({
-    subscriptions: v.number(),
-    customers: v.number(),
-    products: v.number(),
-  }),
-  handler: async (ctx) => {
-    console.log('🐻 Clearing all Polar component data...');
-
-    // Delete subscriptions first (they reference customers and products)
-    const subscriptions = await ctx.db.query('subscriptions').collect();
-    for (const subscription of subscriptions) {
-      await ctx.db.delete(subscription._id);
+export const deleteCustomer = mutation({
+  args: {
+    userId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const customer = await ctx.db
+      .query('customers')
+      .withIndex('userId', (q) => q.eq('userId', args.userId))
+      .unique();
+    if (!customer) {
+      throw new Error(`Customer not found for user: ${args.userId}`);
     }
+    await ctx.db.delete(customer._id);
+  },
+});
 
-    // Delete customers
-    const customers = await ctx.db.query('customers').collect();
-    for (const customer of customers) {
-      await ctx.db.delete(customer._id);
+export const deleteSubscription = mutation({
+  args: {
+    id: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const subscription = await ctx.db
+      .query('subscriptions')
+      .withIndex('id', (q) => q.eq('id', args.id))
+      .unique();
+    if (!subscription) {
+      throw new Error(`Subscription not found: ${args.id}`);
     }
+    await ctx.db.delete(subscription._id);
+  },
+});
 
-    // Delete products
-    const products = await ctx.db.query('products').collect();
-    for (const product of products) {
-      await ctx.db.delete(product._id);
+export const deleteProduct = mutation({
+  args: {
+    id: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const product = await ctx.db
+      .query('products')
+      .withIndex('id', (q) => q.eq('id', args.id))
+      .unique();
+    if (!product) {
+      throw new Error(`Product not found: ${args.id}`);
     }
-
-    const results = {
-      subscriptions: subscriptions.length,
-      customers: customers.length,
-      products: products.length,
-    };
-
-    console.log('✅ All Polar component data cleared');
-    return results;
+    await ctx.db.delete(product._id);
   },
 });
