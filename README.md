@@ -6,6 +6,7 @@ Production-ready e-commerce platform built with Next.js 15, demonstrating experi
 [![React 19](https://img.shields.io/badge/React-19.2.0-61DAFB?style=flat-square&logo=react)](https://react.dev)
 [![Convex](https://img.shields.io/badge/Convex-1.27.4-FF6B35?style=flat-square)](https://convex.dev)
 [![Better Auth](https://img.shields.io/badge/Better_Auth-1.3.8-7C3AED?style=flat-square)](https://better-auth.com)
+[![Polar](https://img.shields.io/badge/Polar-1.0.0-007ACC?style=flat-square)](https://polar.sh)
 [![MIT License](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)](LICENSE)
 
 ## What Is This?
