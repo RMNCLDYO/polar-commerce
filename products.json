@@ -4,27 +4,35 @@
     "price": 18000,
     "category": "MEN",
     "imageUrl": "/products/nike-vomero.jpeg",
-    "description": "Premium running shoes with ZoomX foam technology"
+    "description": "Premium running shoes with ZoomX foam technology",
+    "inStock": true,
+    "inventory_qty": 100
   },
   {
     "name": "Nike Club Cap",
     "price": 2500,
     "category": "ACCESSORIES",
     "imageUrl": "/products/nike-cap.jpeg",
-    "description": "Classic baseball cap with Nike logo"
+    "description": "Classic baseball cap with Nike logo",
+    "inStock": true,
+    "inventory_qty": 50
   },
   {
     "name": "Nike Tech Woven Pants",
     "price": 12000,
     "category": "MEN",
     "imageUrl": "/products/nike-tech-set.jpeg",
-    "description": "Camo tracksuit with modern tech fabric"
+    "description": "Camo tracksuit with modern tech fabric",
+    "inStock": true,
+    "inventory_qty": 30
   },
   {
     "name": "Jordan Fleece Hoodie",
     "price": 8500,
     "category": "MEN",
     "imageUrl": "/products/jordan-hoodie.jpeg",
-    "description": "Premium hoodie with signature graphics"
+    "description": "Premium hoodie with signature graphics",
+    "inStock": false,
+    "inventory_qty": 20
   }
 ]
