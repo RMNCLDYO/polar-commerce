@@ -102,6 +102,8 @@ export const getProducts = query({
       image: p.polarImageUrl || p.imageUrl,
       description: p.description,
       polarProductId: p.polarProductId,
+      inStock: p.inStock,
+      inventory_qty: p.inventory_qty,
     }));
   },
 });
@@ -123,6 +125,8 @@ export const getProduct = query({
       image: product.polarImageUrl || product.imageUrl,
       description: product.description,
       polarProductId: product.polarProductId,
+      inStock: product.inStock,
+      inventory_qty: product.inventory_qty,
     };
   },
 });
@@ -138,11 +142,15 @@ export const createProduct = mutation({
     polarProductId: v.optional(v.string()),
     polarImageUrl: v.optional(v.string()),
     polarImageId: v.optional(v.string()),
+    inStock: v.optional(v.boolean()),
+    inventory_qty: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     const productId = await ctx.db.insert('products', {
       ...args,
       isActive: true,
+      inStock: args.inStock ?? true,
+      inventory_qty: args.inventory_qty ?? 0,
       createdAt: Date.now(),
       updatedAt: Date.now(),
     });
@@ -303,6 +311,8 @@ export const updateProduct = mutation({
       description: v.optional(v.string()),
       polarProductId: v.optional(v.string()),
       isActive: v.optional(v.boolean()),
+      inStock: v.optional(v.boolean()),
+      inventory_qty: v.optional(v.number()),
     }),
   },
   handler: async (ctx, args) => {
@@ -364,5 +374,61 @@ export const updateProductImageUrl = mutation({
       polarImageId: args.polarImageId,
       updatedAt: Date.now(),
     });
+  },
+});
+
+// Decrement product inventory (public mutation)
+export const decrementInventory = mutation({
+  args: {
+    productId: v.id('products'),
+    quantity: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const product = await ctx.db.get(args.productId);
+    if (!product) {
+      throw new Error('Product not found');
+    }
+
+    const newInventory = product.inventory_qty - args.quantity;
+
+    await ctx.db.patch(args.productId, {
+      inventory_qty: Math.max(0, newInventory),
+      inStock: newInventory > 0,
+      updatedAt: Date.now(),
+    });
+
+    return {
+      success: true,
+      newInventory: Math.max(0, newInventory),
+      inStock: newInventory > 0,
+    };
+  },
+});
+
+// Internal mutation for decrementing inventory (called from checkout)
+export const decrementInventoryInternal = internalMutation({
+  args: {
+    productId: v.id('products'),
+    quantity: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const product = await ctx.db.get(args.productId);
+    if (!product) {
+      throw new Error('Product not found');
+    }
+
+    const newInventory = product.inventory_qty - args.quantity;
+
+    await ctx.db.patch(args.productId, {
+      inventory_qty: Math.max(0, newInventory),
+      inStock: newInventory > 0,
+      updatedAt: Date.now(),
+    });
+
+    return {
+      success: true,
+      newInventory: Math.max(0, newInventory),
+      inStock: newInventory > 0,
+    };
   },
 });

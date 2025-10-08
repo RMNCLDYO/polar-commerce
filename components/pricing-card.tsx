@@ -2,14 +2,18 @@
 
 import { CheckoutLink } from '@convex-dev/polar/react';
 import { api } from '@/convex/_generated/api';
-import { Card } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Check } from 'lucide-react';
-import type { FunctionReturnType } from 'convex/server';
 
-type Product = NonNullable<
-  FunctionReturnType<typeof api.polar.getConfiguredProducts>
->[keyof FunctionReturnType<typeof api.polar.getConfiguredProducts>];
+type Product = any; // Simplified type for subscription products
 
 interface PricingCardProps {
   product: Product;
@@ -40,7 +44,7 @@ export function PricingCard({
 
   return (
     <Card
-      className={`p-8 flex flex-col ${highlighted ? 'border-2 border-primary relative' : ''}`}
+      className={`py-8 flex flex-col ${highlighted ? 'border-2 border-primary relative' : ''}`}
     >
       {badge && highlighted && (
         <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground px-4 py-1 rounded-full text-sm font-semibold">
@@ -48,32 +52,38 @@ export function PricingCard({
         </div>
       )}
 
-      <div className="mb-6">
-        <h3 className="text-2xl font-bold mb-2">{product.name}</h3>
-        <div className="text-4xl font-bold mb-4">
+      <CardHeader className="space-y-4">
+        <CardTitle className="text-2xl">{product.name}</CardTitle>
+        <CardDescription className="text-4xl font-bold text-foreground">
           ${amount}
-          <span className="text-xl text-muted-foreground">/{interval}</span>
-        </div>
-      </div>
+          <span className="text-xl text-muted-foreground font-normal">
+            /{interval}
+          </span>
+        </CardDescription>
+      </CardHeader>
 
-      <ul className="space-y-3 mb-8 flex-grow">
-        {features.map((feature) => (
-          <li key={feature} className="flex items-start gap-2">
-            <Check className="w-5 h-5 text-green-500 shrink-0 mt-0.5" />
-            <span>{feature}</span>
-          </li>
-        ))}
-      </ul>
+      <CardContent className="flex-grow">
+        <ul className="space-y-3">
+          {features.map((feature) => (
+            <li key={feature} className="flex items-start gap-2">
+              <Check className="w-5 h-5 text-green-500 shrink-0 mt-0.5" />
+              <span>{feature}</span>
+            </li>
+          ))}
+        </ul>
+      </CardContent>
 
-      <CheckoutLink
-        polarApi={api.polar}
-        productIds={[product.id]}
-        className="w-full"
-      >
-        <Button className="w-full" variant={variant} size="lg">
-          {buttonText || defaultButtonText}
-        </Button>
-      </CheckoutLink>
+      <CardFooter>
+        <CheckoutLink
+          polarApi={api.polar}
+          productIds={[product.id]}
+          className="w-full"
+        >
+          <Button className="w-full" variant={variant} size="lg">
+            {buttonText || defaultButtonText}
+          </Button>
+        </CheckoutLink>
+      </CardFooter>
     </Card>
   );
 }

@@ -1,7 +1,9 @@
 import type { Metadata } from 'next';
 import { ThemeProvider } from '@/components/theme-provider';
-import { geistMono, geistSans } from '@/lib/fonts';
-import { ConvexClientProvider } from './ConvexClientProvider';
+import { geistMono, geistSans } from '@/lib/shared/fonts';
+import { ConvexClientProvider } from '@/lib/client/providers/convex';
+import { CartManager } from '@/components/cart-manager';
+import { Toaster } from '@/components/ui/sonner';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -76,7 +78,9 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
+            <CartManager />
             {children}
+            <Toaster position="bottom-left" />
           </ThemeProvider>
         </ConvexClientProvider>
       </body>

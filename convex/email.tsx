@@ -1,9 +1,10 @@
 import './polyfills';
+// @ts-ignore - React is required for JSX syntax in render() calls
+import React from 'react';
 import VerifyEmail from './emails/verifyEmail';
 import MagicLinkEmail from './emails/magicLink';
 import VerifyOTP from './emails/verifyOTP';
 import { render } from '@react-email/components';
-import React from 'react';
 import ResetPasswordEmail from './emails/resetPassword';
 import { components } from './_generated/api';
 import { Resend } from '@convex-dev/resend';

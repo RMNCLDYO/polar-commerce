@@ -191,6 +191,60 @@
   .add-button:hover {
     opacity: 0.8;
   }
+
+  /* Sonner toast styles using CSS variables from theme */
+  .toaster [data-sonner-toast] {
+    background-color: var(--color-background) !important;
+    color: var(--color-foreground) !important;
+    border: 1px solid var(--color-border) !important;
+    font-family: var(--font-mono);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .toaster [data-sonner-toast][data-type="success"] {
+    background-color: var(--color-background) !important;
+    color: var(--color-foreground) !important;
+    border-color: var(--color-border) !important;
+  }
+
+  .toaster [data-sonner-toast][data-type="error"] {
+    background-color: var(--color-background) !important;
+    color: var(--color-destructive) !important;
+    border-color: var(--color-destructive) !important;
+  }
+
+  .toaster [data-sonner-toast][data-description] {
+    color: var(--color-muted-foreground) !important;
+  }
+
+  .toaster [data-sonner-toast] [data-action] {
+    background-color: var(--color-primary) !important;
+    color: var(--color-primary-foreground) !important;
+    border-radius: var(--radius-sm);
+  }
+
+  .toaster [data-sonner-toast] [data-cancel] {
+    background-color: var(--color-muted) !important;
+    color: var(--color-muted-foreground) !important;
+    border-radius: var(--radius-sm);
+  }
+
+  .toaster [data-sonner-toast] [data-close-button] {
+    background-color: var(--color-muted) !important;
+    border-color: var(--color-border) !important;
+  }
+
+  .toaster [data-sonner-toast] [data-close-button]:hover {
+    background-color: var(--color-accent) !important;
+  }
+
+  /* Remove default Sonner theme colors */
+  .toaster {
+    --normal-bg: var(--color-background) !important;
+    --normal-text: var(--color-foreground) !important;
+    --normal-border: var(--color-border) !important;
+  }
 }
 
 @layer utilities {

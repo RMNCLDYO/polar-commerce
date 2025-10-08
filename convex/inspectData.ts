@@ -1,5 +1,4 @@
 import { query, action } from './_generated/server';
-import { api } from './_generated/api';
 import { Polar } from '@polar-sh/sdk';
 
 /**
@@ -23,7 +22,7 @@ export const inspectAllData = query({
  */
 export const inspectPolarData = action({
   args: {},
-  handler: async (ctx) => {
+  handler: async (_ctx) => {
     const server =
       (process.env.POLAR_SERVER as 'sandbox' | 'production') || 'sandbox';
     const polarClient = new Polar({

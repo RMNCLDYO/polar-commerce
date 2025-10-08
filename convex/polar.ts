@@ -1,6 +1,8 @@
 import { Polar } from '@convex-dev/polar';
-import { action, query } from './_generated/server';
+import { action, query, internalAction } from './_generated/server';
 import { api, components } from './_generated/api';
+import { v } from 'convex/values';
+import { Polar as PolarSDK } from '@polar-sh/sdk';
 
 export const polar = new Polar(components.polar, {
   // Required: provide a function the component can use to get the current user's ID and email
@@ -21,14 +23,24 @@ export const polar = new Polar(components.polar, {
   server: (process.env.POLAR_SERVER as 'sandbox' | 'production') || 'sandbox',
 });
 
-// Export API functions from the Polar client
+// Export API functions from the Polar client component
 export const {
+  // Subscription management
   changeCurrentSubscription,
   cancelCurrentSubscription,
+
+  // Product management
+  getConfiguredProducts,
   listAllProducts,
+
+  // Checkout and portal
   generateCheckoutLink,
   generateCustomerPortalUrl,
 } = polar.api();
+
+// Note: getCurrentSubscription and listUserSubscriptions are available via the component's lib
+// Use them like: await ctx.runQuery(components.polar.lib.getCurrentSubscription, { userId })
+// Or: await ctx.runQuery(components.polar.lib.listUserSubscriptions, { userId })
 
 // Sync products from Polar to Convex
 // This should be run after creating products in Polar dashboard
@@ -65,5 +77,38 @@ export const getSubscriptionProducts = query({
     }
 
     return subscriptionProducts;
+  },
+});
+
+/**
+ * Archive a bundle product after successful checkout
+ * Internal action called by order webhook
+ */
+export const archiveBundleProduct = internalAction({
+  args: {
+    productId: v.string(),
+  },
+  handler: async (_ctx, args) => {
+    console.log('[Polar] Archiving bundle product:', args.productId);
+
+    try {
+      const polarClient = new PolarSDK({
+        accessToken: process.env.POLAR_ORGANIZATION_TOKEN!,
+        server:
+          (process.env.POLAR_SERVER as 'sandbox' | 'production') || 'sandbox',
+      });
+
+      await polarClient.products.update({
+        id: args.productId,
+        productUpdate: {
+          isArchived: true,
+        },
+      });
+
+      console.log('[Polar] ✓ Bundle product archived');
+    } catch (error: any) {
+      console.error('[Polar] Failed to archive bundle product:', error.message);
+      // Don't throw - this is cleanup and shouldn't block order processing
+    }
   },
 });

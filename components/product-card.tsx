@@ -2,12 +2,13 @@
 
 import Image from 'next/image';
 import { useRef, useState } from 'react';
-import { toast } from 'sonner';
 import { Link } from '@/components/link';
 import { Button } from '@/components/ui/button';
-import { logger } from '@/lib/logger';
-import type { Product } from '@/lib/types';
-import { cn } from '@/lib/utils';
+import { useCart } from '@/hooks/use-cart';
+import { logger } from '@/lib/shared/logger';
+import type { Product } from '@/lib/shared/types';
+import { cn } from '@/lib/shared/utils';
+import { Loader2 } from 'lucide-react';
 
 interface ProductCardProps {
   product: Product;
@@ -24,7 +25,9 @@ export function ProductCard({
 }: ProductCardProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
   const loadStartTime = useRef<number>(Date.now());
+  const { addToCart } = useCart();
 
   const handleImageLoad = (): void => {
     const loadTime = Date.now() - loadStartTime.current;
@@ -109,12 +112,20 @@ export function ProductCard({
             className={cn(
               'object-cover transition-all duration-500 group-hover:scale-105',
               isLoading ? 'opacity-0' : 'opacity-100',
+              !product.inStock ? 'grayscale opacity-50' : '',
             )}
             onLoad={handleImageLoad}
             onError={handleImageError}
             priority={index < 2}
             unoptimized={isDataUrl || isBlobUrl}
           />
+        )}
+
+        {/* Out of Stock Badge */}
+        {!product.inStock && (
+          <div className="absolute top-2 right-2 bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full">
+            OUT OF STOCK
+          </div>
         )}
       </div>
 
@@ -135,12 +146,22 @@ export function ProductCard({
             variant="outline-black"
             size="sm"
             className="text-xs font-semibold tracking-widest uppercase px-6 py-2 hover:scale-105"
-            onClick={(e) => {
+            disabled={isAddingToCart || !product.inStock}
+            onClick={async (e) => {
               e.preventDefault();
-              toast.success(`${product.name} added to cart!`);
+              if (!product.inStock) return;
+              setIsAddingToCart(true);
+              await addToCart(product.id as any, 1);
+              setIsAddingToCart(false);
             }}
           >
-            ADD
+            {isAddingToCart ? (
+              <Loader2 className="h-3 w-3 animate-spin" />
+            ) : !product.inStock ? (
+              'OUT OF STOCK'
+            ) : (
+              'ADD'
+            )}
           </Button>
         </div>
       </div>

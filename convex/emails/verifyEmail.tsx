@@ -1,5 +1,6 @@
-import { Heading, Link, Text } from '@react-email/components';
+// @ts-ignore - React is required for JSX syntax
 import React from 'react';
+import { Heading, Link, Text } from '@react-email/components';
 import { BaseEmail, styles } from './components/BaseEmail';
 
 interface VerifyEmailProps {

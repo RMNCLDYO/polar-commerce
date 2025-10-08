@@ -20,29 +20,75 @@ const getSession = async (request: NextRequest) => {
 };
 */
 
-const signInRoutes = ['/sign-in', '/sign-up', '/verify-2fa'];
-const protectedRoutes = ['/dashboard', '/settings'];
+// Auth flow routes (sign-in, sign-up, etc.)
+const authFlowRoutes = [
+  '/sign-in',
+  '/sign-up',
+  '/verify-2fa',
+  '/reset-password',
+];
+
+// Protected routes that require authentication
+const protectedRoutes = ['/dashboard', '/settings', '/portal'];
+
+// Tier-specific routes
+const starterRoutes: string[] = []; // Add starter-specific routes here
+const premiumRoutes: string[] = []; // Add premium-specific routes here
 
 // Just check cookie, recommended approach
 export default async function middleware(request: NextRequest) {
   const sessionCookie = getSessionCookie(request);
-  // Uncomment to fetch the session (not recommended)
-  // const session = await getSession(request);
+  const pathname = request.nextUrl.pathname;
 
-  const isSignInRoute = signInRoutes.includes(request.nextUrl.pathname);
-  const isProtectedRoute = protectedRoutes.some((route) =>
-    request.nextUrl.pathname.startsWith(route),
+  // Check if it's an auth flow route
+  const isAuthFlowRoute = authFlowRoutes.some((route) =>
+    pathname.startsWith(route),
   );
 
-  // Redirect to dashboard if signed in and on auth pages
-  if (isSignInRoute && sessionCookie) {
+  // Check if it's a protected route
+  const isProtectedRoute = protectedRoutes.some((route) =>
+    pathname.startsWith(route),
+  );
+
+  // Check tier-specific routes
+  const isStarterRoute = starterRoutes.some((route) =>
+    pathname.startsWith(route),
+  );
+
+  const isPremiumRoute = premiumRoutes.some((route) =>
+    pathname.startsWith(route),
+  );
+
+  // Redirect to dashboard if signed in and on auth flow pages
+  if (isAuthFlowRoute && sessionCookie) {
     return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 
   // Redirect to sign-in if trying to access protected route without auth
-  if (isProtectedRoute && !sessionCookie) {
+  if (
+    (isProtectedRoute || isStarterRoute || isPremiumRoute) &&
+    !sessionCookie
+  ) {
     return NextResponse.redirect(new URL('/sign-in', request.url));
   }
+
+  // Tier-based access control (can be enhanced when tier routes are added)
+  // TODO: Uncomment and implement when you have tier-specific routes
+  /*
+  if (sessionCookie && (isStarterRoute || isPremiumRoute)) {
+    // Would need to fetch session to check tier
+    const session = await getSession(request);
+    const userTier = session?.tier || 'free';
+
+    if (isStarterRoute && userTier === 'free') {
+      return NextResponse.redirect(new URL('/pricing?upgrade=starter', request.url));
+    }
+
+    if (isPremiumRoute && userTier !== 'premium') {
+      return NextResponse.redirect(new URL('/pricing?upgrade=premium', request.url));
+    }
+  }
+  */
 
   return NextResponse.next();
 }

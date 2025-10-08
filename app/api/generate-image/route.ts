@@ -2,7 +2,7 @@ import 'server-only';
 import { generateText } from 'ai';
 import { google } from '@ai-sdk/google';
 import { type NextRequest, NextResponse } from 'next/server';
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/shared/logger';
 
 /**
  * API Route for generating images using Google Gemini.

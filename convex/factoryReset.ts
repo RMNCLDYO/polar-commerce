@@ -25,7 +25,6 @@
 import { Polar } from '@polar-sh/sdk';
 import { action, internalAction, internalMutation } from './_generated/server';
 import { internal, components } from './_generated/api';
-import { v } from 'convex/values';
 
 /**
  * Factory Reset - Complete System Cleanup
@@ -79,8 +78,8 @@ export const factoryReset = action({
         convexSubscriptions: polarComponentResults.subscriptions,
         convexCustomers: polarComponentResults.customers,
         convexProducts: polarComponentResults.products,
-        apiCustomers: polarApiResults.customers,
-        apiProducts: polarApiResults.products,
+        apiCustomers: polarApiResults.customers ?? 0,
+        apiProducts: polarApiResults.products ?? 0,
       };
       console.log('✅ Polar data deleted from Convex and API');
     } catch (error) {
@@ -305,10 +304,10 @@ export const clearPolarComponentData = internalAction({
  */
 export const clearPolarDataInternal = internalAction({
   args: {},
-  handler: async (ctx) => {
+  handler: async () => {
     console.log('🐻 Clearing Polar data...');
 
-    const results: Record<string, number> = {
+    const results = {
       customers: 0,
       products: 0,
     };

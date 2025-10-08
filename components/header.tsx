@@ -1,9 +1,10 @@
-import { Heart, ShoppingBag } from 'lucide-react';
+import { Heart } from 'lucide-react';
 import Image from 'next/image';
 import { Link } from '@/components/link';
-import { ModeToggle } from '@/components/mode-toggle';
+import { ThemeToggle } from '@/components/theme-toggle';
 import { Search } from '@/components/search';
 import { UserMenu } from '@/components/user-menu';
+import { CartIcon } from '@/components/cart/cart-icon';
 import LogoImage from '@/public/logo.png';
 
 export function Header() {
@@ -43,9 +44,9 @@ export function Header() {
         >
           <Search />
           <Heart className="size-4 cursor-pointer hover:text-muted-foreground transition-colors" />
-          <ShoppingBag className="size-4 cursor-pointer hover:text-muted-foreground transition-colors" />
+          <CartIcon />
           <UserMenu />
-          <ModeToggle />
+          <ThemeToggle />
         </div>
       </div>
     </header>

@@ -231,6 +231,10 @@ async function seedSubscriptions() {
         }
 
         const part = createResponse.upload.parts[0];
+        if (!part) {
+          throw new Error('No upload part available');
+        }
+
         const uploadHeaders = {
           'Content-Type': 'image/png',
           ...part.headers,
@@ -239,7 +243,7 @@ async function seedSubscriptions() {
         const s3Response = await fetch(part.url, {
           method: 'PUT',
           headers: uploadHeaders,
-          body: imageBuffer,
+          body: imageBuffer as any,
         });
 
         if (!s3Response.ok) {
