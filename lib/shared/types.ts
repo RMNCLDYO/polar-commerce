@@ -8,6 +8,8 @@ export interface Product {
   category: string;
   image: StaticImageData | string;
   description: string;
+  inStock?: boolean;
+  inventory_qty?: number;
 }
 
 export interface ProductFilters {

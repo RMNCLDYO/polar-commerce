@@ -6,7 +6,7 @@ import {
   unstable_cacheTag as cacheTag,
 } from 'next/cache';
 import 'server-only';
-import type { Product, ProductFilters } from './types';
+import type { Product, ProductFilters } from '@/lib/shared/types';
 
 export type { Product, ProductFilters };
 
