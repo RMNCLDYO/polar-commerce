@@ -25,6 +25,8 @@ interface Product {
   category: string;
   imageUrl: string;
   description: string;
+  inStock: boolean;
+  inventory_qty: number;
 }
 
 async function seedProducts() {
@@ -208,6 +210,10 @@ async function seedProducts() {
         }
 
         const part = createResponse.upload.parts[0];
+        if (!part) {
+          throw new Error('No upload part available');
+        }
+
         const uploadHeaders = {
           'Content-Type': 'image/jpeg',
           ...part.headers,
@@ -216,7 +222,7 @@ async function seedProducts() {
         const s3Response = await fetch(part.url, {
           method: 'PUT',
           headers: uploadHeaders,
-          body: imageBuffer,
+          body: imageBuffer as any,
         });
 
         if (!s3Response.ok) {
@@ -278,6 +284,8 @@ async function seedProducts() {
               polarProductId: polarProduct.id,
               polarImageUrl: polarImageUrl,
               polarImageId: uploadedFile.id,
+              inStock: product.inStock,
+              inventory_qty: product.inventory_qty,
             },
           });
           convexId = existingConvexProduct._id;
@@ -294,6 +302,8 @@ async function seedProducts() {
             polarProductId: polarProduct.id,
             polarImageUrl: polarImageUrl,
             polarImageId: uploadedFile.id,
+            inStock: product.inStock,
+            inventory_qty: product.inventory_qty,
           });
         }
 

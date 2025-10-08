@@ -1,5 +1,5 @@
 import { v } from 'convex/values';
-import { action, internalAction, internalMutation } from './_generated/server';
+import { action, internalAction } from './_generated/server';
 import { api, internal, components } from './_generated/api';
 import { Polar as PolarSDK } from '@polar-sh/sdk';
 
@@ -16,7 +16,12 @@ export const onUserCreated = internalAction({
   handler: async (
     ctx,
     { userId, email, name },
-  ): Promise<{ success: boolean; customerId?: string; error?: string }> => {
+  ): Promise<{
+    success: boolean;
+    customerId?: string;
+    linkedOrders?: number;
+    error?: string;
+  }> => {
     console.log(`🆕 New user created: ${email}`);
 
     try {
@@ -25,15 +30,35 @@ export const onUserCreated = internalAction({
         await ctx.runAction(api.polarCustomer.ensurePolarCustomer, {
           userId,
           email,
+          name,
         });
 
       console.log(`✅ Polar customer ready for ${email} (${result.source})`);
 
-      // 2. User starts on free tier by default
+      // 2. Link any existing guest orders to this user
+      const orderLinkResult = await ctx.runMutation(
+        internal.orderSync.linkOrdersToUser,
+        {
+          userId,
+          email,
+        },
+      );
+
+      if (orderLinkResult.linkedOrders > 0) {
+        console.log(
+          `✅ Linked ${orderLinkResult.linkedOrders} guest orders to user ${email}`,
+        );
+      }
+
+      // 3. User starts on free tier by default
       // No subscription needed - tier detection handles this
       console.log(`✅ User ${email} assigned to FREE tier (default)`);
 
-      return { success: true, customerId: result.customerId };
+      return {
+        success: true,
+        customerId: result.customerId,
+        linkedOrders: orderLinkResult.linkedOrders,
+      };
     } catch (error: any) {
       console.error(`❌ Failed to sync user ${email}:`, error);
       // Don't throw - user account still created, they can checkout later
@@ -48,7 +73,7 @@ export const onUserCreated = internalAction({
  */
 export const syncAllUsers = action({
   args: {},
-  handler: async (ctx) => {
+  handler: async (_ctx) => {
     console.log('🔄 Syncing all users to Polar...\n');
 
     // Note: We can't directly query betterAuth.users
@@ -148,6 +173,29 @@ export const syncOrphanedCustomers = internalAction({
           await ctx.runMutation(components.polar.lib.insertCustomer, {
             id: customer.id,
             userId,
+            email: customer.email,
+            email_verified: customer.emailVerified ?? false,
+            name: customer.name ?? null,
+            external_id: customer.externalId ?? null,
+            avatar_url: customer.avatarUrl ?? null,
+            billing_address: customer.billingAddress
+              ? {
+                  line1: customer.billingAddress.line1 ?? null,
+                  line2: customer.billingAddress.line2 ?? null,
+                  postal_code: customer.billingAddress.postalCode ?? null,
+                  city: customer.billingAddress.city ?? null,
+                  state: customer.billingAddress.state ?? null,
+                  country: customer.billingAddress.country,
+                }
+              : null,
+            tax_id: customer.taxId
+              ? Array.isArray(customer.taxId)
+                ? customer.taxId
+                : null
+              : null,
+            created_at: customer.createdAt,
+            modified_at: customer.modifiedAt ?? null,
+            deleted_at: customer.deletedAt ?? null,
             metadata: customer.metadata || {},
           });
 

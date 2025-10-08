@@ -2,7 +2,6 @@ import {
   createClient,
   GenericCtx,
   getStaticAuth,
-  type AuthFunctions,
 } from '@convex-dev/better-auth';
 import { convex } from '@convex-dev/better-auth/plugins';
 import { requireActionCtx } from '@convex-dev/better-auth/utils';
@@ -28,10 +27,9 @@ import { polar } from './polar';
 
 const siteUrl = process.env.SITE_URL;
 
-const authFunctions: AuthFunctions = internal.auth;
-
+// @ts-expect-error - Circular type reference with internal.auth
 export const authComponent = createClient<DataModel>(components.betterAuth, {
-  authFunctions,
+  authFunctions: internal.auth as any,
   verbose: false,
   triggers: {
     user: {
@@ -56,10 +54,34 @@ export const authComponent = createClient<DataModel>(components.betterAuth, {
           // Don't throw - we don't want to block user creation
         }
       },
+      onDelete: async (ctx, authUser) => {
+        // Automatically delete Polar customer when user deletes their account
+        console.log(`🔔 [TRIGGER] User deleted: ${authUser.email}`);
+
+        try {
+          await ctx.scheduler.runAfter(
+            0,
+            internal.polarCustomer.deleteCustomer,
+            {
+              userId: authUser._id,
+            },
+          );
+          console.log(
+            `✅ [TRIGGER] Scheduled Polar customer deletion for ${authUser.email}`,
+          );
+        } catch (error) {
+          console.error(
+            `❌ [TRIGGER] Failed to schedule Polar customer deletion:`,
+            error,
+          );
+          // Don't throw - user account already deleted
+        }
+      },
     },
   },
 });
 
+// @ts-expect-error - Circular type reference in return type
 export const createAuth = (
   ctx: GenericCtx<DataModel>,
   { optionsOnly } = { optionsOnly: false },
@@ -147,6 +169,7 @@ export const createAuth = (
   } satisfies BetterAuthOptions);
 
 // Export a static instance for Better Auth schema generation and type inference
+// @ts-expect-error - Circular type reference in auth initialization
 export const auth = getStaticAuth(createAuth);
 
 // Below are example helpers and functions for getting the current user

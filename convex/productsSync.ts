@@ -1,7 +1,6 @@
 import { v } from 'convex/values';
 import {
   mutation,
-  action,
   internalMutation,
   internalAction,
   internalQuery,
@@ -21,12 +20,16 @@ export const createProduct = mutation({
     imageUrl: v.string(),
     description: v.string(),
     isActive: v.optional(v.boolean()),
+    inStock: v.optional(v.boolean()),
+    inventory_qty: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     // 1. Insert into app.products
     const productId = await ctx.db.insert('products', {
       ...args,
       isActive: args.isActive ?? true,
+      inStock: args.inStock ?? true,
+      inventory_qty: args.inventory_qty ?? 0,
       createdAt: Date.now(),
       updatedAt: Date.now(),
     });
@@ -52,6 +55,8 @@ export const updateProduct = mutation({
     imageUrl: v.optional(v.string()),
     description: v.optional(v.string()),
     isActive: v.optional(v.boolean()),
+    inStock: v.optional(v.boolean()),
+    inventory_qty: v.optional(v.number()),
   },
   handler: async (ctx, { productId, ...updates }) => {
     // 1. Update app.products
@@ -187,7 +192,7 @@ export const archivePolarProduct = internalAction({
   args: {
     polarProductId: v.string(),
   },
-  handler: async (ctx, { polarProductId }) => {
+  handler: async (_ctx, { polarProductId }) => {
     const polarClient = new PolarSDK({
       accessToken: process.env.POLAR_ORGANIZATION_TOKEN!,
       server:

@@ -36,6 +36,16 @@ export const insertCustomer = mutation({
     return ctx.db.insert('customers', {
       id: args.id,
       userId: args.userId,
+      email: args.email,
+      email_verified: args.email_verified,
+      name: args.name,
+      external_id: args.external_id,
+      avatar_url: args.avatar_url,
+      billing_address: args.billing_address,
+      tax_id: args.tax_id,
+      created_at: args.created_at,
+      modified_at: args.modified_at,
+      deleted_at: args.deleted_at,
       metadata: args.metadata,
     });
   },
@@ -53,6 +63,16 @@ export const upsertCustomer = mutation({
       const customerId = await ctx.db.insert('customers', {
         id: args.id,
         userId: args.userId,
+        email: args.email,
+        email_verified: args.email_verified,
+        name: args.name,
+        external_id: args.external_id,
+        avatar_url: args.avatar_url,
+        billing_address: args.billing_address,
+        tax_id: args.tax_id,
+        created_at: args.created_at,
+        modified_at: args.modified_at,
+        deleted_at: args.deleted_at,
         metadata: args.metadata,
       });
       const newCustomer = await ctx.db.get(customerId);
@@ -61,6 +81,18 @@ export const upsertCustomer = mutation({
       }
       return newCustomer.id;
     }
+    await ctx.db.patch(customer._id, {
+      email: args.email,
+      email_verified: args.email_verified,
+      name: args.name,
+      external_id: args.external_id,
+      avatar_url: args.avatar_url,
+      billing_address: args.billing_address,
+      tax_id: args.tax_id,
+      modified_at: args.modified_at,
+      deleted_at: args.deleted_at,
+      metadata: args.metadata,
+    });
     return customer.id;
   },
 });

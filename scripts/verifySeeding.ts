@@ -302,7 +302,7 @@ async function verifySeeding() {
 
   let allPassed = true;
 
-  results.forEach((result, index) => {
+  results.forEach((result) => {
     const icon = result.passed ? '✅' : '❌';
     const color = result.passed ? colors.green : colors.red;
 
