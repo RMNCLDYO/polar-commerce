@@ -5,6 +5,312 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2025-10-08 - Cart and Checkout System
+
+**PR #27** - Complete e-commerce cart and checkout implementation with 13 atomic commits
+
+### Added
+
+#### Shopping Cart System
+- `convex/cart.ts` - Cart management with CRUD operations (814 lines)
+- `convex/schema.ts` - Cart and order tables with indices
+- `hooks/use-cart.ts` - React hook for cart state management (174 lines)
+- Cart persistence for both authenticated users and guest sessions
+- Real-time cart synchronization across tabs
+- Inventory tracking (`inStock`, `inventory_qty` fields)
+
+#### Checkout & Payment Processing
+- `convex/checkout.ts` - Polar checkout integration (1,118 lines)
+- `convex/checkoutComponent.ts` - Checkout component logic (225 lines)
+- `convex/checkoutHttp.ts` - HTTP handlers for checkout (111 lines)
+- `convex/checkout_types.ts` - TypeScript types (350 lines)
+- Discount code support
+- Trial subscription support
+- Custom field data handling
+- Multiple product checkout
+
+#### Order Management
+- `convex/orderSync.ts` - Order synchronization (113 lines)
+- `convex/orderWebhook.ts` - Webhook handlers (92 lines)
+- `convex/orderWebhookHttp.ts` - HTTP webhook routing (69 lines)
+- `convex/polarWebhookMiddleware.ts` - Webhook signature verification (91 lines)
+- `convex/polar/types.ts` - Polar type definitions (363 lines)
+- Full order history tracking
+- Customer details capture
+- Billing address storage
+- Tax and discount tracking
+
+#### UI Components - Cart
+- `components/cart-manager.tsx` - Cart state provider (13 lines)
+- `components/cart/cart-drawer.tsx` - Slide-out cart UI (239 lines)
+- `components/cart/cart-icon.tsx` - Cart icon with badge (33 lines)
+- `components/cart/add-to-cart-button.tsx` - Add to cart button (56 lines)
+- `components/cart/quick-add-button.tsx` - Quick add functionality (45 lines)
+- `components/ui/drawer.tsx` - Drawer component (vaul) (135 lines)
+- `components/ui/sonner.tsx` - Toast notifications (19 lines)
+
+#### Route Reorganization
+- `app/(protected)/` - Protected routes requiring authentication
+  - `app/(protected)/(starter)/layout.tsx` - Starter tier layout
+  - `app/(protected)/(premium)/layout.tsx` - Premium tier layout
+  - `app/(protected)/portal/page.tsx` - Customer portal page (90 lines)
+  - Moved dashboard, settings from `(auth)/`
+- `app/(public)/` - Public routes accessible to all
+  - `app/(public)/(shop)/` - Shop routes
+  - `app/(public)/(auth)/` - Authentication flows
+  - `app/(public)/(shop)/checkout/page.tsx` - Checkout page (467 lines)
+  - `app/(public)/(shop)/checkout/checkout-simple.tsx` - Simple checkout (90 lines)
+  - `app/(public)/(shop)/checkout/success/page.tsx` - Success page (143 lines)
+
+#### Lib Restructure
+- `lib/client/` - Client-side utilities
+  - `lib/client/auth.ts` - Client auth utilities
+  - `lib/client/providers/convex.tsx` - Convex provider
+- `lib/server/` - Server-side utilities
+  - `lib/server/api.ts` - API helpers
+  - `lib/server/auth.ts` - Server auth utilities
+  - `lib/server/products.ts` - Product queries
+  - `lib/server/prompts.ts` - AI prompts
+  - `lib/server/revalidate.ts` - Cache revalidation
+- `lib/shared/` - Shared utilities
+  - `lib/shared/fonts.ts` - Font configuration
+  - `lib/shared/logger.ts` - Logging utility
+  - `lib/shared/types.ts` - Type definitions
+  - `lib/shared/utils.ts` - Utility functions
+
+### Changed
+
+#### Database Schema
+- Enhanced `products` table with inventory tracking
+  - Added `inStock: v.boolean()`
+  - Added `inventory_qty: v.number()`
+  - Added index on `inStock` field
+
+- Added `carts` table
+  - User/session tracking
+  - Last checkout state preservation
+  - Discount code storage
+  - Custom field data
+  - Expiration for cleanup
+
+- Added `orders` table
+  - Complete order history
+  - Customer information
+  - Status tracking (succeeded, failed, pending, confirmed, expired)
+  - Product details with quantities
+  - Payment amounts (total, discount, tax)
+  - Billing address
+  - Trial and subscription info
+  - Metadata and custom fields
+
+#### Middleware Enhancement
+- `middleware.ts` - Enhanced route protection
+  - Separated auth flow routes vs protected routes
+  - Added tier-specific route arrays (starter, premium)
+  - Improved redirect logic
+  - TODOs for future tier-based access control
+
+#### Component Updates
+- `components/header.tsx` - Integrated cart icon
+- `components/pricing-card.tsx` - Updated for checkout flow
+- `components/product-card.tsx` - Added cart integration
+- `components/theme-toggle.tsx` - Renamed from mode-toggle
+- `components/dashboard-render-toggle.tsx` - New toggle component (43 lines)
+- All UI components updated with import paths
+
+#### Convex Backend
+- `convex/http.ts` - Added checkout and order webhook routes
+- `convex/products.ts` - Added inventory queries (66 lines added)
+- All Convex files updated for lib restructure imports
+- Enhanced error handling across all mutations
+
+#### Dependencies
+- Added `vaul@1.1.2` - Drawer component
+- Added `@radix-ui/react-dialog@1.1.15` - Dialog primitives
+
+### Removed
+- `app/(auth)/` - Moved to `(protected)/`
+- `app/(shop)/` - Moved to `(public)/(shop)/`
+- `app/(unauth)/` - Moved to `(public)/(auth)/`
+- `app/ConvexClientProvider.tsx` - Moved to `lib/client/providers/convex.tsx`
+- `app/mode-toggle.tsx` - Replaced by `components/theme-toggle.tsx`
+- `components/mode-toggle.tsx` - Consolidated into theme-toggle
+- Old lib structure (10 files moved/reorganized)
+
+### Breaking Changes
+
+#### Route Structure
+**Before:**
+```
+app/(auth)/         # Protected routes
+app/(shop)/         # Shop routes
+app/(unauth)/       # Auth flows
+```
+
+**After:**
+```
+app/(protected)/    # Protected routes with tier groups
+app/(public)/       # Public routes (shop + auth)
+```
+
+**Migration:**
+- Update any hardcoded route references
+- Update bookmarks and saved links
+- Auth routes: `/sign-in` → `/sign-in` (same, but under (public))
+- Shop routes: `/products` → `/products` (same, but under (public))
+- Protected: `/dashboard` → `/dashboard` (same, but under (protected))
+
+#### Import Paths
+**Before:**
+```typescript
+import { auth } from '@/lib/auth-client'
+import { products } from '@/lib/products'
+```
+
+**After:**
+```typescript
+import { auth } from '@/lib/client/auth'
+import { products } from '@/lib/server/products'
+```
+
+#### Database Migration Required
+New tables must be deployed:
+```bash
+npx convex deploy  # Deploy new schema with carts and orders
+```
+
+### Commit Structure (13 Atomic Commits)
+
+All commits GPG signed with ED25519:
+
+1. `build: add drawer and dialog ui dependencies`
+2. `feat(schema): add cart, order tables and inventory tracking`
+3. `refactor(lib): reorganize into client/server/shared structure`
+4. `refactor(convex): update imports for lib restructure`
+5. `feat(api): add cart management endpoints`
+6. `feat(api): add polar checkout integration`
+7. `feat(api): add order sync and webhook handlers`
+8. `refactor(routes): reorganize into protected/public route groups`
+9. `feat(components): add drawer and toast notification ui`
+10. `feat(components): add cart management ui`
+11. `refactor(components): update imports and integrate cart`
+12. `refactor(app): update root layout and api routes`
+13. `chore(data): update product metadata`
+
+### Impact
+- **Bundle**: +2 dependencies, +5,000 lines of cart/checkout code
+- **Performance**: Real-time cart state with Convex live queries
+- **Security**: Webhook signature verification, GPG signed commits
+- **Architecture**: Clear client/server/shared separation
+- **UX**: Persistent cart across sessions, guest checkout support
+- **Commerce**: Full Polar integration for payment processing
+
+### Statistics
+- **Files Changed:** 129 files
+  - 72 files added
+  - 45 files modified
+  - 12 files removed (consolidated)
+- **Lines:** 10,682 insertions, 2,191 deletions
+- **Net Change:** +8,491 lines
+- **Commits:** 13 atomic commits (all independently revertable)
+
+---
+
+## [0.3.2] - 2025-10-07 - Better Auth NPM Migration & Polar CRUD
+
+**PR #26** - Migrate Better Auth to NPM package and refactor Polar operations
+
+### Changed
+
+#### Authentication Architecture
+- **Better Auth Migration**
+  - Migrated from local Better Auth install to `@convex-dev/better-auth` NPM package
+  - Updated `convex/auth.ts` to use `getStaticAuth` with NPM imports
+  - Updated `convex/convex.config.ts` configuration
+  - Updated `lib/auth-client.ts` import paths
+  - Removed `convex/betterAuth/` directory (1,655 lines deleted)
+
+#### Polar Component Refactor
+- **CRUD Operations**
+  - Added `listCustomers()` query - Fetch all customers
+  - Added `listSubscriptions()` query - Fetch all subscriptions
+  - Added `deleteCustomer()` mutation - Individual customer deletion
+  - Added `deleteSubscription()` mutation - Individual subscription deletion
+  - Added `deleteProduct()` mutation - Individual product deletion
+  - Removed `upsertProduct()` - Now `createProduct()` throws on duplicates
+  - Removed `clearAllData()` - Replaced by individual delete operations
+
+- **Factory Reset Updates**
+  - `convex/factoryReset.ts` - Updated to use new individual delete mutations
+  - Iterates through all entities for deletion
+  - Maintains data integrity during resets
+
+### Removed
+- `convex/betterAuth/` - Local Better Auth adapter (1,655 lines)
+- `upsertProduct()` mutation - Replaced by explicit create/update
+- `clearAllData()` mutation - Replaced by individual deletes
+
+### Build & Types
+- Updated Better Auth generated types
+  - `convex/_generated/api.d.ts` - 2,245 insertions, 101 deletions
+  - `convex/_generated/server.d.ts` - Type updates
+- Updated Polar generated types
+  - `convex/polar/_generated/api.d.ts` - 45 insertions, 56 deletions
+  - Better type safety for CRUD operations
+
+### Style
+- `next-env.d.ts` - Fixed import quote style (double → single quotes)
+
+### Documentation
+- `README.md` - Added Polar badge to showcase
+
+### Breaking Changes
+
+#### Removed Mutations
+```typescript
+// Before (upsert pattern)
+await ctx.runMutation(api.polar.upsertProduct, { data })
+
+// After (explicit create/update)
+await ctx.runMutation(api.polar.createProduct, { data })
+// Throws error if product exists
+
+// Before (bulk delete)
+await ctx.runMutation(api.polar.clearAllData, {})
+
+// After (individual deletes)
+const customers = await ctx.runQuery(api.polar.listCustomers, {})
+for (const customer of customers) {
+  await ctx.runMutation(api.polar.deleteCustomer, { id: customer._id })
+}
+```
+
+#### Import Changes
+```typescript
+// Before (local Better Auth)
+import { auth } from '@/convex/betterAuth'
+
+// After (NPM package)
+import { getStaticAuth } from '@convex-dev/better-auth'
+```
+
+### Impact
+- **Architecture**: Simpler maintenance with NPM Better Auth package
+- **CRUD**: More explicit operations (no implicit upserts)
+- **Bundle**: Net reduction of ~1,500 lines
+- **Types**: Improved type safety with regenerated types
+- **Breaking**: Removed `upsertProduct()` and `clearAllData()`
+
+### Statistics
+- **Files Changed:** 11 files
+  - 6 files modified
+  - 1 directory removed (convex/betterAuth/)
+- **Lines:** 2,290 insertions, 1,812 deletions
+- **Net Change:** +478 lines (mostly type regeneration)
+- **Commits:** 6 atomic commits
+
+---
+
 ## [0.3.1] - 2025-10-06 - Polar Customer Duplication Fix
 
 **PR #25** - Fix duplicate customer creation and update dependencies
