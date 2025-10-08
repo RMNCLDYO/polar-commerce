@@ -19,7 +19,11 @@ Full-stack e-commerce application showcasing Next.js 15 experimental features in
 - Product catalog with categories (Men's, Women's, Kids, New Arrivals)
 - Real-time search and filtering
 - Product detail pages with optimized images
-- Shopping cart (coming soon)
+- Shopping cart with real-time synchronization
+- Checkout with Polar payment processing
+- Order history and tracking
+- Inventory management
+- Guest and authenticated cart support
 
 ### Authentication
 - Email/password with verification
@@ -109,23 +113,32 @@ Visit `https://localhost:3000` (HTTPS required for Convex WebSockets)
 
 ```
 app/
-├── (shop)/              # Public routes (PPR enabled)
-│   ├── page.tsx         # Home
-│   ├── [category]/      # Category pages
-│   ├── product/[id]/    # Product details
-│   ├── products/        # All products
-│   └── pricing/         # Subscription pricing
-├── (auth)/              # Protected routes
+├── (protected)/         # Protected routes (auth required)
+│   ├── (starter)/       # Starter tier routes
+│   ├── (premium)/       # Premium tier routes
 │   ├── dashboard/       # User dashboard with todos
-│   └── settings/        # Account settings
-└── (unauth)/            # Auth flows
-    ├── sign-in/
-    ├── sign-up/
-    └── verify-2fa/
+│   ├── settings/        # Account settings
+│   └── portal/          # Customer portal
+├── (public)/            # Public routes
+│   ├── (shop)/          # Shop routes (PPR enabled)
+│   │   ├── page.tsx     # Home
+│   │   ├── [category]/  # Category pages
+│   │   ├── product/[id]/ # Product details
+│   │   ├── products/    # All products
+│   │   ├── pricing/     # Subscription pricing
+│   │   └── checkout/    # Checkout flow
+│   └── (auth)/          # Auth flows
+│       ├── sign-in/
+│       ├── sign-up/
+│       └── verify-2fa/
 
 convex/
-├── schema.ts            # Database schema
-├── products.ts          # Product CRUD
+├── schema.ts            # Database schema (products, carts, orders)
+├── cart.ts              # Cart management
+├── checkout.ts          # Polar checkout integration
+├── orderSync.ts         # Order synchronization
+├── orderWebhook.ts      # Webhook handlers
+├── products.ts          # Product CRUD + inventory
 ├── productsSync.ts      # Bi-directional sync
 ├── polar/               # Local Polar component
 ├── polarCustomer.ts     # Customer management
@@ -134,78 +147,34 @@ convex/
 ├── factoryReset.ts      # Complete data reset
 └── [other functions]
 
+lib/
+├── client/              # Client-side code
+│   ├── auth.ts          # Auth utilities
+│   └── providers/       # React providers
+├── server/              # Server-side code
+│   ├── api.ts           # API utilities
+│   ├── auth.ts          # Auth utilities
+│   ├── products.ts      # Product queries
+│   └── prompts.ts       # AI prompts
+└── shared/              # Shared utilities
+    ├── types.ts         # Type definitions
+    ├── utils.ts         # Utility functions
+    └── logger.ts        # Logging
+
+components/
+├── cart/                # Cart components
+│   ├── cart-drawer.tsx  # Shopping cart UI
+│   ├── cart-icon.tsx    # Cart icon with badge
+│   └── add-to-cart-button.tsx
+└── [other components]
+
+hooks/
+└── use-cart.ts          # Cart state management
+
 scripts/
 ├── seedAll.ts           # Seed everything
 ├── seedProducts.ts      # Physical products
 └── seedSubscriptions.ts # Subscription tiers
-```
-
-## Key Implementation Patterns
-
-### Modern Caching
-
-```tsx
-// lib/products.ts
-import 'server-only';
-import { unstable_cacheLife as cacheLife, unstable_cacheTag as cacheTag } from 'next/cache';
-
-export async function getProducts(filters?: ProductFilters) {
-  'use cache';
-  cacheLife('hours');
-  cacheTag('products');
-
-  return filteredProducts;
-}
-```
-
-### Component-Level Caching
-
-```tsx
-// app/(shop)/[category]/page.tsx
-async function CachedCategoryContent({ category, search, sort }) {
-  'use cache';
-  cacheLife('hours');
-  cacheTag('products', `category-${category}`);
-
-  const products = await getProducts(filters);
-  return <main>{/* Cached content */}</main>;
-}
-
-export const experimental_ppr = true;
-```
-
-### Subscription System
-
-```tsx
-// convex/auth.ts - Auto-tier detection
-export const getCurrentUser = query({
-  handler: async (ctx) => {
-    const user = await safeGetUser(ctx);
-    if (!user) return null;
-
-    const subscription = await polar.getCurrentSubscription(ctx, { userId: user._id });
-
-    let tier: 'free' | 'starter' | 'premium' = 'free';
-    if (subscription?.productKey?.includes('starter')) tier = 'starter';
-    if (subscription?.productKey?.includes('premium')) tier = 'premium';
-
-    return { ...user, subscription, tier, isFree, isStarter, isPremium };
-  },
-});
-
-// User signup trigger - Auto-create Polar customer
-export const authComponent = createClient({
-  triggers: {
-    user: {
-      onCreate: async (ctx, authUser) => {
-        await ctx.scheduler.runAfter(0, internal.userSync.onUserCreated, {
-          userId: authUser._id,
-          email: authUser.email,
-        });
-      },
-    },
-  },
-});
 ```
 
 ## Scripts
@@ -276,10 +245,11 @@ Type Safety:       100% (zero any types)
 - Added AI virtual try-on
 
 ### Recent Updates
+- **v0.4.0** - Cart and checkout system with Polar integration (13 atomic commits)
+- **v0.3.2** - Better Auth NPM migration and Polar CRUD improvements
 - **v0.3.1** - Fixed duplicate customer creation, downgraded better-auth to 1.3.8
 - **v0.3.0** - Added subscription system with Polar integration
 - **v0.2.0** - Complete backend integration (Convex + Better Auth + Polar)
-- **v0.1.21** - Cache modernization with component-level caching
 
 See [CHANGELOG.md](CHANGELOG.md) for detailed changes.
 
