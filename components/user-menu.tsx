@@ -20,7 +20,7 @@ import {
   Crown,
   Sparkles,
 } from 'lucide-react';
-import { authClient } from '@/lib/auth-client';
+import { authClient } from '@/lib/client/auth';
 import { useRouter } from 'next/navigation';
 
 export function UserMenu() {

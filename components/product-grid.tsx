@@ -2,7 +2,7 @@ import { Sparkles } from 'lucide-react';
 import { Link } from '@/components/link';
 import { ProductCard } from '@/components/product-card';
 import { Button } from '@/components/ui/button';
-import type { Product } from '@/lib/products';
+import type { Product } from '@/lib/server/products';
 
 interface ProductGridProps {
   products: Product[];

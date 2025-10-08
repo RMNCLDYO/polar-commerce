@@ -21,7 +21,7 @@ export const UserProfile = ({
         />
       ) : (
         <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-foreground font-medium">
-          {user?.name?.[0].toUpperCase()}
+          {user?.name?.[0]?.toUpperCase()}
         </div>
       )}
       <div>

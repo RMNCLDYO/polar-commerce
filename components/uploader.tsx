@@ -5,7 +5,7 @@ import { useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/shared/utils';
 
 export function Uploader() {
   const [userPhoto, setUserPhoto] = useState<File | null>(null);
