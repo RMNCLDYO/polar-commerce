@@ -14,12 +14,12 @@ Full-stack e-commerce with **Next.js 15 canary + Convex + Better Auth + Polar**.
 
 ## What's Inside
 
-**Authentication** → Better Auth (email/password, GitHub OAuth, 2FA)
-**Database** → Convex (real-time, type-safe, auto-generated API)
-**Payments** → Polar (subscriptions + one-time purchases)
-**Frontend** → Next.js 15 (PPR, Server Components, modern caching)
-**UI** → shadcn/ui + Tailwind v4
-**AI** → Vercel AI SDK + Google Gemini
+- **Authentication** - Better Auth (email/password, GitHub OAuth, 2FA)
+- **Database** - Convex (real-time, type-safe, auto-generated API)
+- **Payments** - Polar (subscriptions + one-time purchases)
+- **Frontend** - Next.js 15 (PPR, Server Components, modern caching)
+- **UI** - shadcn/ui + Tailwind v4
+- **AI** - Vercel AI SDK + Google Gemini
 
 ## Quick Start
 
@@ -186,8 +186,7 @@ npx convex run factoryReset:factoryReset  # Reset database
 
 ## Credits
 
-**Original Template:** [@estebansuarez](https://github.com/estebansuarez) ([v0 Storefront](https://v0.app/templates/storefront-w-nano-banana-ai-sdk-ai-gateway-XAMOoZPMUO5))
-**Next.js 15 + Backend:** [@RMNCLDYO](https://github.com/RMNCLDYO)
+Original v0 template by [@estebansuarez](https://github.com/estebansuarez) - [v0 Storefront](https://v0.app/templates/storefront-w-nano-banana-ai-sdk-ai-gateway-XAMOoZPMUO5)
 
 ## License
 
