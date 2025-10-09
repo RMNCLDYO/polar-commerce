@@ -1,10 +1,10 @@
 /**
- * Factory Reset - Complete System Cleanup
+ * Clear Database - Complete System Cleanup
  *
- * This action performs a complete factory reset by:
+ * This action performs a complete database reset by:
  * 1. Deleting all Better Auth data (sessions, accounts, users, etc.)
  * 2. Deleting all Polar data from both Convex and Polar API
- * 3. Deleting all Convex app data (products, todos)
+ * 3. Deleting all Convex app data (catalog, carts, orders, demos)
  *
  * Polar component deletion approach:
  * - Uses list queries to get all records:
@@ -27,18 +27,18 @@ import { action, internalAction, internalMutation } from '../_generated/server';
 import { internal, components } from '../_generated/api';
 
 /**
- * Factory Reset - Complete System Cleanup
+ * Clear Database - Complete System Cleanup
  * This will delete EVERYTHING from Better Auth, Polar, and Convex
  */
-export const factoryReset = action({
+export const clearDatabase = action({
   args: {},
   handler: async (ctx) => {
-    console.log('🚨 FACTORY RESET INITIATED');
+    console.log('🚨 DATABASE RESET INITIATED');
     console.log('='.repeat(60));
     console.log('This will delete ALL data from:');
     console.log('  • Better Auth (users, sessions, accounts, etc.)');
     console.log('  • Polar (customers, archived products)');
-    console.log('  • Convex (products, todos)');
+    console.log('  • Convex (catalog, carts, orders, demos)');
     console.log('='.repeat(60));
 
     const results = {
@@ -52,7 +52,7 @@ export const factoryReset = action({
     try {
       const authResults = await ctx.runMutation(
         // @ts-ignore - Type instantiation is excessively deep (known Convex issue)
-        internal.utils.factoryReset.clearBetterAuthData,
+        internal.utils.clearDatabase.clearBetterAuthData,
       );
       results.betterAuth = authResults;
       console.log('✅ Better Auth data deleted');
@@ -66,12 +66,12 @@ export const factoryReset = action({
     try {
       // Delete from Polar component in Convex first
       const polarComponentResults = await ctx.runAction(
-        internal.utils.factoryReset.clearPolarComponentData,
+        internal.utils.clearDatabase.clearPolarComponentData,
       );
 
       // Delete from Polar API
       const polarApiResults = await ctx.runAction(
-        internal.utils.factoryReset.clearPolarDataInternal,
+        internal.utils.clearDatabase.clearPolarDataInternal,
       );
 
       results.polar = {
@@ -91,7 +91,7 @@ export const factoryReset = action({
     console.log('\n🗄️  STEP 3: Deleting Convex app data...');
     try {
       const convexResults = await ctx.runMutation(
-        internal.utils.factoryReset.clearConvexData,
+        internal.utils.clearDatabase.clearConvexData,
       );
       results.convex = convexResults;
       console.log('✅ Convex app data deleted');
@@ -101,7 +101,7 @@ export const factoryReset = action({
     }
 
     console.log('\n' + '='.repeat(60));
-    console.log('🎉 FACTORY RESET COMPLETE!');
+    console.log('🎉 DATABASE RESET COMPLETE!');
     console.log('='.repeat(60));
     console.log('\n📊 Summary:');
     console.log('\nBetter Auth:');
@@ -404,21 +404,45 @@ export const clearConvexData = internalMutation({
 
     const results: Record<string, number> = {};
 
-    // Delete products
-    const products = await ctx.db.query('products').collect();
-    for (const product of products) {
-      await ctx.db.delete(product._id);
+    // Delete catalog items
+    const catalog = await ctx.db.query('catalog').collect();
+    for (const item of catalog) {
+      await ctx.db.delete(item._id);
     }
-    results.products = products.length;
-    console.log(`  ✅ Deleted ${products.length} products`);
+    results.catalog = catalog.length;
+    console.log(`  ✅ Deleted ${catalog.length} catalog items`);
 
-    // Delete todos
-    const todos = await ctx.db.query('todos').collect();
-    for (const todo of todos) {
+    // Delete demo todos
+    const demoTodos = await ctx.db.query('demoTodos').collect();
+    for (const todo of demoTodos) {
       await ctx.db.delete(todo._id);
     }
-    results.todos = todos.length;
-    console.log(`  ✅ Deleted ${todos.length} todos`);
+    results.demoTodos = demoTodos.length;
+    console.log(`  ✅ Deleted ${demoTodos.length} demo todos`);
+
+    // Delete cart items
+    const cartItems = await ctx.db.query('cartItems').collect();
+    for (const item of cartItems) {
+      await ctx.db.delete(item._id);
+    }
+    results.cartItems = cartItems.length;
+    console.log(`  ✅ Deleted ${cartItems.length} cart items`);
+
+    // Delete carts
+    const carts = await ctx.db.query('carts').collect();
+    for (const cart of carts) {
+      await ctx.db.delete(cart._id);
+    }
+    results.carts = carts.length;
+    console.log(`  ✅ Deleted ${carts.length} carts`);
+
+    // Delete orders
+    const orders = await ctx.db.query('orders').collect();
+    for (const order of orders) {
+      await ctx.db.delete(order._id);
+    }
+    results.orders = orders.length;
+    console.log(`  ✅ Deleted ${orders.length} orders`);
 
     return results;
   },
