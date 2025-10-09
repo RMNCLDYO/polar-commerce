@@ -116,9 +116,10 @@ app/
 convex/
 ├── auth/                     # Better Auth integration + user sync
 ├── cart/                     # Real-time cart with Convex
+├── catalog/                  # Product/subscription catalog + inventory
 ├── checkout/                 # Polar checkout integration
+├── demos/                    # Demo features (todos)
 ├── orders/                   # Order sync + webhook handlers
-├── products/                 # Product CRUD + inventory
 └── polar/                    # Polar component (extended API)
 
 components/
@@ -156,7 +157,7 @@ APIs may change before stable release.
 npm run dev                   # Start dev server
 npm run build                 # Production build
 npm run polar:seed            # Seed products + subscriptions
-npx convex run factoryReset:factoryReset  # Reset database
+npm run db:reset              # Reset database
 ```
 
 ## Tech Stack

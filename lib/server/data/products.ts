@@ -17,7 +17,7 @@ export async function getProducts(
   cacheLife('hours');
   cacheTag('products');
 
-  const products = await fetchQuery(api.products.products.getProducts, {
+  const products = await fetchQuery(api.catalog.catalog.getProducts, {
     category: filters?.category,
     search: filters?.search,
     minPrice: filters?.minPrice,
@@ -36,8 +36,8 @@ export async function getProduct(id: string): Promise<Product | null> {
   cacheTag('products', `product-${id}`);
 
   try {
-    const product = await fetchQuery(api.products.products.getProduct, {
-      id: id as Id<'products'>,
+    const product = await fetchQuery(api.catalog.catalog.getProduct, {
+      id: id as Id<'catalog'>,
     });
     return product;
   } catch (error) {

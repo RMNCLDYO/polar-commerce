@@ -7,7 +7,7 @@ import { useCart } from '@/lib/client/hooks/use-cart';
 import { Id } from '@/convex/_generated/dataModel';
 
 interface AddToCartButtonProps {
-  productId: Id<'products'>;
+  catalogId: Id<'catalog'>;
   quantity?: number;
   variant?: 'default' | 'outline';
   size?: 'default' | 'sm' | 'lg';
@@ -18,7 +18,7 @@ interface AddToCartButtonProps {
 }
 
 export function AddToCartButton({
-  productId,
+  catalogId,
   quantity = 1,
   variant = 'default',
   size = 'default',
@@ -33,7 +33,7 @@ export function AddToCartButton({
   const handleAddToCart = async () => {
     if (!inStock) return;
     setIsLoading(true);
-    await addToCart(productId, quantity);
+    await addToCart(catalogId, quantity);
     setIsLoading(false);
   };
 

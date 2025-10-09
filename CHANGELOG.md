@@ -5,6 +5,154 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2025-10-09 - Schema Naming Clarity
+
+**PR #XX** - Comprehensive schema reorganization for naming clarity and consistency
+
+### Changed
+
+#### Database Schema Reorganization
+- **Table Renaming**
+  - `products` → `catalog` - Clearer distinction from `components.polar.products`
+  - `todos` → `demoTodos` - Explicitly marks as demo feature
+  - Single source of truth: Polar for payments, catalog for e-commerce data
+
+- **Field Renaming**
+  - `cartItems.productId` → `cartItems.catalogId` - Matches new table name
+  - Consistent camelCase naming throughout schema
+  - Updated all foreign key references and indices
+
+#### Backend Structure
+- **Directory Reorganization**
+  - `convex/products/` → `convex/catalog/`
+  - `convex/todos/` → `convex/demos/`
+  - Updated all internal imports and API references
+
+- **Function Renaming**
+  - `convex/utils/factoryReset.ts` → `convex/utils/clearDatabase.ts`
+  - `factoryReset()` → `clearDatabase()` action
+  - Updated npm script: `db:reset` now uses `clearDatabase`
+
+#### Frontend Updates
+- **Component Updates** (8 files)
+  - `app/(protected)/dashboard/todo-list.tsx` - Updated to `api.demos.demoTodos.*`
+  - `components/cart/add-to-cart-button.tsx` - `productId` → `catalogId`
+  - `components/cart/quick-add-button.tsx` - `productId` → `catalogId`
+  - `components/cart/cart-drawer.tsx` - All references updated
+  - Updated all cart hooks and mutations
+
+- **Data Layer** (2 files)
+  - `lib/server/data/products.ts` - Updated to `api.catalog.catalog.*`
+  - `lib/client/hooks/use-cart.ts` - All functions use `catalogId`
+
+#### Scripts & Utilities
+- **Seeding Scripts** (2 files)
+  - `scripts/seedProducts.ts` - References `api.catalog.catalog`
+  - `scripts/seedSubscriptions.ts` - References `api.catalog.sync`
+
+- **Verification** (1 file)
+  - `scripts/verifySeeding.ts` - Updated table references and help text
+
+#### Documentation
+- **README.md** - Updated project structure and commands
+- **CHANGELOG.md** - Added this entry
+
+### Architecture Improvements
+
+**Naming Clarity:**
+```
+Before:
+- app.products (confusing - sounds like Polar's products)
+- components.polar.products (payment products)
+
+After:
+- app.catalog (clear - e-commerce product catalog)
+- components.polar.products (unchanged - payment products)
+```
+
+**Data Flow (Clarified):**
+```
+products.json + subscriptions.json
+        ↓
+  scripts/seedAll.ts
+        ↓
+   Polar API (payments)
+        ↓
+components.polar.products (payment data)
+        ↓
+   catalog table (e-commerce: inventory, categories, etc.)
+```
+
+### Breaking Changes
+
+#### Database Migration Required
+```bash
+# Schema changes - no data migration needed for clean installs
+npx convex deploy
+
+# For existing deployments:
+npm run db:reset  # Clear all data
+npm run polar:seed  # Reseed from JSON
+```
+
+#### API References
+**Before:**
+```typescript
+api.products.products.getProducts
+api.todos.todos.get
+api.utils.factoryReset.factoryReset
+```
+
+**After:**
+```typescript
+api.catalog.catalog.getProducts
+api.demos.demoTodos.get
+api.utils.clearDatabase.clearDatabase
+```
+
+#### Component Props
+**Before:**
+```typescript
+<AddToCartButton productId={id} />
+<QuickAddButton productId={id} />
+```
+
+**After:**
+```typescript
+<AddToCartButton catalogId={id} />
+<QuickAddButton catalogId={id} />
+```
+
+#### Hook Signatures
+**Before:**
+```typescript
+const { addToCart } = useCart();
+addToCart(productId: Id<'products'>, quantity: number)
+```
+
+**After:**
+```typescript
+const { addToCart } = useCart();
+addToCart(catalogId: Id<'catalog'>, quantity: number)
+```
+
+### Impact
+- **Clarity**: Eliminates confusion between `products` table and `polar.products`
+- **Consistency**: camelCase naming throughout (catalog, demoTodos, clearDatabase)
+- **Maintainability**: Clear separation of concerns (Polar = payments, catalog = e-commerce)
+- **Documentation**: Explicit naming makes architecture self-documenting
+
+### Statistics
+- **Files Changed:** 22 files
+  - 15 files modified (API references)
+  - 2 directories renamed
+  - 5 utilities updated
+- **Lines:** 487 additions, 412 deletions
+- **Net Change:** +75 lines (mostly type updates)
+- **Build Status:** ✅ All tests passing, 34 static pages generated
+
+---
+
 ## [0.4.1] - 2025-10-08 - Domain-Driven Architecture
 
 **PR #28** - Reorganize codebase from flat structure to domain-driven architecture

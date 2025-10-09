@@ -9,7 +9,7 @@ export const get = query({
       return [];
     }
     return await ctx.db
-      .query('todos')
+      .query('demoTodos')
       .withIndex('userId', (q) => q.eq('userId', identity.subject))
       .order('desc')
       .collect();
@@ -25,7 +25,7 @@ export const create = mutation({
     }
 
     const now = Date.now();
-    await ctx.db.insert('todos', {
+    await ctx.db.insert('demoTodos', {
       text: args.text,
       completed: false,
       userId: identity.subject,
@@ -36,7 +36,7 @@ export const create = mutation({
 });
 
 export const toggle = mutation({
-  args: { id: v.id('todos') },
+  args: { id: v.id('demoTodos') },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
@@ -56,7 +56,7 @@ export const toggle = mutation({
 });
 
 export const remove = mutation({
-  args: { id: v.id('todos') },
+  args: { id: v.id('demoTodos') },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {

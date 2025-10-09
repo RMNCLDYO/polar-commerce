@@ -108,7 +108,7 @@ async function CachedProductContent({ id }: { id: string }) {
             <div className="space-y-4">
               <div className="flex gap-3">
                 <AddToCartButton
-                  productId={product.id as any}
+                  catalogId={product.id as any}
                   size="lg"
                   className="flex-1 text-sm font-semibold tracking-widest uppercase"
                   inStock={product.inStock}

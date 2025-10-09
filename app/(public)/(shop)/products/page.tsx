@@ -102,7 +102,7 @@ async function CachedProductsContent({
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-semibold">{product.price}</span>
                   <QuickAddButton
-                    productId={product.id as any}
+                    catalogId={product.id as any}
                     inStock={product.inStock}
                   />
                 </div>

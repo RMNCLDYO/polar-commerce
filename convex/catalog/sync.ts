@@ -1,5 +1,6 @@
 import { v } from 'convex/values';
 import {
+  query,
   mutation,
   internalMutation,
   internalAction,
@@ -9,7 +10,7 @@ import { internal } from '../_generated/api';
 import { Polar as PolarSDK } from '@polar-sh/sdk';
 
 /**
- * Create a product in app.products AND automatically sync to Polar
+ * Create a product in catalog AND automatically sync to Polar
  * This is the ONLY way to create products - ensures 100% sync
  */
 export const createProduct = mutation({
@@ -24,8 +25,8 @@ export const createProduct = mutation({
     inventory_qty: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    // 1. Insert into app.products
-    const productId = await ctx.db.insert('products', {
+    // 1. Insert into catalog
+    const productId = await ctx.db.insert('catalog', {
       ...args,
       isActive: args.isActive ?? true,
       inStock: args.inStock ?? true,
@@ -35,7 +36,7 @@ export const createProduct = mutation({
     });
 
     // 2. Trigger Polar sync action
-    await ctx.scheduler.runAfter(0, internal.products.sync.syncProductToPolar, {
+    await ctx.scheduler.runAfter(0, internal.catalog.sync.syncProductToPolar, {
       productId,
     });
 
@@ -44,11 +45,11 @@ export const createProduct = mutation({
 });
 
 /**
- * Update a product in app.products AND automatically sync to Polar
+ * Update a product in catalog AND automatically sync to Polar
  */
 export const updateProduct = mutation({
   args: {
-    productId: v.id('products'),
+    productId: v.id('catalog'),
     name: v.optional(v.string()),
     price: v.optional(v.number()),
     category: v.optional(v.string()),
@@ -59,14 +60,14 @@ export const updateProduct = mutation({
     inventory_qty: v.optional(v.number()),
   },
   handler: async (ctx, { productId, ...updates }) => {
-    // 1. Update app.products
+    // 1. Update catalog
     await ctx.db.patch(productId, {
       ...updates,
       updatedAt: Date.now(),
     });
 
     // 2. Trigger Polar sync
-    await ctx.scheduler.runAfter(0, internal.products.sync.syncProductToPolar, {
+    await ctx.scheduler.runAfter(0, internal.catalog.sync.syncProductToPolar, {
       productId,
     });
 
@@ -75,11 +76,11 @@ export const updateProduct = mutation({
 });
 
 /**
- * Delete a product from app.products AND Polar
+ * Delete a product from catalog AND Polar
  */
 export const deleteProduct = mutation({
   args: {
-    productId: v.id('products'),
+    productId: v.id('catalog'),
   },
   handler: async (ctx, { productId }) => {
     const product = await ctx.db.get(productId);
@@ -95,7 +96,7 @@ export const deleteProduct = mutation({
     if (product.polarProductId) {
       await ctx.scheduler.runAfter(
         0,
-        internal.products.sync.archivePolarProduct,
+        internal.catalog.sync.archivePolarProduct,
         {
           polarProductId: product.polarProductId,
         },
@@ -112,11 +113,11 @@ export const deleteProduct = mutation({
  */
 export const syncProductToPolar = internalAction({
   args: {
-    productId: v.id('products'),
+    productId: v.id('catalog'),
   },
   handler: async (ctx, { productId }) => {
-    // Get product from app.products
-    const product = await ctx.runQuery(internal.products.sync.getProduct, {
+    // Get product from catalog
+    const product = await ctx.runQuery(internal.catalog.sync.getProduct, {
       productId,
     });
 
@@ -169,8 +170,8 @@ export const syncProductToPolar = internalAction({
         });
 
         if (result) {
-          // Store Polar product ID in app.products
-          await ctx.runMutation(internal.products.sync.updatePolarId, {
+          // Store Polar product ID in catalog
+          await ctx.runMutation(internal.catalog.sync.updatePolarId, {
             productId,
             polarProductId: result.id,
           });
@@ -218,7 +219,7 @@ export const archivePolarProduct = internalAction({
  * Internal query: Get product by ID
  */
 export const getProduct = internalQuery({
-  args: { productId: v.id('products') },
+  args: { productId: v.id('catalog') },
   handler: async (ctx, { productId }) => {
     return await ctx.db.get(productId);
   },
@@ -229,7 +230,7 @@ export const getProduct = internalQuery({
  */
 export const updatePolarId = internalMutation({
   args: {
-    productId: v.id('products'),
+    productId: v.id('catalog'),
     polarProductId: v.string(),
   },
   handler: async (ctx, { productId, polarProductId }) => {
@@ -243,11 +244,11 @@ export const updatePolarId = internalMutation({
 /**
  * Helper: List all active products
  */
-export const listProducts = mutation({
+export const listProducts = query({
   args: {},
   handler: async (ctx) => {
     return await ctx.db
-      .query('products')
+      .query('catalog')
       .filter((q) => q.eq(q.field('isActive'), true))
       .collect();
   },
@@ -256,11 +257,11 @@ export const listProducts = mutation({
 /**
  * Helper: Get products by category
  */
-export const listByCategory = mutation({
+export const listByCategory = query({
   args: { category: v.string() },
   handler: async (ctx, { category }) => {
     return await ctx.db
-      .query('products')
+      .query('catalog')
       .withIndex('category', (q) => q.eq('category', category))
       .filter((q) => q.eq(q.field('isActive'), true))
       .collect();
@@ -275,7 +276,7 @@ export const syncAllProductsToPolar = internalMutation({
   args: {},
   handler: async (ctx) => {
     const products = await ctx.db
-      .query('products')
+      .query('catalog')
       .filter((q) => q.eq(q.field('isActive'), true))
       .collect();
 
@@ -286,7 +287,7 @@ export const syncAllProductsToPolar = internalMutation({
       try {
         await ctx.scheduler.runAfter(
           0,
-          internal.products.sync.syncProductToPolar,
+          internal.catalog.sync.syncProductToPolar,
           {
             productId: product._id,
           },

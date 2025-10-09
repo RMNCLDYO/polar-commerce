@@ -1,16 +1,64 @@
 import { defineSchema, defineTable } from 'convex/server';
 import { v } from 'convex/values';
 
-export default defineSchema({
-  todos: defineTable({
-    text: v.string(),
-    completed: v.boolean(),
-    userId: v.string(),
-    createdAt: v.number(),
-    updatedAt: v.number(),
-  }).index('userId', ['userId']),
+/**
+ * AISDK STOREFRONT SCHEMA
+ *
+ * ARCHITECTURE OVERVIEW:
+ * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ *
+ * COMPONENTS (External Dependencies - Isolated Schemas):
+ * • betterAuth     → User authentication (tables: betterAuth_*)
+ * • resend         → Email service (tables: resend_*)
+ * • polar          → Payment & billing (tables: components.polar.*)
+ *
+ * APP TABLES (Core Business Logic):
+ * • catalog        → Product/subscription catalog (synced FROM Polar)
+ * • carts/cartItems → Shopping cart system
+ * • orders         → Order history and fulfillment
+ * • demoTodos      → Example todo feature for demonstrations
+ *
+ * DATA FLOW:
+ * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ *
+ * Seeding:
+ *   products.json + subscriptions.json
+ *            ↓
+ *      scripts/seedAll.ts
+ *            ↓
+ *       Polar API (source of truth)
+ *            ↓
+ *    Polar webhooks sync
+ *            ↓
+ *   components.polar.products
+ *            ↓
+ *   Augment with e-commerce fields
+ *            ↓
+ *       catalog table (app)
+ *
+ * Runtime:
+ *   Store pages → query catalog
+ *   Cart → references catalog
+ *   Checkout → uses catalog.polarProductId for Polar API
+ */
 
-  products: defineTable({
+export default defineSchema({
+  // ==========================================
+  // CATALOG (Product & Subscription Catalog)
+  // ==========================================
+  /**
+   * Product and subscription catalog synced FROM Polar.
+   *
+   * Why this exists:
+   * - Polar's schema lacks e-commerce fields (inventory, categories)
+   * - We augment Polar products with store-specific data
+   * - Single catalog for both products AND subscriptions
+   *
+   * Contains:
+   * - Physical products (Nike shoes, caps, etc.) with inventory
+   * - Subscription plans (Starter, Premium) without inventory
+   */
+  catalog: defineTable({
     name: v.string(),
     price: v.number(), // Store as cents for precision
     category: v.string(),
@@ -30,6 +78,9 @@ export default defineSchema({
     .index('isActive', ['isActive'])
     .index('inStock', ['inStock']),
 
+  // ==========================================
+  // SHOPPING CART
+  // ==========================================
   carts: defineTable({
     userId: v.optional(v.string()), // Optional for guest users
     sessionId: v.optional(v.string()), // For anonymous users
@@ -46,7 +97,20 @@ export default defineSchema({
     .index('sessionId', ['sessionId'])
     .index('expiresAt', ['expiresAt']),
 
-  // Order history tracking
+  cartItems: defineTable({
+    cartId: v.id('carts'),
+    catalogId: v.id('catalog'), // References catalog table
+    quantity: v.number(),
+    price: v.number(), // Snapshot price at time of adding
+    addedAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index('cartId', ['cartId'])
+    .index('cartId_catalogId', ['cartId', 'catalogId']),
+
+  // ==========================================
+  // ORDER MANAGEMENT
+  // ==========================================
   orders: defineTable({
     userId: v.optional(v.string()),
     email: v.optional(v.string()), // Customer email for guest orders and user linking
@@ -113,14 +177,18 @@ export default defineSchema({
     .index('createdAt', ['createdAt'])
     .index('subscriptionId', ['subscriptionId']),
 
-  cartItems: defineTable({
-    cartId: v.id('carts'),
-    productId: v.id('products'),
-    quantity: v.number(),
-    price: v.number(), // Snapshot price at time of adding
-    addedAt: v.number(),
+  // ==========================================
+  // DEMO FEATURES
+  // ==========================================
+  /**
+   * Demo todos feature for showcasing CRUD operations.
+   * Safe to remove in production if not needed.
+   */
+  demoTodos: defineTable({
+    text: v.string(),
+    completed: v.boolean(),
+    userId: v.string(),
+    createdAt: v.number(),
     updatedAt: v.number(),
-  })
-    .index('cartId', ['cartId'])
-    .index('cartId_productId', ['cartId', 'productId']),
+  }).index('userId', ['userId']),
 });
