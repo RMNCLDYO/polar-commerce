@@ -1,17 +1,41 @@
 import { Heart } from 'lucide-react';
 import Image from 'next/image';
 import { Link } from '@/components/link';
+import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/layout/header/theme-toggle';
 import { Search } from '@/components/layout/header/search';
-import { UserMenu } from '@/components/layout/header/user-menu';
+import { UserMenuClient } from '@/components/layout/header/user-menu-client';
 import { CartIcon } from '@/components/cart/cart-icon';
+import { MobileNav } from '@/components/layout/header/mobile-nav';
 import LogoImage from '@/public/logo.png';
+import { preloadQuery } from 'convex/nextjs';
+import { api } from '@/convex/_generated/api';
+import { Suspense } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { headers } from 'next/headers';
+
+const NAV_ITEMS = [
+  { label: 'NEW', hideBelow: '' }, // Always visible when nav is visible
+  { label: 'MEN', hideBelow: 'max-[820px]:hidden' },
+  { label: 'WOMEN', hideBelow: 'max-[900px]:hidden' },
+  { label: 'KIDS', hideBelow: 'max-[980px]:hidden' },
+  { label: 'ACCESSORIES', hideBelow: 'max-[1080px]:hidden' },
+  { label: 'PRICING', hideBelow: 'max-[1180px]:hidden' }, // First to hide
+] as const;
+
+async function UserMenuWrapper() {
+  await headers(); // Opt into dynamic rendering
+  const preloadedUser = await preloadQuery(api.auth.auth.getCurrentUserBasic);
+
+  return <UserMenuClient preloadedUser={preloadedUser} />;
+}
 
 export function Header() {
   return (
     <header className="px-8 py-6 border-b border-border animate-slide-down">
       <div className="mx-auto max-w-7xl flex items-center justify-between">
-        <div className="flex items-center">
+        <div className="flex items-center gap-x-4">
+          <MobileNav />
           <Link href="/" prefetchStrategy="always">
             <Image
               src={LogoImage}
@@ -22,20 +46,18 @@ export function Header() {
           </Link>
         </div>
 
-        <nav className="hidden md:flex items-center gap-x-12">
-          {['NEW', 'MEN', 'WOMEN', 'KIDS', 'ACCESSORIES', 'PRICING'].map(
-            (item, index) => (
-              <Link
-                key={item}
-                href={`/${item.toLowerCase()}`}
-                prefetchStrategy="hover"
-                className="text-xs font-semibold tracking-widest uppercase hover:text-muted-foreground animate-slide-up transition-colors"
-                style={{ animationDelay: `${300 + index * 100}ms` }}
-              >
-                {item}
-              </Link>
-            ),
-          )}
+        <nav className="hidden md:flex items-center gap-x-8">
+          {NAV_ITEMS.map((item, index) => (
+            <Link
+              key={item.label}
+              href={`/${item.label.toLowerCase()}`}
+              prefetchStrategy="hover"
+              className={`${item.hideBelow} text-xs font-semibold tracking-widest uppercase hover:text-muted-foreground animate-slide-up transition-colors whitespace-nowrap`}
+              style={{ animationDelay: `${300 + index * 100}ms` }}
+            >
+              {item.label}
+            </Link>
+          ))}
         </nav>
 
         <div
@@ -43,9 +65,15 @@ export function Header() {
           style={{ animationDelay: '500ms' }}
         >
           <Search />
-          <Heart className="size-4 cursor-pointer hover:text-muted-foreground transition-colors" />
+          <Link href="/wishlist" prefetchStrategy="hover">
+            <Button variant="ghost" size="icon" aria-label="Wishlist">
+              <Heart className="h-5 w-5" />
+            </Button>
+          </Link>
           <CartIcon />
-          <UserMenu />
+          <Suspense fallback={<Skeleton className="size-9 rounded-md" />}>
+            <UserMenuWrapper />
+          </Suspense>
           <ThemeToggle />
         </div>
       </div>
