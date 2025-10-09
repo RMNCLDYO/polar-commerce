@@ -29,7 +29,7 @@ export const getProducts = query({
   },
   handler: async (ctx, args) => {
     let products = await ctx.db
-      .query('products')
+      .query('catalog')
       .filter((q) => q.eq(q.field('isActive'), true))
       .collect();
 
@@ -110,7 +110,7 @@ export const getProducts = query({
 
 // Get single product by ID
 export const getProduct = query({
-  args: { id: v.id('products') },
+  args: { id: v.id('catalog') },
   handler: async (ctx, args) => {
     const product = await ctx.db.get(args.id);
     if (!product || !product.isActive) {
@@ -146,7 +146,7 @@ export const createProduct = mutation({
     inventory_qty: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const productId = await ctx.db.insert('products', {
+    const productId = await ctx.db.insert('catalog', {
       ...args,
       isActive: true,
       inStock: args.inStock ?? true,
@@ -161,7 +161,7 @@ export const createProduct = mutation({
 // Update product with Polar product ID
 export const linkPolarProduct = mutation({
   args: {
-    productId: v.id('products'),
+    productId: v.id('catalog'),
     polarProductId: v.string(),
   },
   handler: async (ctx, args) => {
@@ -176,7 +176,7 @@ export const linkPolarProduct = mutation({
 export const getAllProducts = internalQuery({
   args: {},
   handler: async (ctx) => {
-    return await ctx.db.query('products').collect();
+    return await ctx.db.query('catalog').collect();
   },
 });
 
@@ -184,7 +184,7 @@ export const getAllProducts = internalQuery({
 export const getAllProductsRaw = query({
   args: {},
   handler: async (ctx) => {
-    return await ctx.db.query('products').collect();
+    return await ctx.db.query('catalog').collect();
   },
 });
 
@@ -192,7 +192,7 @@ export const getAllProductsRaw = query({
 export const list = query({
   args: {},
   handler: async (ctx) => {
-    return await ctx.db.query('products').collect();
+    return await ctx.db.query('catalog').collect();
   },
 });
 
@@ -210,7 +210,7 @@ export const syncProductsToPolar = action({
 
     // Get all Convex products
     const convexProducts = await ctx.runQuery(
-      internal.products.products.getAllProducts,
+      internal.catalog.catalog.getAllProducts,
     );
 
     // Get all Polar products - Polar API returns paginated response
@@ -275,7 +275,7 @@ export const syncProductsToPolar = action({
       }
 
       // Link the products
-      await ctx.runMutation(internal.products.products.linkProductInternal, {
+      await ctx.runMutation(internal.catalog.catalog.linkProductInternal, {
         productId: convexProduct._id,
         polarProductId,
       });
@@ -288,7 +288,7 @@ export const syncProductsToPolar = action({
 // Internal mutation to link products
 export const linkProductInternal = internalMutation({
   args: {
-    productId: v.id('products'),
+    productId: v.id('catalog'),
     polarProductId: v.string(),
   },
   handler: async (ctx, args) => {
@@ -302,7 +302,7 @@ export const linkProductInternal = internalMutation({
 // Update product with partial data
 export const updateProduct = mutation({
   args: {
-    productId: v.id('products'),
+    productId: v.id('catalog'),
     updates: v.object({
       name: v.optional(v.string()),
       price: v.optional(v.number()),
@@ -332,7 +332,7 @@ export const updateProduct = mutation({
 // Public mutation to update Polar product ID (for external scripts)
 export const updatePolarProductId = mutation({
   args: {
-    productId: v.id('products'),
+    productId: v.id('catalog'),
     polarProductId: v.union(v.string(), v.null()),
   },
   handler: async (ctx, args) => {
@@ -353,7 +353,7 @@ export const updatePolarProductId = mutation({
 // Delete a product (for testing/cleanup)
 export const deleteProduct = mutation({
   args: {
-    productId: v.id('products'),
+    productId: v.id('catalog'),
   },
   handler: async (ctx, args) => {
     await ctx.db.delete(args.productId);
@@ -364,7 +364,7 @@ export const deleteProduct = mutation({
 // Update product image URL with Polar S3 URL
 export const updateProductImageUrl = mutation({
   args: {
-    productId: v.id('products'),
+    productId: v.id('catalog'),
     imageUrl: v.string(),
     polarImageUrl: v.optional(v.string()),
     polarImageId: v.optional(v.string()),
@@ -382,7 +382,7 @@ export const updateProductImageUrl = mutation({
 // Decrement product inventory (public mutation)
 export const decrementInventory = mutation({
   args: {
-    productId: v.id('products'),
+    productId: v.id('catalog'),
     quantity: v.number(),
   },
   handler: async (ctx, args) => {
@@ -410,7 +410,7 @@ export const decrementInventory = mutation({
 // Internal mutation for decrementing inventory (called from checkout)
 export const decrementInventoryInternal = internalMutation({
   args: {
-    productId: v.id('products'),
+    productId: v.id('catalog'),
     quantity: v.number(),
   },
   handler: async (ctx, args) => {
