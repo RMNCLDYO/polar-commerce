@@ -1,4 +1,4 @@
-import { Check, Heart, RefreshCw, Shield, Truck } from 'lucide-react';
+import { Check, RefreshCw, Shield, Truck } from 'lucide-react';
 import type { Metadata } from 'next';
 import {
   unstable_cacheLife as cacheLife,
@@ -7,14 +7,16 @@ import {
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { Link } from '@/components/link';
-import { Button } from '@/components/ui/button';
-import { AddToCartButton } from '@/components/cart/add-to-cart-button';
+import { ProductActions } from '@/components/products/product-actions';
 import {
   getProduct,
   getProducts,
   type Product,
 } from '@/lib/server/data/products';
 import { cn } from '@/lib/shared/utils';
+import { Badge } from '@/components/ui/badge';
+import { AddToWishlistButton } from '@/components/wishlist/add-to-wishlist-button';
+import { QuickAddButton } from '@/components/cart/quick-add-button';
 
 export const experimental_ppr = true;
 
@@ -46,25 +48,17 @@ async function CachedProductContent({ id }: { id: string }) {
       <div className="mx-auto max-w-7xl">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           <div
-            className="relative bg-muted/50 overflow-hidden"
+            className="relative overflow-hidden"
             style={{ aspectRatio: '3/4' }}
           >
             <Image
               src={product.image}
               alt={product.name}
               fill
-              className={cn(
-                'object-cover',
-                !product.inStock && 'grayscale opacity-50',
-              )}
+              className="object-cover"
               sizes="(max-width: 1024px) 100vw, 50vw"
               priority
             />
-            {!product.inStock && (
-              <div className="absolute top-4 right-4 bg-red-600 text-white text-sm font-bold px-4 py-2 rounded-full">
-                OUT OF STOCK
-              </div>
-            )}
           </div>
 
           <div className="space-y-8">
@@ -98,7 +92,7 @@ async function CachedProductContent({ id }: { id: string }) {
                   <>
                     <div className="h-2 w-2 rounded-full bg-red-500" />
                     <span className="text-sm text-red-600 font-medium">
-                      Out of Stock
+                      Sold Out
                     </span>
                   </>
                 )}
@@ -106,22 +100,18 @@ async function CachedProductContent({ id }: { id: string }) {
             </div>
 
             <div className="space-y-4">
-              <div className="flex gap-3">
-                <AddToCartButton
-                  catalogId={product.id as any}
-                  size="lg"
-                  className="flex-1 text-sm font-semibold tracking-widest uppercase"
-                  inStock={product.inStock}
-                />
-                <Button
-                  variant="outline"
-                  size="lg"
-                  className="px-4"
-                  disabled={!product.inStock}
-                >
-                  <Heart className="h-4 w-4" />
-                </Button>
-              </div>
+              <ProductActions
+                catalogId={product.id}
+                inStock={product.inStock}
+                productInfo={{
+                  name: product.name,
+                  image:
+                    typeof product.image === 'string'
+                      ? product.image
+                      : product.image.src,
+                  price: product.price,
+                }}
+              />
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4">
                 <div className="flex items-center gap-3 text-sm">
@@ -179,16 +169,24 @@ async function CachedProductContent({ id }: { id: string }) {
                   className="group cursor-pointer"
                 >
                   <div
-                    className="relative mb-4 overflow-hidden bg-muted/50"
+                    className="relative mb-4 overflow-hidden"
                     style={{ aspectRatio: '3/4' }}
                   >
-                    <Image
-                      src={relatedProduct.image}
-                      alt={relatedProduct.name}
-                      fill
-                      className="object-cover transition-transform duration-300 group-hover:scale-105"
-                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                    />
+                    <div
+                      className={cn(
+                        'absolute inset-0 transition-all duration-300',
+                        !relatedProduct.inStock &&
+                          'grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100',
+                      )}
+                    >
+                      <Image
+                        src={relatedProduct.image}
+                        alt={relatedProduct.name}
+                        fill
+                        className="object-cover transition-transform duration-300 group-hover:scale-105"
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                      />
+                    </div>
                   </div>
                   <div className="space-y-2">
                     <h3 className="text-sm font-semibold tracking-wide">
@@ -197,9 +195,38 @@ async function CachedProductContent({ id }: { id: string }) {
                     <p className="text-xs text-muted-foreground uppercase tracking-widest font-mono">
                       {relatedProduct.category}
                     </p>
-                    <p className="text-sm font-semibold">
-                      {relatedProduct.price}
-                    </p>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-semibold">
+                        {relatedProduct.price}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <AddToWishlistButton
+                          catalogId={relatedProduct.id as any}
+                          variant="outline"
+                          size="sm"
+                          productInfo={{
+                            name: relatedProduct.name,
+                            image:
+                              typeof relatedProduct.image === 'string'
+                                ? relatedProduct.image
+                                : relatedProduct.image.src,
+                            price: relatedProduct.price,
+                          }}
+                        />
+                        <QuickAddButton
+                          catalogId={relatedProduct.id as any}
+                          inStock={relatedProduct.inStock}
+                          productInfo={{
+                            name: relatedProduct.name,
+                            image:
+                              typeof relatedProduct.image === 'string'
+                                ? relatedProduct.image
+                                : relatedProduct.image.src,
+                            price: relatedProduct.price,
+                          }}
+                        />
+                      </div>
+                    </div>
                   </div>
                 </Link>
               ))}

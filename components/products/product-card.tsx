@@ -13,6 +13,7 @@ import type { Product } from '@/lib/shared/types';
 import { cn } from '@/lib/shared/utils';
 import { Loader2 } from 'lucide-react';
 import { Id } from '@/convex/_generated/dataModel';
+import { AddToWishlistButton } from '@/components/wishlist/add-to-wishlist-button';
 
 interface ProductCardProps {
   product: Product;
@@ -80,7 +81,7 @@ export function ProductCard({
           : `${600 + index * 150}ms`,
       }}
     >
-      <AspectRatio ratio={3 / 4} className="mb-4 overflow-hidden">
+      <AspectRatio ratio={3 / 4} className="mb-4 overflow-hidden relative">
         {isLoading && !error && (
           <Skeleton className="absolute inset-0 w-full h-full" />
         )}
@@ -94,33 +95,42 @@ export function ProductCard({
         )}
 
         {!error && (
-          <Image
-            key={product.id}
-            src={imageSrc}
-            alt={
-              personalizedImage ? `You modeling ${product.name}` : product.name
-            }
-            fill
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          <div
             className={cn(
-              'object-cover transition-all duration-500 group-hover:scale-105',
-              isLoading ? 'opacity-0' : 'opacity-100',
-              !product.inStock ? 'grayscale opacity-50' : '',
+              'absolute inset-0 transition-all duration-500',
+              !product.inStock &&
+                'grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100',
             )}
-            onLoad={handleImageLoad}
-            onError={handleImageError}
-            priority={index < 2}
-            unoptimized={isDataUrl || isBlobUrl}
-          />
+          >
+            <Image
+              key={product.id}
+              src={imageSrc}
+              alt={
+                personalizedImage
+                  ? `You modeling ${product.name}`
+                  : product.name
+              }
+              fill
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              className={cn(
+                'object-cover transition-transform duration-500 group-hover:scale-105',
+                isLoading ? 'opacity-0' : 'opacity-100',
+              )}
+              onLoad={handleImageLoad}
+              onError={handleImageError}
+              priority={index < 2}
+              unoptimized={isDataUrl || isBlobUrl}
+            />
+          </div>
         )}
 
         {/* Out of Stock Badge */}
         {!product.inStock && (
           <Badge
             variant="destructive"
-            className="absolute top-2 right-2 font-bold"
+            className="absolute top-2 right-2 font-bold z-10 text-[10px] px-2 py-0.5"
           >
-            OUT OF STOCK
+            SOLD OUT
           </Badge>
         )}
       </AspectRatio>
@@ -138,27 +148,49 @@ export function ProductCard({
           <span className="text-sm font-semibold tracking-wide">
             {product.price}
           </span>
-          <Button
-            variant="outline-black"
-            size="sm"
-            className="text-xs font-semibold tracking-widest uppercase px-6 py-2 hover:scale-105"
-            disabled={isAddingToCart || !product.inStock}
-            onClick={async (e) => {
-              e.preventDefault();
-              if (!product.inStock) return;
-              setIsAddingToCart(true);
-              await addToCart(product.id as Id<'catalog'>, 1);
-              setIsAddingToCart(false);
-            }}
-          >
-            {isAddingToCart ? (
-              <Loader2 className="h-3 w-3 animate-spin" />
-            ) : !product.inStock ? (
-              'OUT OF STOCK'
-            ) : (
-              'ADD'
-            )}
-          </Button>
+          <div className="flex items-center gap-2">
+            <AddToWishlistButton
+              catalogId={product.id as Id<'catalog'>}
+              variant="outline"
+              size="sm"
+              productInfo={{
+                name: product.name,
+                image:
+                  typeof product.image === 'string'
+                    ? product.image
+                    : product.image.src,
+                price: product.price,
+              }}
+            />
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-xs font-semibold tracking-widest uppercase"
+              disabled={isAddingToCart || !product.inStock}
+              onClick={async (e) => {
+                e.preventDefault();
+                if (!product.inStock) return;
+                setIsAddingToCart(true);
+                await addToCart(product.id as Id<'catalog'>, 1, {
+                  name: product.name,
+                  image:
+                    typeof product.image === 'string'
+                      ? product.image
+                      : product.image.src,
+                  price: product.price,
+                });
+                setIsAddingToCart(false);
+              }}
+            >
+              {isAddingToCart ? (
+                <Loader2 className="h-3 w-3 animate-spin" />
+              ) : !product.inStock ? (
+                'SOLD OUT'
+              ) : (
+                'ADD TO CART'
+              )}
+            </Button>
+          </div>
         </div>
       </div>
     </Link>

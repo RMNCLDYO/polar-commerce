@@ -8,6 +8,9 @@ import { notFound } from 'next/navigation';
 import { Link } from '@/components/link';
 import { getProducts, type ProductFilters } from '@/lib/server/data/products';
 import { cn } from '@/lib/shared/utils';
+import { Badge } from '@/components/ui/badge';
+import { AddToWishlistButton } from '@/components/wishlist/add-to-wishlist-button';
+import { QuickAddButton } from '@/components/cart/quick-add-button';
 
 export const experimental_ppr = true;
 
@@ -139,23 +142,33 @@ async function CachedCategoryContent({
                 className="group cursor-pointer"
               >
                 <div
-                  className="relative mb-4 overflow-hidden bg-muted/50"
+                  className="relative mb-4 overflow-hidden"
                   style={{ aspectRatio: '3/4' }}
                 >
-                  <Image
-                    src={product.image}
-                    alt={product.name}
-                    fill
+                  <div
                     className={cn(
-                      'object-cover transition-transform duration-300 group-hover:scale-105',
-                      !product.inStock && 'grayscale opacity-50',
+                      'absolute inset-0 transition-all duration-300',
+                      !product.inStock &&
+                        'grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100',
                     )}
-                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
-                  />
+                  >
+                    <Image
+                      src={product.image}
+                      alt={product.name}
+                      fill
+                      className="object-cover transition-transform duration-300 group-hover:scale-105"
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
+                    />
+                  </div>
+
+                  {/* Out of Stock Badge */}
                   {!product.inStock && (
-                    <div className="absolute top-2 right-2 bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full">
-                      OUT OF STOCK
-                    </div>
+                    <Badge
+                      variant="destructive"
+                      className="absolute top-2 right-2 font-bold z-10 text-[10px] px-2 py-0.5"
+                    >
+                      SOLD OUT
+                    </Badge>
                   )}
                 </div>
                 <div className="space-y-2">
@@ -169,11 +182,33 @@ async function CachedCategoryContent({
                     <span className="text-sm font-semibold">
                       {product.price}
                     </span>
-                    {!product.inStock && (
-                      <span className="text-xs text-red-600 font-semibold">
-                        OUT OF STOCK
-                      </span>
-                    )}
+                    <div className="flex items-center gap-2">
+                      <AddToWishlistButton
+                        catalogId={product.id as any}
+                        variant="outline"
+                        size="sm"
+                        productInfo={{
+                          name: product.name,
+                          image:
+                            typeof product.image === 'string'
+                              ? product.image
+                              : product.image.src,
+                          price: product.price,
+                        }}
+                      />
+                      <QuickAddButton
+                        catalogId={product.id as any}
+                        inStock={product.inStock}
+                        productInfo={{
+                          name: product.name,
+                          image:
+                            typeof product.image === 'string'
+                              ? product.image
+                              : product.image.src,
+                          price: product.price,
+                        }}
+                      />
+                    </div>
                   </div>
                 </div>
               </Link>
