@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { ShoppingBag } from 'lucide-react';
-import { useCart, useCartMerge } from '@/hooks/use-cart';
+import { useCart, useCartMerge } from '@/lib/client/hooks/use-cart';
 import { CartDrawer } from './cart-drawer';
 
 export function CartIcon() {

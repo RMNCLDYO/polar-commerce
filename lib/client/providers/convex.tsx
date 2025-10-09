@@ -9,7 +9,7 @@ const convex = new ConvexReactClient(process.env.NEXT_PUBLIC_CONVEX_URL!, {
   verbose: false,
 });
 
-export function ConvexClientProvider({ children }: { children: ReactNode }) {
+export function ConvexProvider({ children }: { children: ReactNode }) {
   return (
     <ConvexBetterAuthProvider client={convex} authClient={authClient}>
       {children}

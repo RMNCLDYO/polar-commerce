@@ -146,7 +146,10 @@ async function verifySeeding() {
   );
 
   try {
-    const appProducts = await convexClient.query(api.products.list, {});
+    const appProducts = await convexClient.query(
+      api.products.products.list,
+      {},
+    );
 
     const subscriptionProducts = appProducts.filter(
       (p: any) => p.category === 'subscription',
@@ -248,7 +251,10 @@ async function verifySeeding() {
   );
 
   try {
-    const appProducts = await convexClient.query(api.products.list, {});
+    const appProducts = await convexClient.query(
+      api.products.products.list,
+      {},
+    );
     const polarConvexProducts = await convexClient.query(
       api.polar.listAllProducts,
       {},

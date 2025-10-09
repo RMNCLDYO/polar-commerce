@@ -14,7 +14,7 @@ export default function PricingPage() {
   const [billingCycle, setBillingCycle] = useState<BillingCycle>('monthly');
   const [loading, setLoading] = useState<string | null>(null);
   const products = useQuery(api.polar.getSubscriptionProducts);
-  const user = useQuery(api.auth.getCurrentUser);
+  const user = useQuery(api.auth.auth.getCurrentUser);
   const generateCheckout = useAction(api.polar.generateCheckoutLink);
   const ensureCustomer = useAction(api.polarCustomer.ensurePolarCustomer);
   const router = useRouter();

@@ -9,7 +9,11 @@ import { notFound } from 'next/navigation';
 import { Link } from '@/components/link';
 import { Button } from '@/components/ui/button';
 import { AddToCartButton } from '@/components/cart/add-to-cart-button';
-import { getProduct, getProducts, type Product } from '@/lib/server/products';
+import {
+  getProduct,
+  getProducts,
+  type Product,
+} from '@/lib/server/data/products';
 import { cn } from '@/lib/shared/utils';
 
 export const experimental_ppr = true;

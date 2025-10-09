@@ -13,9 +13,11 @@ export default function CheckoutSuccessPage() {
   const searchParams = useSearchParams();
   const checkoutId = searchParams.get('checkout_id');
 
-  const handleCheckoutSuccess = useAction(api.checkout.handleCheckoutSuccess);
+  const handleCheckoutSuccess = useAction(
+    api.checkout.checkout.handleCheckoutSuccess,
+  );
   const order = useQuery(
-    api.checkout.getOrder,
+    api.checkout.checkout.getOrder,
     checkoutId ? { checkoutId } : 'skip',
   );
 

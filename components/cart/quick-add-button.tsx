@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useCart } from '@/hooks/use-cart';
+import { useCart } from '@/lib/client/hooks/use-cart';
 import { Id } from '@/convex/_generated/dataModel';
 import { Loader2 } from 'lucide-react';
 

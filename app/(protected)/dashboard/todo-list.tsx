@@ -10,13 +10,13 @@ import {
   TodoList as TodoListComponent,
   TodoRemoveButton,
   TodoText,
-} from '@/components/server';
+} from './components/todo-components';
 
 export const TodoList = () => {
-  const todos = useQuery(api.todos.get) ?? [];
-  const create = useMutation(api.todos.create);
-  const toggle = useMutation(api.todos.toggle);
-  const remove = useMutation(api.todos.remove);
+  const todos = useQuery(api.todos.todos.get) ?? [];
+  const create = useMutation(api.todos.todos.create);
+  const toggle = useMutation(api.todos.todos.toggle);
+  const remove = useMutation(api.todos.todos.remove);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();

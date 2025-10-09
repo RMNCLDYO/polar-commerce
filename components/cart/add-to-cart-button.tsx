@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ShoppingBag, Loader2 } from 'lucide-react';
-import { useCart } from '@/hooks/use-cart';
+import { useCart } from '@/lib/client/hooks/use-cart';
 import { Id } from '@/convex/_generated/dataModel';
 
 interface AddToCartButtonProps {

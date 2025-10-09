@@ -1,5 +1,5 @@
 import type { MetadataRoute } from 'next';
-import { getProducts } from '@/lib/server/products';
+import { getProducts } from '@/lib/server/data/products';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // NEXT_PUBLIC_BASE_URL is used for absolute URL generation in sitemap

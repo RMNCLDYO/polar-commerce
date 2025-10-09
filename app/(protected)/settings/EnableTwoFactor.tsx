@@ -25,7 +25,7 @@ type SetupStep =
   | 'backup';
 
 export default function EnableTwoFactor() {
-  const user = useQuery(api.auth.getCurrentUser);
+  const user = useQuery(api.auth.auth.getCurrentUser);
   const [step, setStep] = useState<SetupStep>('loading');
   const [password, setPassword] = useState('');
   const [code, setCode] = useState('');
@@ -39,7 +39,7 @@ export default function EnableTwoFactor() {
       const accounts = await authClient.listAccounts();
       if ('data' in accounts && accounts.data) {
         const hasCredential = accounts.data.some(
-          (account) => account.providerId === 'credential',
+          (account: any) => account.providerId === 'credential',
         );
         setStep(hasCredential ? 'password' : 'need-password');
       }

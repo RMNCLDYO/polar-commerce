@@ -3,7 +3,7 @@ import { generateText } from 'ai';
 import { google } from '@ai-sdk/google';
 import { type NextRequest, NextResponse } from 'next/server';
 import { logger } from '@/lib/shared/logger';
-import { getProductPrompt } from '@/lib/server/prompts';
+import { getProductPrompt } from '@/lib/server/prompts/ai';
 
 /**
  * API Route for generating personalized model images using Google Gemini.

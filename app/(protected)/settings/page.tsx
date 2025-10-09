@@ -22,7 +22,7 @@ export default function SettingsPage() {
   const [showEnable2FA, setShowEnable2FA] = useState(false);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const user = useQuery(api.auth.getCurrentUser);
+  const user = useQuery(api.auth.auth.getCurrentUser);
 
   const handleDisable2FA = async () => {
     try {

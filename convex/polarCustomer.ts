@@ -71,11 +71,21 @@ export const ensurePolarCustomer = action({
     email: v.string(),
     name: v.optional(v.string()),
   },
-  handler: async (ctx, { userId, email, name }) => {
+  handler: async (
+    ctx,
+    { userId, email, name },
+  ): Promise<{
+    success: boolean;
+    customerId?: string;
+    source?: string;
+    message?: string;
+  }> => {
     // Check if customer already exists in Convex (synced via webhook)
     const existingCustomer = await ctx.runQuery(
       components.polar.lib.getCustomerByUserId,
-      { userId },
+      {
+        userId,
+      },
     );
 
     if (existingCustomer) {
@@ -234,7 +244,9 @@ export const updateCustomer = action({
 
     const existingCustomer = await ctx.runQuery(
       components.polar.lib.getCustomerByUserId,
-      { userId },
+      {
+        userId,
+      },
     );
 
     if (!existingCustomer) {
@@ -293,10 +305,19 @@ export const deleteCustomer = internalAction({
   args: {
     userId: v.string(),
   },
-  handler: async (ctx, { userId }) => {
+  handler: async (
+    ctx,
+    { userId },
+  ): Promise<{
+    success: boolean;
+    customerId?: string;
+    message?: string;
+  }> => {
     const existingCustomer = await ctx.runQuery(
       components.polar.lib.getCustomerByUserId,
-      { userId },
+      {
+        userId,
+      },
     );
 
     if (!existingCustomer) {

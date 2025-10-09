@@ -92,7 +92,7 @@ async function seedProducts() {
     );
 
     const existingConvexProducts = await convexClient.query(
-      api.products.getAllProductsRaw,
+      api.products.products.getAllProductsRaw,
       {},
     );
     console.log(
@@ -274,7 +274,7 @@ async function seedProducts() {
           console.log(
             `  ${colors.yellow}✓ Convex product exists, updating...${colors.reset}`,
           );
-          await convexClient.mutation(api.products.updateProduct, {
+          await convexClient.mutation(api.products.products.updateProduct, {
             productId: existingConvexProduct._id,
             updates: {
               price: product.price,
@@ -293,18 +293,21 @@ async function seedProducts() {
           console.log(
             `  ${colors.cyan}Creating new Convex product...${colors.reset}`,
           );
-          convexId = await convexClient.mutation(api.products.createProduct, {
-            name: product.name,
-            price: product.price,
-            category: product.category,
-            imageUrl: product.imageUrl,
-            description: product.description,
-            polarProductId: polarProduct.id,
-            polarImageUrl: polarImageUrl,
-            polarImageId: uploadedFile.id,
-            inStock: product.inStock,
-            inventory_qty: product.inventory_qty,
-          });
+          convexId = await convexClient.mutation(
+            api.products.products.createProduct,
+            {
+              name: product.name,
+              price: product.price,
+              category: product.category,
+              imageUrl: product.imageUrl,
+              description: product.description,
+              polarProductId: polarProduct.id,
+              polarImageUrl: polarImageUrl,
+              polarImageId: uploadedFile.id,
+              inStock: product.inStock,
+              inventory_qty: product.inventory_qty,
+            },
+          );
         }
 
         console.log(
@@ -332,7 +335,7 @@ async function seedProducts() {
     );
 
     const finalConvexProducts = await convexClient.query(
-      api.products.getAllProductsRaw,
+      api.products.products.getAllProductsRaw,
       {},
     );
     console.log(

@@ -36,7 +36,7 @@ export default function SignIn() {
         onRequest: () => {
           setOtpLoading(true);
         },
-        onSuccess: (ctx) => {
+        onSuccess: (ctx: any) => {
           setOtpLoading(false);
           if (ctx.data.twoFactorRedirect) {
             router.push('/verify-2fa');
@@ -44,7 +44,7 @@ export default function SignIn() {
             router.push('/');
           }
         },
-        onError: (ctx) => {
+        onError: (ctx: any) => {
           setOtpLoading(false);
           alert(ctx.error.message);
         },
@@ -80,7 +80,7 @@ export default function SignIn() {
           setMagicLinkLoading(false);
           alert('Check your email for the magic link!');
         },
-        onError: (ctx) => {
+        onError: (ctx: any) => {
           setMagicLinkLoading(false);
           alert(ctx.error.message);
         },
@@ -98,7 +98,7 @@ export default function SignIn() {
           setOtpLoading(true);
         },
         onResponse: () => setOtpLoading(false),
-        onError: (ctx) => {
+        onError: (ctx: any) => {
           alert(ctx.error.message);
         },
       },

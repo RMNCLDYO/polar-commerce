@@ -329,7 +329,7 @@ async function seedSubscriptions() {
 
           // Check if product already exists in app.products
           const existingProducts = await convexClient.query(
-            api.products.list,
+            api.products.products.list,
             {},
           );
           const existingProduct = existingProducts.find(
@@ -338,7 +338,7 @@ async function seedSubscriptions() {
 
           if (!existingProduct) {
             // Create in app.products with Polar image URL
-            await convexClient.mutation(api.products.createProduct, {
+            await convexClient.mutation(api.products.products.createProduct, {
               name: product.name,
               price: plan.priceAmount,
               category: 'subscription',
@@ -356,7 +356,7 @@ async function seedSubscriptions() {
               polarImageUrl &&
               existingProduct.polarImageUrl !== polarImageUrl
             ) {
-              await convexClient.mutation(api.products.updateProduct, {
+              await convexClient.mutation(api.products.products.updateProduct, {
                 productId: existingProduct._id,
                 updates: {
                   polarImageUrl: polarImageUrl,
@@ -417,7 +417,10 @@ async function seedSubscriptions() {
     }
 
     // Check app.products table
-    const allProducts = await convexClient.query(api.products.list, {});
+    const allProducts = await convexClient.query(
+      api.products.products.list,
+      {},
+    );
     const subProducts = allProducts.filter(
       (p: any) => p.category === 'subscription',
     );

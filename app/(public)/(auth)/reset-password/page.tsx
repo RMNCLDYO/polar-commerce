@@ -45,7 +45,7 @@ export default function ResetPassword() {
           setLoading(false);
           redirect('/');
         },
-        onError: (ctx) => {
+        onError: (ctx: any) => {
           setLoading(false);
           alert(ctx.error.message);
         },

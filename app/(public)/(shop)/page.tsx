@@ -2,9 +2,9 @@ import {
   unstable_cacheLife as cacheLife,
   unstable_cacheTag as cacheTag,
 } from 'next/cache';
-import { ProductGrid } from '@/components/product-grid';
-import { Uploader } from '@/components/uploader';
-import { getProducts, type ProductFilters } from '@/lib/server/products';
+import { ProductGrid } from '@/components/products/product-grid';
+import { Uploader } from '@/app/(public)/(shop)/components/uploader';
+import { getProducts, type ProductFilters } from '@/lib/server/data/products';
 
 export const experimental_ppr = true;
 

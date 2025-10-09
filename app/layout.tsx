@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
-import { ThemeProvider } from '@/components/theme-provider';
+import { ThemeProvider } from '@/lib/client/providers/theme';
 import { geistMono, geistSans } from '@/lib/shared/fonts';
-import { ConvexClientProvider } from '@/lib/client/providers/convex';
-import { CartManager } from '@/components/cart-manager';
+import { ConvexProvider } from '@/lib/client/providers/convex';
+import { CartManager } from '@/components/cart/cart-manager';
 import { Toaster } from '@/components/ui/sonner';
 import './globals.css';
 
@@ -71,7 +71,7 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable}`}
     >
       <body className={`${geistSans.className} antialiased`}>
-        <ConvexClientProvider>
+        <ConvexProvider>
           <ThemeProvider
             attribute="class"
             defaultTheme="system"
@@ -82,7 +82,7 @@ export default function RootLayout({
             {children}
             <Toaster position="bottom-left" />
           </ThemeProvider>
-        </ConvexClientProvider>
+        </ConvexProvider>
       </body>
     </html>
   );
