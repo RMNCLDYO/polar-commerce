@@ -92,7 +92,7 @@ async function seedProducts() {
     );
 
     const existingConvexProducts = await convexClient.query(
-      api.products.products.getAllProductsRaw,
+      api.catalog.catalog.getAllProductsRaw,
       {},
     );
     console.log(
@@ -274,7 +274,7 @@ async function seedProducts() {
           console.log(
             `  ${colors.yellow}✓ Convex product exists, updating...${colors.reset}`,
           );
-          await convexClient.mutation(api.products.products.updateProduct, {
+          await convexClient.mutation(api.catalog.catalog.updateProduct, {
             productId: existingConvexProduct._id,
             updates: {
               price: product.price,
@@ -294,7 +294,7 @@ async function seedProducts() {
             `  ${colors.cyan}Creating new Convex product...${colors.reset}`,
           );
           convexId = await convexClient.mutation(
-            api.products.products.createProduct,
+            api.catalog.catalog.createProduct,
             {
               name: product.name,
               price: product.price,
@@ -335,7 +335,7 @@ async function seedProducts() {
     );
 
     const finalConvexProducts = await convexClient.query(
-      api.products.products.getAllProductsRaw,
+      api.catalog.catalog.getAllProductsRaw,
       {},
     );
     console.log(

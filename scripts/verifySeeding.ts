@@ -139,15 +139,15 @@ async function verifySeeding() {
   }
 
   // ==========================================
-  // 3. Verify Convex app.products table
+  // 3. Verify Convex app.catalog table
   // ==========================================
   console.log(
-    `${colors.yellow}3️⃣  Verifying Convex app.products table...${colors.reset}`,
+    `${colors.yellow}3️⃣  Verifying Convex app.catalog table...${colors.reset}`,
   );
 
   try {
     const appProducts = await convexClient.query(
-      api.products.products.list,
+      api.catalog.sync.listProducts,
       {},
     );
 
@@ -173,20 +173,20 @@ async function verifySeeding() {
     if (appProducts.length === 0) {
       results.push({
         passed: false,
-        message: 'No products found in app.products table',
+        message: 'No products found in app.catalog table',
         details,
       });
     } else {
       results.push({
         passed: true,
-        message: `Found ${appProducts.length} products in app.products`,
+        message: `Found ${appProducts.length} products in app.catalog`,
         details,
       });
     }
   } catch (error: any) {
     results.push({
       passed: false,
-      message: `Failed to query app.products: ${error.message}`,
+      message: `Failed to query app.catalog: ${error.message}`,
     });
   }
 
@@ -252,7 +252,7 @@ async function verifySeeding() {
 
   try {
     const appProducts = await convexClient.query(
-      api.products.products.list,
+      api.catalog.sync.listProducts,
       {},
     );
     const polarConvexProducts = await convexClient.query(
@@ -350,8 +350,8 @@ async function verifySeeding() {
     );
     console.log('\nSome checks did not pass. Please review the issues above.');
     console.log('\nCommon fixes:');
-    console.log("  • Run 'npm run factory-reset' to clear all data");
-    console.log("  • Run 'npm run seed' to reseed everything");
+    console.log("  • Run 'npm run db:reset' to clear all data");
+    console.log("  • Run 'npm run polar:seed' to reseed everything");
     console.log('  • Check your .env.local configuration');
     console.log('  • Verify Polar API token has correct permissions');
   }

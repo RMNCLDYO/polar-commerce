@@ -327,9 +327,9 @@ async function seedSubscriptions() {
           const polarImageUrl =
             polarProduct?.medias?.[0]?.publicUrl || undefined;
 
-          // Check if product already exists in app.products
+          // Check if product already exists in catalog
           const existingProducts = await convexClient.query(
-            api.products.products.list,
+            api.catalog.sync.listProducts,
             {},
           );
           const existingProduct = existingProducts.find(
@@ -337,8 +337,8 @@ async function seedSubscriptions() {
           );
 
           if (!existingProduct) {
-            // Create in app.products with Polar image URL
-            await convexClient.mutation(api.products.products.createProduct, {
+            // Create in catalog with Polar image URL
+            await convexClient.mutation(api.catalog.catalog.createProduct, {
               name: product.name,
               price: plan.priceAmount,
               category: 'subscription',
@@ -348,7 +348,7 @@ async function seedSubscriptions() {
               polarImageUrl: polarImageUrl,
             });
             console.log(
-              `  ${colors.green}✓ Created ${product.name} in app.products${colors.reset}`,
+              `  ${colors.green}✓ Created ${product.name} in catalog${colors.reset}`,
             );
           } else {
             // Update existing product with Polar image URL if available
@@ -356,7 +356,7 @@ async function seedSubscriptions() {
               polarImageUrl &&
               existingProduct.polarImageUrl !== polarImageUrl
             ) {
-              await convexClient.mutation(api.products.products.updateProduct, {
+              await convexClient.mutation(api.catalog.catalog.updateProduct, {
                 productId: existingProduct._id,
                 updates: {
                   polarImageUrl: polarImageUrl,
@@ -367,7 +367,7 @@ async function seedSubscriptions() {
               );
             } else {
               console.log(
-                `  ${colors.yellow}✓ ${product.name} already exists in app.products${colors.reset}`,
+                `  ${colors.yellow}✓ ${product.name} already exists in catalog${colors.reset}`,
               );
             }
           }
@@ -416,9 +416,9 @@ async function seedSubscriptions() {
       );
     }
 
-    // Check app.products table
+    // Check catalog table
     const allProducts = await convexClient.query(
-      api.products.products.list,
+      api.catalog.sync.listProducts,
       {},
     );
     const subProducts = allProducts.filter(
@@ -427,14 +427,14 @@ async function seedSubscriptions() {
 
     if (subProducts.length > 0) {
       console.log(
-        `  ${colors.green}✓ Found ${subProducts.length} subscription products in app.products${colors.reset}`,
+        `  ${colors.green}✓ Found ${subProducts.length} subscription products in catalog${colors.reset}`,
       );
       subProducts.forEach((p: any) => {
         console.log(`    ✅ ${p.name}: ${p.polarProductId}`);
       });
     } else {
       console.log(
-        `  ${colors.yellow}⚠️  No subscription products found in app.products${colors.reset}`,
+        `  ${colors.yellow}⚠️  No subscription products found in catalog${colors.reset}`,
       );
     }
 
