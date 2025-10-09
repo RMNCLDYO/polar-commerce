@@ -46,7 +46,7 @@ async function getOrCreateCart(
 // Add item to cart
 export const addToCart = mutation({
   args: {
-    productId: v.id('products'),
+    catalogId: v.id('catalog'),
     quantity: v.number(),
     sessionId: v.optional(v.string()),
   },
@@ -66,7 +66,7 @@ export const addToCart = mutation({
     }
 
     // Get product to verify it exists and get current price
-    const product = await ctx.db.get(args.productId);
+    const product = await ctx.db.get(args.catalogId);
     if (!product || !product.isActive) {
       throw new Error('Product not found or inactive');
     }
@@ -79,8 +79,8 @@ export const addToCart = mutation({
     // Check if item already in cart
     const existingItem = await ctx.db
       .query('cartItems')
-      .withIndex('cartId_productId', (q) =>
-        q.eq('cartId', cart._id).eq('productId', args.productId),
+      .withIndex('cartId_catalogId', (q) =>
+        q.eq('cartId', cart._id).eq('catalogId', args.catalogId),
       )
       .first();
 
@@ -103,7 +103,7 @@ export const addToCart = mutation({
       // Add new item
       await ctx.db.insert('cartItems', {
         cartId: cart._id,
-        productId: args.productId,
+        catalogId: args.catalogId,
         quantity: args.quantity,
         price: product.price,
         addedAt: Date.now(),
@@ -123,7 +123,7 @@ export const addToCart = mutation({
 // Update cart item quantity
 export const updateCartItem = mutation({
   args: {
-    productId: v.id('products'),
+    catalogId: v.id('catalog'),
     quantity: v.number(),
     sessionId: v.optional(v.string()),
   },
@@ -156,8 +156,8 @@ export const updateCartItem = mutation({
     // Find cart item
     const cartItem = await ctx.db
       .query('cartItems')
-      .withIndex('cartId_productId', (q) =>
-        q.eq('cartId', cart._id).eq('productId', args.productId),
+      .withIndex('cartId_catalogId', (q) =>
+        q.eq('cartId', cart._id).eq('catalogId', args.catalogId),
       )
       .first();
 
@@ -188,7 +188,7 @@ export const updateCartItem = mutation({
 // Remove item from cart
 export const removeFromCart = mutation({
   args: {
-    productId: v.id('products'),
+    catalogId: v.id('catalog'),
     sessionId: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
@@ -220,8 +220,8 @@ export const removeFromCart = mutation({
     // Find and delete cart item
     const cartItem = await ctx.db
       .query('cartItems')
-      .withIndex('cartId_productId', (q) =>
-        q.eq('cartId', cart._id).eq('productId', args.productId),
+      .withIndex('cartId_catalogId', (q) =>
+        q.eq('cartId', cart._id).eq('catalogId', args.catalogId),
       )
       .first();
 
@@ -327,12 +327,12 @@ export const getCart = query({
 
     const itemsWithProducts = await Promise.all(
       cartItems.map(async (item) => {
-        const product = await ctx.db.get(item.productId);
+        const product = await ctx.db.get(item.catalogId);
         if (!product) return null;
 
         return {
           id: item._id,
-          productId: item.productId,
+          catalogId: item.catalogId,
           quantity: item.quantity,
           price: item.price, // Price when added to cart
           currentPrice: product.price, // Current product price
@@ -461,8 +461,8 @@ export const mergeCart = mutation({
     for (const guestItem of guestItems) {
       const existingItem = await ctx.db
         .query('cartItems')
-        .withIndex('cartId_productId', (q) =>
-          q.eq('cartId', userCart._id).eq('productId', guestItem.productId),
+        .withIndex('cartId_catalogId', (q) =>
+          q.eq('cartId', userCart._id).eq('catalogId', guestItem.catalogId),
         )
         .first();
 
@@ -476,7 +476,7 @@ export const mergeCart = mutation({
         // Move item to user cart
         await ctx.db.insert('cartItems', {
           cartId: userCart._id,
-          productId: guestItem.productId,
+          catalogId: guestItem.catalogId,
           quantity: guestItem.quantity,
           price: guestItem.price,
           addedAt: guestItem.addedAt,
@@ -555,7 +555,7 @@ export const validateCart = query({
 
     // Check each item
     for (const item of cartItems) {
-      const product = await ctx.db.get(item.productId);
+      const product = await ctx.db.get(item.catalogId);
       if (!product) {
         errors.push('One or more products no longer exist');
         continue;
@@ -627,7 +627,7 @@ export const internal_getCartItems = internalQuery({
 
     const itemsWithProducts = await Promise.all(
       items.map(async (item) => {
-        const product = await ctx.db.get(item.productId);
+        const product = await ctx.db.get(item.catalogId);
         if (!product) return null;
 
         return {

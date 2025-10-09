@@ -44,7 +44,7 @@ export const handleOrderPaid = internalMutation({
         try {
           await ctx.scheduler.runAfter(
             0,
-            internal.products.products.decrementInventoryInternal,
+            internal.catalog.catalog.decrementInventoryInternal,
             {
               productId: productId as any,
               quantity,

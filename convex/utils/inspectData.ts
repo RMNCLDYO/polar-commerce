@@ -10,8 +10,8 @@ export const inspectAllData = query({
     const results: Record<string, number> = {};
 
     // Check Convex app tables
-    results.products = (await ctx.db.query('products').collect()).length;
-    results.todos = (await ctx.db.query('todos').collect()).length;
+    results.catalog = (await ctx.db.query('catalog').collect()).length;
+    results.demoTodos = (await ctx.db.query('demoTodos').collect()).length;
 
     return results;
   },

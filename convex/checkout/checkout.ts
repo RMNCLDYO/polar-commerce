@@ -966,7 +966,7 @@ export const handleCheckoutSuccess = action({
           if (productId && quantity) {
             try {
               await ctx.runMutation(
-                internal.products.products.decrementInventoryInternal,
+                internal.catalog.catalog.decrementInventoryInternal,
                 {
                   productId: productId as any,
                   quantity,
