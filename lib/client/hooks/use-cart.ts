@@ -151,21 +151,31 @@ export function useCart() {
 }
 
 // Hook for auth state changes to merge carts
+// Independent of useCart to avoid unnecessary queries in root layout
 export function useCartMerge() {
-  const { mergeCart } = useCart();
+  const mergeCartMutation = useMutation(api.cart.cart.mergeCart);
   const user = useQuery(api.auth.auth.getCurrentUser);
   const [hasRunMerge, setHasRunMerge] = useState(false);
 
   useEffect(() => {
-    // Only merge once when user logs in (not on sign out)
-    if (user && user.email && !hasRunMerge) {
-      mergeCart();
-      setHasRunMerge(true);
+    const sessionId =
+      typeof window !== 'undefined'
+        ? localStorage.getItem('cart-session-id')
+        : null;
+
+    // Only merge once when user logs in with a guest cart
+    if (user?.email && !hasRunMerge && sessionId) {
+      mergeCartMutation({ sessionId })
+        .then(() => {
+          localStorage.removeItem('cart-session-id');
+          setHasRunMerge(true);
+        })
+        .catch((err) => console.error('Cart merge failed:', err));
     }
 
     // Reset flag when user signs out
     if (!user) {
       setHasRunMerge(false);
     }
-  }, [user, hasRunMerge, mergeCart]);
+  }, [user, hasRunMerge, mergeCartMutation]);
 }
