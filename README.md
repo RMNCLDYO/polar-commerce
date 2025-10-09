@@ -9,7 +9,8 @@
 [![Polar](https://img.shields.io/badge/Polar-0.35.4-007ACC?style=flat-square)](https://polar.sh)
 [![MIT License](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)](LICENSE)
 
-> ⚠️ **Experimental Project** - Uses Next.js 15 canary features and custom workarounds. Not production-ready.
+> [!WARNING]
+> **Experimental Project** - Uses Next.js 15 canary features and custom workarounds. Not production-ready.
 
 ## What is this?
 
@@ -95,6 +96,7 @@ npm run dev
 ```
 
 The application includes:
+
 - **Shop** - Browse products, add to cart, checkout
 - **Pricing** - View subscription tiers, purchase plans
 - **Dashboard** - Protected route with todo list
@@ -106,6 +108,7 @@ The application includes:
 🚧 **Active Development** - This is an experimental learning project demonstrating Next.js 15 canary features.
 
 **Known Limitations:**
+
 - Uses experimental APIs that may change before stable release
 - Multi-product checkout uses custom workaround (Polar doesn't support native cart)
 - Not recommended for production use
@@ -116,7 +119,10 @@ See [CHANGELOG.md](CHANGELOG.md) for version history.
 
 ### Multi-Product Checkout Workaround
 
-Polar doesn't currently support multi-product checkout. This demo implements a workaround:
+> [!CAUTION]
+> Polar doesn't currently support multi-product checkout. This demo implements a workaround.
+
+**Implementation:**
 
 1. **Convex Cart** - Cart state, inventory, and sessions stored in Convex
 2. **Bundle Strategy** - Multiple items bundled and sent to Polar as custom metadata
@@ -126,7 +132,11 @@ This provides an e-commerce-like experience but **is not production-ready**. Whe
 
 ### Experimental Features
 
-This project uses **Next.js 15 canary** experimental features:
+> [!NOTE]
+> This project uses **Next.js 15 canary** experimental features.
+
+**Features used:**
+
 - Partial Prerendering (PPR)
 - `use cache` directive
 - `unstable_cacheLife()`
@@ -218,7 +228,8 @@ Contributions welcome! This is a learning project, so feel free to experiment.
 4. Push to branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-Please use [conventional commits](https://www.conventionalcommits.org/) for commit messages.
+> [!TIP]
+> Please use [conventional commits](https://www.conventionalcommits.org/) for commit messages.
 
 ## Authors
 
