@@ -4,12 +4,16 @@ import { redirect } from 'next/navigation';
 import { fetchQuery } from 'convex/nextjs';
 import { api } from '@/convex/_generated/api';
 import { getToken } from '@/lib/server/auth';
+import { headers } from 'next/headers';
 
 export default async function ProtectedLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  // Opt into dynamic rendering before accessing auth
+  await headers();
+
   // Server-side auth check using Better Auth token
   const token = await getToken();
   const user = token

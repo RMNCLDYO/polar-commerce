@@ -4,11 +4,15 @@ import Image from 'next/image';
 import { useRef, useState } from 'react';
 import { Link } from '@/components/link';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
+import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { useCart } from '@/lib/client/hooks/use-cart';
 import { logger } from '@/lib/shared/logger';
 import type { Product } from '@/lib/shared/types';
 import { cn } from '@/lib/shared/utils';
 import { Loader2 } from 'lucide-react';
+import { Id } from '@/convex/_generated/dataModel';
 
 interface ProductCardProps {
   product: Product;
@@ -76,24 +80,13 @@ export function ProductCard({
           : `${600 + index * 150}ms`,
       }}
     >
-      <div
-        className="relative mb-4 w-full overflow-hidden bg-muted/50"
-        style={{ aspectRatio: '3/4' }}
-      >
+      <AspectRatio ratio={3 / 4} className="mb-4 overflow-hidden">
         {isLoading && !error && (
-          <div
-            className="w-full bg-muted animate-pulse"
-            style={{ aspectRatio: '3/4' }}
-          >
-            <div className="w-full h-full bg-gradient-to-r from-muted via-accent to-muted animate-shimmer" />
-          </div>
+          <Skeleton className="absolute inset-0 w-full h-full" />
         )}
 
         {error && (
-          <div
-            className="w-full bg-muted flex items-center justify-center"
-            style={{ aspectRatio: '3/4' }}
-          >
+          <div className="w-full h-full flex items-center justify-center bg-muted">
             <span className="text-muted-foreground text-xs">
               Failed to load image
             </span>
@@ -123,11 +116,14 @@ export function ProductCard({
 
         {/* Out of Stock Badge */}
         {!product.inStock && (
-          <div className="absolute top-2 right-2 bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full">
+          <Badge
+            variant="destructive"
+            className="absolute top-2 right-2 font-bold"
+          >
             OUT OF STOCK
-          </div>
+          </Badge>
         )}
-      </div>
+      </AspectRatio>
 
       <div className="space-y-3">
         <div>
@@ -151,7 +147,7 @@ export function ProductCard({
               e.preventDefault();
               if (!product.inStock) return;
               setIsAddingToCart(true);
-              await addToCart(product.id as any, 1);
+              await addToCart(product.id as Id<'catalog'>, 1);
               setIsAddingToCart(false);
             }}
           >

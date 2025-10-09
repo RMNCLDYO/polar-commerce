@@ -12,23 +12,23 @@ export function Link({
   children,
   ...props
 }: LinkProps) {
-  const [shouldPrefetch, setShouldPrefetch] = useState(
-    prefetchStrategy !== 'hover',
-  );
+  const [hovered, setHovered] = useState(false);
 
-  // Simplified prefetch logic
+  // Determine prefetch behavior based on strategy
   const prefetchValue =
     prefetchStrategy === 'never'
       ? false
       : prefetchStrategy === 'always'
         ? true
-        : prefetchStrategy === 'hover' && !shouldPrefetch
-          ? false
-          : null;
+        : prefetchStrategy === 'hover'
+          ? hovered
+            ? null
+            : false // null = restore default prefetch on hover
+          : null; // 'visible' uses default behavior
 
   const handleMouseEnter = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    if (prefetchStrategy === 'hover' && !shouldPrefetch) {
-      setShouldPrefetch(true);
+    if (prefetchStrategy === 'hover' && !hovered) {
+      setHovered(true);
     }
     props.onMouseEnter?.(e);
   };

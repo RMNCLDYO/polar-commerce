@@ -1,7 +1,7 @@
 'use client';
 
 import SignIn from './SignIn';
-import Link from 'next/link';
+import { Link } from '@/components/link';
 
 export default function SignInPage() {
   return (
@@ -12,6 +12,7 @@ export default function SignInPage() {
           Don&apos;t have an account?{' '}
           <Link
             href="/sign-up"
+            prefetchStrategy="always"
             className="text-foreground hover:underline font-medium"
           >
             Sign up

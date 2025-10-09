@@ -15,6 +15,7 @@ import { useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { authClient } from '@/lib/client/auth';
 import { useRouter } from 'next/navigation';
+import { Link } from '@/components/link';
 
 type VerificationMethod = 'totp' | 'otp' | 'backup';
 
@@ -212,9 +213,11 @@ export default function TwoFactorVerification() {
             className="w-full"
             variant="outline"
             disabled={loading}
-            onClick={() => router.push('/sign-in')}
+            asChild
           >
-            Cancel
+            <Link href="/sign-in" prefetchStrategy="always">
+              Cancel
+            </Link>
           </Button>
         </form>
       </CardContent>

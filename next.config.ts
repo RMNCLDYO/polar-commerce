@@ -1,6 +1,7 @@
 import type { NextConfig } from 'next';
 
 const nextConfig = {
+  reactStrictMode: false, // Disable double token requests in dev
   logging: {
     fetches: {
       fullUrl: true,
@@ -9,6 +10,7 @@ const nextConfig = {
   experimental: {
     cssChunking: true,
     cacheComponents: true,
+    dynamicIO: true, // Enable cacheLife feature
     cacheLife: {
       default: {
         stale: 3600,

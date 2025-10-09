@@ -182,6 +182,15 @@ export const getUser = async (ctx: QueryCtx) => {
   return authComponent.getAuthUser(ctx);
 };
 
+// Fast query for header - just returns basic user info without subscription
+export const getCurrentUserBasic = query({
+  args: {},
+  handler: async (ctx) => {
+    return await safeGetUser(ctx);
+  },
+});
+
+// Full query with subscription data - use this on pages that need tier info
 export const getCurrentUser = query({
   args: {},
   handler: async (ctx) => {
