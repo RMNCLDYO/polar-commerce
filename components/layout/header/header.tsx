@@ -1,11 +1,10 @@
-import { Heart } from 'lucide-react';
 import Image from 'next/image';
 import { Link } from '@/components/link';
-import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/layout/header/theme-toggle';
 import { Search } from '@/components/layout/header/search';
 import { UserMenuClient } from '@/components/layout/header/user-menu-client';
 import { CartIcon } from '@/components/cart/cart-icon';
+import { WishlistIcon } from '@/components/wishlist/wishlist-icon';
 import { MobileNav } from '@/components/layout/header/mobile-nav';
 import LogoImage from '@/public/logo.png';
 import { preloadQuery } from 'convex/nextjs';
@@ -35,7 +34,6 @@ export function Header() {
     <header className="px-8 py-6 border-b border-border animate-slide-down">
       <div className="mx-auto max-w-7xl flex items-center justify-between">
         <div className="flex items-center gap-x-4">
-          <MobileNav />
           <Link href="/" prefetchStrategy="always">
             <Image
               src={LogoImage}
@@ -65,16 +63,13 @@ export function Header() {
           style={{ animationDelay: '500ms' }}
         >
           <Search />
-          <Link href="/wishlist" prefetchStrategy="hover">
-            <Button variant="ghost" size="icon" aria-label="Wishlist">
-              <Heart className="h-5 w-5" />
-            </Button>
-          </Link>
+          <WishlistIcon />
           <CartIcon />
+          <ThemeToggle />
           <Suspense fallback={<Skeleton className="size-9 rounded-md" />}>
             <UserMenuWrapper />
           </Suspense>
-          <ThemeToggle />
+          <MobileNav />
         </div>
       </div>
     </header>

@@ -68,9 +68,15 @@ export const getProducts = query({
       });
     }
 
-    // Sorting
-    if (args.sort) {
-      products.sort((a, b) => {
+    // Sorting - always put out of stock items at the end
+    products.sort((a, b) => {
+      // First sort by stock status (in stock first)
+      if (a.inStock !== b.inStock) {
+        return a.inStock ? -1 : 1;
+      }
+
+      // Then apply the user's chosen sort option
+      if (args.sort) {
         switch (args.sort) {
           case 'price-asc':
             return a.price - b.price;
@@ -85,8 +91,9 @@ export const getProducts = query({
           default:
             return 0;
         }
-      });
-    }
+      }
+      return 0;
+    });
 
     // Apply limit if specified
     if (args.limit !== undefined) {

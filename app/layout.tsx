@@ -3,6 +3,7 @@ import { ThemeProvider } from '@/lib/client/providers/theme';
 import { geistMono, geistSans } from '@/lib/shared/fonts';
 import { ConvexProvider } from '@/lib/client/providers/convex';
 import { CartManager } from '@/components/cart/cart-manager';
+import { WishlistManager } from '@/components/wishlist/wishlist-manager';
 import { Toaster } from '@/components/ui/sonner';
 import './globals.css';
 
@@ -79,6 +80,7 @@ export default function RootLayout({
             disableTransitionOnChange
           >
             <CartManager />
+            <WishlistManager />
             {children}
             <Toaster position="bottom-left" />
           </ThemeProvider>
