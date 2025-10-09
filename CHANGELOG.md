@@ -5,6 +5,151 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.0] - 2025-10-09 - Wishlist Feature & UX Enhancements
+
+**PR #31** - Complete wishlist implementation with guest support, cart/wishlist toast improvements, mobile navigation enhancements
+
+### Added
+
+#### Wishlist System
+- **Database Layer**
+  - `convex/schema.ts` - Wishlist table with user/session support and indexes
+  - Support for both authenticated users and guest sessions
+  - Session-based wishlist persistence for guests
+
+- **Backend API** (470 lines)
+  - `convex/wishlist/wishlist.ts` - Complete wishlist CRUD operations
+  - `toggleWishlist()` mutation - Add/remove with single action
+  - `clearWishlist()` mutation - Bulk removal
+  - `mergeWishlist()` mutation - Merge guest wishlist on login
+  - `getWishlistCount()` query - Real-time count for badge
+  - `isInWishlist()` query - Check if product is in wishlist
+  - Session and user-based wishlist queries
+  - Catalog integration for wishlist status checking
+
+- **Client Hooks** (284 lines)
+  - `lib/client/hooks/use-wishlist.tsx` - Full wishlist state management
+  - Toast notifications with product images
+  - Silent mode for removal (when moving to cart)
+  - Optimistic UI updates
+  - Real-time count tracking
+
+- **UI Components** (4 files, 138 lines)
+  - `components/wishlist/wishlist-icon.tsx` - Header icon with count badge
+  - `components/wishlist/add-to-wishlist-button.tsx` - Heart toggle button
+  - `components/wishlist/wishlist-manager.tsx` - Client state provider
+  - `components/products/product-actions.tsx` - Unified product action buttons
+
+- **Wishlist Page** (216 lines)
+  - `app/(public)/(shop)/wishlist/page.tsx` - Public wishlist page
+  - Guest access warning with sign-in prompt
+  - Product grid with remove and move-to-cart actions
+  - Empty state with browse products link
+  - Real-time updates with Convex
+
+#### Cart Toast Enhancements
+- **Enhanced Notifications** (`lib/client/hooks/use-cart.tsx`)
+  - Product image preview in add/remove toasts
+  - Product name, price, and quantity display
+  - Custom toast UI with 3-second duration
+  - Renamed from `.ts` to `.tsx` for JSX support
+
+- **Cart Drawer Updates** (`components/cart/cart-drawer.tsx`)
+  - Remove action shows product preview toast
+  - Enhanced remove handler with product info
+
+#### Mobile Navigation
+- **Search Integration** (`components/layout/header/mobile-nav.tsx`)
+  - Search bar added to mobile drawer
+  - Auto-close drawer on search submit
+  - Improved tablet visibility (sm: breakpoint)
+
+- **Conditional Auth Links**
+  - "Sign In" link for guests (above wishlist)
+  - "Dashboard" and "Settings" links for authenticated users only
+  - Dynamic menu based on auth state
+
+#### Header Improvements
+- **Navigation Reordering** (`components/layout/header/header.tsx`)
+  - New order: Search → Wishlist → Cart → Theme → User Account
+  - Wishlist icon with count badge
+  - Consistent spacing and alignment
+
+### Changed
+
+#### Route Structure
+- **Wishlist Accessibility**
+  - Moved from `app/(protected)/wishlist/` → `app/(public)/(shop)/wishlist/`
+  - Now accessible to guests with warning banner
+  - Alert component with yellow styling for non-authenticated users
+  - Sign-in button in alert banner
+
+#### Terminology Updates
+- **Stock Status** (6 files)
+  - Changed "Out of Stock" → "Sold Out" across all pages
+  - Updated in product cards, cart buttons, quick-add buttons
+  - Badge text: "SOLD OUT" (all caps)
+  - Button text: "Sold Out" (title case)
+
+#### UX Improvements
+- **Search Visibility** (`components/layout/header/search.tsx`)
+  - Changed breakpoint from `md:` (768px) to `sm:` (640px)
+  - Search bar visible earlier on tablet devices
+
+- **Silent Wishlist Removal**
+  - When moving item to cart: only "Added to cart" toast shows
+  - No redundant "Removed from wishlist" notification
+  - Cleaner user experience
+
+### Impact
+
+**Performance:**
+- No bundle size impact (components lazy loaded)
+- Optimistic UI updates for instant feedback
+- Real-time wishlist count with Convex live queries
+
+**User Experience:**
+- Guest users can save items without sign-in
+- Clear warning about temporary wishlist data
+- Product image previews in all notifications
+- Improved mobile navigation with search
+- Cleaner terminology ("Sold Out" vs "Out of Stock")
+
+**Database:**
+- New `wishlist` table (auto-deployed via Convex)
+- Automatic guest-to-user migration on login
+
+### Commit Structure (13 Atomic Commits)
+
+All commits GPG signed:
+
+1. `feat(schema): add wishlist table with user and session support`
+2. `feat(api): add wishlist backend endpoints and catalog integration`
+3. `feat(hooks): add wishlist client hook with toast notifications`
+4. `feat(cart): add product image to cart toast notifications`
+5. `feat(components): add wishlist UI components`
+6. `feat(pages): add public wishlist page with guest access warning`
+7. `feat(products): integrate wishlist buttons into product displays`
+8. `feat(header): add wishlist icon and reorder navigation items`
+9. `feat(mobile): add search and conditional auth links to mobile menu`
+10. `feat(search): improve visibility on tablet breakpoints`
+11. `refactor(products): update stock status from 'out of stock' to 'sold out'`
+12. `feat(app): integrate wishlist merge on authentication`
+13. `chore: update generated types and formatting`
+
+### Statistics
+
+- **Files Changed**: 25 files
+  - 18 files modified
+  - 7 files added (wishlist system)
+  - 1 file deleted (moved wishlist page)
+  - 1 file renamed (use-cart.ts → use-cart.tsx)
+- **Lines**: 1,559 additions, 196 deletions
+- **Net Change**: +1,363 lines
+- **Build Status**: ✅ All tests passing, 34 static pages generated
+
+---
+
 ## [0.6.0] - 2025-10-09 - UI/UX Optimization & Mobile Navigation
 
 **PR #30** - Mobile navigation, performance optimizations, layout shift fixes

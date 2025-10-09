@@ -175,6 +175,7 @@ npm run db:reset              # Reset database
 
 - Complete auth system (email, OAuth, 2FA)
 - Real-time shopping cart
+- Wishlist with guest support
 - Subscription management (3 tiers)
 - Product catalog with inventory
 - Order processing + webhooks
