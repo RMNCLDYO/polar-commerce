@@ -1,8 +1,8 @@
 import { httpRouter } from 'convex/server';
-import { authComponent, createAuth } from './auth';
+import { authComponent, createAuth } from './auth/auth';
 import { polar } from './polar';
-import { createCheckout, checkoutOptions } from './checkoutHttp';
-import './polyfills';
+import { createCheckout, checkoutOptions } from './checkout/http';
+import './utils/polyfills';
 
 const http = httpRouter();
 

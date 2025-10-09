@@ -14,7 +14,7 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from '@/components/ui/drawer';
-import { useCart } from '@/hooks/use-cart';
+import { useCart } from '@/lib/client/hooks/use-cart';
 import { Id } from '@/convex/_generated/dataModel';
 import { useRouter } from 'next/navigation';
 

@@ -8,25 +8,22 @@
  * @module
  */
 
-import type * as auth from "../auth.js";
-import type * as cart from "../cart.js";
-import type * as checkout from "../checkout.js";
-import type * as checkoutComponent from "../checkoutComponent.js";
-import type * as checkoutHttp from "../checkoutHttp.js";
-import type * as checkout_types from "../checkout_types.js";
-import type * as crons from "../crons.js";
-import type * as email from "../email.js";
+import type * as auth_auth from "../auth/auth.js";
+import type * as auth_sync from "../auth/sync.js";
+import type * as cart_cart from "../cart/cart.js";
+import type * as checkout_checkout from "../checkout/checkout.js";
+import type * as checkout_http from "../checkout/http.js";
+import type * as checkout_types from "../checkout/types.js";
 import type * as emails_components_BaseEmail from "../emails/components/BaseEmail.js";
+import type * as emails_email from "../emails/email.js";
 import type * as emails_magicLink from "../emails/magicLink.js";
 import type * as emails_resetPassword from "../emails/resetPassword.js";
 import type * as emails_verifyEmail from "../emails/verifyEmail.js";
 import type * as emails_verifyOTP from "../emails/verifyOTP.js";
-import type * as factoryReset from "../factoryReset.js";
 import type * as http from "../http.js";
-import type * as inspectData from "../inspectData.js";
-import type * as orderSync from "../orderSync.js";
-import type * as orderWebhook from "../orderWebhook.js";
-import type * as orderWebhookHttp from "../orderWebhookHttp.js";
+import type * as orders_http from "../orders/http.js";
+import type * as orders_sync from "../orders/sync.js";
+import type * as orders_webhook from "../orders/webhook.js";
 import type * as polar__generated_api from "../polar/_generated/api.js";
 import type * as polar__generated_server from "../polar/_generated/server.js";
 import type * as polar_lib from "../polar/lib.js";
@@ -34,11 +31,13 @@ import type * as polar_types from "../polar/types.js";
 import type * as polar_util from "../polar/util.js";
 import type * as polar from "../polar.js";
 import type * as polarCustomer from "../polarCustomer.js";
-import type * as polarWebhookMiddleware from "../polarWebhookMiddleware.js";
-import type * as products from "../products.js";
-import type * as productsSync from "../productsSync.js";
-import type * as todos from "../todos.js";
-import type * as userSync from "../userSync.js";
+import type * as polarMiddleware from "../polarMiddleware.js";
+import type * as products_products from "../products/products.js";
+import type * as products_sync from "../products/sync.js";
+import type * as todos_todos from "../todos/todos.js";
+import type * as utils_crons from "../utils/crons.js";
+import type * as utils_factoryReset from "../utils/factoryReset.js";
+import type * as utils_inspectData from "../utils/inspectData.js";
 
 import type {
   ApiFromModules,
@@ -55,25 +54,22 @@ import type {
  * ```
  */
 declare const fullApi: ApiFromModules<{
-  auth: typeof auth;
-  cart: typeof cart;
-  checkout: typeof checkout;
-  checkoutComponent: typeof checkoutComponent;
-  checkoutHttp: typeof checkoutHttp;
-  checkout_types: typeof checkout_types;
-  crons: typeof crons;
-  email: typeof email;
+  "auth/auth": typeof auth_auth;
+  "auth/sync": typeof auth_sync;
+  "cart/cart": typeof cart_cart;
+  "checkout/checkout": typeof checkout_checkout;
+  "checkout/http": typeof checkout_http;
+  "checkout/types": typeof checkout_types;
   "emails/components/BaseEmail": typeof emails_components_BaseEmail;
+  "emails/email": typeof emails_email;
   "emails/magicLink": typeof emails_magicLink;
   "emails/resetPassword": typeof emails_resetPassword;
   "emails/verifyEmail": typeof emails_verifyEmail;
   "emails/verifyOTP": typeof emails_verifyOTP;
-  factoryReset: typeof factoryReset;
   http: typeof http;
-  inspectData: typeof inspectData;
-  orderSync: typeof orderSync;
-  orderWebhook: typeof orderWebhook;
-  orderWebhookHttp: typeof orderWebhookHttp;
+  "orders/http": typeof orders_http;
+  "orders/sync": typeof orders_sync;
+  "orders/webhook": typeof orders_webhook;
   "polar/_generated/api": typeof polar__generated_api;
   "polar/_generated/server": typeof polar__generated_server;
   "polar/lib": typeof polar_lib;
@@ -81,11 +77,13 @@ declare const fullApi: ApiFromModules<{
   "polar/util": typeof polar_util;
   polar: typeof polar;
   polarCustomer: typeof polarCustomer;
-  polarWebhookMiddleware: typeof polarWebhookMiddleware;
-  products: typeof products;
-  productsSync: typeof productsSync;
-  todos: typeof todos;
-  userSync: typeof userSync;
+  polarMiddleware: typeof polarMiddleware;
+  "products/products": typeof products_products;
+  "products/sync": typeof products_sync;
+  "todos/todos": typeof todos_todos;
+  "utils/crons": typeof utils_crons;
+  "utils/factoryReset": typeof utils_factoryReset;
+  "utils/inspectData": typeof utils_inspectData;
 }>;
 declare const fullApiWithMounts: typeof fullApi;
 

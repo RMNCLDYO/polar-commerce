@@ -14,7 +14,7 @@ import { useQuery } from 'convex/react';
 import { Button } from '@/components/ui/button';
 
 export default function CustomerPortalPage() {
-  const user = useQuery(api.auth.getCurrentUser);
+  const user = useQuery(api.auth.auth.getCurrentUser);
 
   if (user === undefined) {
     return <div>Loading...</div>;

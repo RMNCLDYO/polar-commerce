@@ -6,7 +6,7 @@ import {
 import Image from 'next/image';
 import { Link } from '@/components/link';
 import { QuickAddButton } from '@/components/cart/quick-add-button';
-import { getProducts, type ProductFilters } from '@/lib/server/products';
+import { getProducts, type ProductFilters } from '@/lib/server/data/products';
 import { cn } from '@/lib/shared/utils';
 
 export const experimental_ppr = true;

@@ -9,7 +9,7 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { useCart } from '@/hooks/use-cart';
+import { useCart } from '@/lib/client/hooks/use-cart';
 import { Link } from '@/components/link';
 import { useConvexAuth, useAction } from 'convex/react';
 import { api } from '@/convex/_generated/api';
@@ -18,7 +18,9 @@ export default function CheckoutPage() {
   const router = useRouter();
   const { cart, cartValidation, sessionId } = useCart();
   const { isAuthenticated } = useConvexAuth();
-  const createCheckoutAction = useAction(api.checkout.createCheckoutSession);
+  const createCheckoutAction = useAction(
+    api.checkout.checkout.createCheckoutSession,
+  );
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

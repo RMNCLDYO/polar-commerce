@@ -1,4 +1,4 @@
-import type { auth } from '@/convex/auth';
+import type { auth } from '@/convex/auth/auth';
 import { convexClient } from '@convex-dev/better-auth/client/plugins';
 import {
   anonymousClient,

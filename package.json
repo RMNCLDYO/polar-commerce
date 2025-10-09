@@ -23,7 +23,7 @@
     "start": "next start",
     "lint": "biome format --write && tsc -p convex",
     "clean": "rm -rf .next && rm -rf node_modules && rm -rf dist && npm install",
-    "db:reset": "npx convex run factoryReset:factoryReset",
+    "db:reset": "npx convex run utils/factoryReset:factoryReset",
     "polar:seed": "npx tsx scripts/seedAll.ts",
     "polar:seed-products": "npx tsx scripts/seedProducts.ts",
     "polar:seed-subscriptions": "npx tsx scripts/seedSubscriptions.ts",

@@ -51,7 +51,7 @@ export default function SignUp() {
         onSuccess: () => {
           setLoading(false);
         },
-        onError: async (ctx) => {
+        onError: async (ctx: any) => {
           setLoading(false);
           console.error(ctx.error);
           console.error('response', ctx.response);
