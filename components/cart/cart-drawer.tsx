@@ -4,7 +4,8 @@ import { useState } from 'react';
 import Image from 'next/image';
 import { Link } from '@/components/link';
 import { Button } from '@/components/ui/button';
-import { ShoppingBag, Plus, Minus, Trash2 } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { ShoppingBag, Plus, Minus, Trash2, AlertCircle } from 'lucide-react';
 import {
   Drawer,
   DrawerClose,
@@ -17,6 +18,7 @@ import {
 import { useCart } from '@/lib/client/hooks/use-cart';
 import { Id } from '@/convex/_generated/dataModel';
 import { useRouter } from 'next/navigation';
+import { cn } from '@/lib/shared/utils';
 
 interface CartDrawerProps {
   open: boolean;
@@ -68,8 +70,8 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
   };
 
   return (
-    <Drawer open={open} onOpenChange={onOpenChange} direction="right">
-      <DrawerContent className="h-full flex flex-col sm:max-w-md">
+    <Drawer open={open} onOpenChange={onOpenChange} direction="bottom">
+      <DrawerContent className="max-h-[85vh] flex flex-col">
         <DrawerHeader className="border-b">
           <DrawerTitle>Shopping Cart</DrawerTitle>
           <DrawerDescription>
@@ -100,9 +102,10 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
                 return (
                   <div
                     key={item.id}
-                    className={`flex gap-4 py-4 border-b last:border-0 ${
-                      isUpdating ? 'opacity-50' : ''
-                    }`}
+                    className={cn(
+                      'flex gap-4 py-4 border-b last:border-0',
+                      isUpdating && 'opacity-50',
+                    )}
                   >
                     {/* Product Image */}
                     <Link
@@ -138,7 +141,9 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
 
                         {/* Quantity Controls */}
                         <div className="flex items-center gap-2">
-                          <button
+                          <Button
+                            variant="ghost"
+                            size="icon"
                             onClick={() =>
                               handleQuantityChange(
                                 item.catalogId,
@@ -146,14 +151,16 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
                               )
                             }
                             disabled={isUpdating || item.quantity <= 1}
-                            className="p-1 rounded hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="h-8 w-8"
                           >
                             <Minus className="h-4 w-4" />
-                          </button>
+                          </Button>
                           <span className="w-8 text-center">
                             {item.quantity}
                           </span>
-                          <button
+                          <Button
+                            variant="ghost"
+                            size="icon"
                             onClick={() =>
                               handleQuantityChange(
                                 item.catalogId,
@@ -161,17 +168,19 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
                               )
                             }
                             disabled={isUpdating}
-                            className="p-1 rounded hover:bg-muted disabled:opacity-50"
+                            className="h-8 w-8"
                           >
                             <Plus className="h-4 w-4" />
-                          </button>
-                          <button
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
                             onClick={() => handleRemoveItem(item.catalogId)}
                             disabled={isUpdating}
-                            className="p-1 rounded hover:bg-muted text-destructive disabled:opacity-50 ml-2"
+                            className="h-8 w-8 text-destructive hover:text-destructive ml-2"
                           >
                             <Trash2 className="h-4 w-4" />
-                          </button>
+                          </Button>
                         </div>
                       </div>
 
@@ -188,12 +197,14 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
 
               {/* Clear Cart Button */}
               {cart.items.length > 0 && (
-                <button
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={clearCart}
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors w-full text-center py-2"
+                  className="w-full text-muted-foreground hover:text-foreground"
                 >
                   Clear cart
-                </button>
+                </Button>
               )}
             </div>
           )}
@@ -204,11 +215,14 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
           <DrawerFooter className="border-t">
             {/* Validation Errors */}
             {cartValidation && !cartValidation.valid && (
-              <div className="bg-destructive/10 text-destructive text-sm p-3 rounded-lg mb-4">
-                {cartValidation.errors.map((error, index) => (
-                  <p key={index}>{error}</p>
-                ))}
-              </div>
+              <Alert variant="destructive" className="mb-4">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  {cartValidation.errors.map((error, index) => (
+                    <p key={index}>{error}</p>
+                  ))}
+                </AlertDescription>
+              </Alert>
             )}
 
             {/* Subtotal */}

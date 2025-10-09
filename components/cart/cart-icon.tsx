@@ -2,30 +2,34 @@
 
 import { useState } from 'react';
 import { ShoppingBag } from 'lucide-react';
-import { useCart, useCartMerge } from '@/lib/client/hooks/use-cart';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { useCart } from '@/lib/client/hooks/use-cart';
 import { CartDrawer } from './cart-drawer';
 
 export function CartIcon() {
   const [open, setOpen] = useState(false);
   const { cartCount } = useCart();
 
-  // Automatically merge cart on auth state changes
-  useCartMerge();
-
   return (
     <>
-      <button
+      <Button
+        variant="ghost"
+        size="icon"
         onClick={() => setOpen(true)}
-        className="relative p-2 hover:bg-muted rounded-lg transition-colors"
+        className="relative"
         aria-label="Shopping cart"
       >
         <ShoppingBag className="h-5 w-5" />
         {cartCount > 0 && (
-          <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center font-semibold">
+          <Badge
+            variant="default"
+            className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-xs"
+          >
             {cartCount > 99 ? '99+' : cartCount}
-          </span>
+          </Badge>
         )}
-      </button>
+      </Button>
 
       <CartDrawer open={open} onOpenChange={setOpen} />
     </>
