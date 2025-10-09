@@ -15,6 +15,7 @@ interface AddToCartButtonProps {
   showIcon?: boolean;
   children?: React.ReactNode;
   inStock?: boolean;
+  productInfo?: { name: string; image: string; price: string };
 }
 
 export function AddToCartButton({
@@ -26,6 +27,7 @@ export function AddToCartButton({
   showIcon = true,
   children,
   inStock = true,
+  productInfo,
 }: AddToCartButtonProps) {
   const { addToCart } = useCart();
   const [isLoading, setIsLoading] = useState(false);
@@ -33,7 +35,7 @@ export function AddToCartButton({
   const handleAddToCart = async () => {
     if (!inStock) return;
     setIsLoading(true);
-    await addToCart(catalogId, quantity);
+    await addToCart(catalogId, quantity, productInfo);
     setIsLoading(false);
   };
 
@@ -50,7 +52,7 @@ export function AddToCartButton({
       ) : (
         showIcon && <ShoppingBag className="mr-2 h-4 w-4" />
       )}
-      {!inStock ? 'Out of Stock' : children || 'Add to Cart'}
+      {!inStock ? 'Sold Out' : children || 'Add to Cart'}
     </Button>
   );
 }

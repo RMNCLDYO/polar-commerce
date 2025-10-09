@@ -11,12 +11,14 @@ interface QuickAddButtonProps {
   catalogId: Id<'catalog'>;
   className?: string;
   inStock?: boolean;
+  productInfo?: { name: string; image: string; price: string };
 }
 
 export function QuickAddButton({
   catalogId,
   className,
   inStock = true,
+  productInfo,
 }: QuickAddButtonProps) {
   const { addToCart } = useCart();
   const [isLoading, setIsLoading] = useState(false);
@@ -25,7 +27,7 @@ export function QuickAddButton({
     e.preventDefault(); // Prevent navigation when clicking
     if (!inStock) return;
     setIsLoading(true);
-    await addToCart(catalogId, 1);
+    await addToCart(catalogId, 1, productInfo);
     setIsLoading(false);
   };
 
@@ -43,9 +45,9 @@ export function QuickAddButton({
       {isLoading ? (
         <Loader2 className="h-3 w-3 animate-spin" />
       ) : !inStock ? (
-        'OUT OF STOCK'
+        'SOLD OUT'
       ) : (
-        'Quick Add'
+        'ADD TO CART'
       )}
     </Button>
   );
