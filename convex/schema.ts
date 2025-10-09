@@ -109,6 +109,29 @@ export default defineSchema({
     .index('cartId_catalogId', ['cartId', 'catalogId']),
 
   // ==========================================
+  // WISHLIST
+  // ==========================================
+  wishlists: defineTable({
+    userId: v.optional(v.string()),
+    sessionId: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+    expiresAt: v.optional(v.number()),
+  })
+    .index('userId', ['userId'])
+    .index('sessionId', ['sessionId'])
+    .index('expiresAt', ['expiresAt']),
+
+  wishlistItems: defineTable({
+    wishlistId: v.id('wishlists'),
+    catalogId: v.id('catalog'),
+    addedAt: v.number(),
+    notes: v.optional(v.string()),
+  })
+    .index('wishlistId', ['wishlistId'])
+    .index('wishlistId_catalogId', ['wishlistId', 'catalogId']),
+
+  // ==========================================
   // ORDER MANAGEMENT
   // ==========================================
   orders: defineTable({
