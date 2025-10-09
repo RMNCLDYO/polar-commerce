@@ -1,8 +1,6 @@
 'use client';
 
-import { useQuery } from 'convex/react';
-import { api } from '@/convex/_generated/api';
-import Link from 'next/link';
+import { Link } from '@/components/link';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -12,19 +10,21 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import {
-  User,
-  LayoutDashboard,
-  Settings,
-  LogOut,
-  Crown,
-  Sparkles,
-} from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { User, LayoutDashboard, Settings, LogOut } from 'lucide-react';
 import { authClient } from '@/lib/client/auth';
 import { useRouter } from 'next/navigation';
 
-export function UserMenu() {
-  const user = useQuery(api.auth.auth.getCurrentUser);
+interface UserMenuProps {
+  user: {
+    id: string;
+    email: string;
+    name?: string | null;
+    image?: string | null;
+  } | null;
+}
+
+export function UserMenu({ user }: UserMenuProps) {
   const router = useRouter();
 
   const handleSignOut = async () => {
@@ -32,38 +32,32 @@ export function UserMenu() {
     router.push('/');
   };
 
-  if (user === undefined) {
-    return null; // Loading
-  }
-
   if (!user) {
     return (
       <Link href="/sign-in">
-        <Button variant="ghost" size="sm" className="gap-2">
-          <User className="size-4" />
-          Sign In
+        <Button variant="ghost" size="icon" aria-label="Sign in">
+          <User className="size-5" />
         </Button>
       </Link>
     );
   }
 
   return (
-    <DropdownMenu>
+    <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className="gap-2">
-          {user.image ? (
-            <img
-              src={user.image}
+        <Button variant="ghost" size="icon" aria-label="User menu">
+          <Avatar className="size-6">
+            <AvatarImage
+              src={user.image || undefined}
               alt={user.name || 'User'}
-              className="size-6 rounded-full"
             />
-          ) : (
-            <User className="size-4" />
-          )}
-          <span className="hidden md:inline">{user.name || user.email}</span>
+            <AvatarFallback>
+              <User className="size-4" />
+            </AvatarFallback>
+          </Avatar>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56">
+      <DropdownMenuContent align="end" className="w-56" sideOffset={8}>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
             <p className="text-sm font-medium leading-none">
@@ -72,18 +66,6 @@ export function UserMenu() {
             <p className="text-xs leading-none text-muted-foreground">
               {user.email}
             </p>
-            {user.tier && user.tier !== 'free' && (
-              <div
-                className={`flex items-center gap-1 text-xs font-medium mt-2 ${
-                  user.tier === 'premium'
-                    ? 'text-yellow-600 dark:text-yellow-500'
-                    : 'text-blue-600 dark:text-blue-500'
-                }`}
-              >
-                <Crown className="size-3" />
-                {user.tier === 'starter' ? 'Starter' : 'Premium'} Member
-              </div>
-            )}
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
@@ -99,20 +81,6 @@ export function UserMenu() {
             Settings
           </Link>
         </DropdownMenuItem>
-        {user.tier !== 'premium' && (
-          <>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-              <Link
-                href="/pricing"
-                className="cursor-pointer flex items-center text-yellow-600 dark:text-yellow-500"
-              >
-                <Sparkles className="size-4 mr-2" />
-                {user.tier === 'free' ? 'Upgrade to Premium' : 'Upgrade Plan'}
-              </Link>
-            </DropdownMenuItem>
-          </>
-        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
           <LogOut className="size-4 mr-2" />
