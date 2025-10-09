@@ -1,9 +1,11 @@
 'use client';
 
 import { useState } from 'react';
+import { Button } from '@/components/ui/button';
 import { useCart } from '@/lib/client/hooks/use-cart';
 import { Id } from '@/convex/_generated/dataModel';
 import { Loader2 } from 'lucide-react';
+import { cn } from '@/lib/shared/utils';
 
 interface QuickAddButtonProps {
   catalogId: Id<'catalog'>;
@@ -28,10 +30,15 @@ export function QuickAddButton({
   };
 
   return (
-    <button
+    <Button
+      variant="outline"
+      size="sm"
       onClick={handleQuickAdd}
       disabled={isLoading || !inStock}
-      className={`text-xs font-semibold tracking-widest uppercase px-3 py-1 border border-border hover:bg-muted transition-colors disabled:opacity-50 ${className}`}
+      className={cn(
+        'text-xs font-semibold tracking-widest uppercase',
+        className,
+      )}
     >
       {isLoading ? (
         <Loader2 className="h-3 w-3 animate-spin" />
@@ -40,6 +47,6 @@ export function QuickAddButton({
       ) : (
         'Quick Add'
       )}
-    </button>
+    </Button>
   );
 }

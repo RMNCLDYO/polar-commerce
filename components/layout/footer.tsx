@@ -1,9 +1,17 @@
-'use client';
-
 import Image from 'next/image';
+import { unstable_cache } from 'next/cache';
 import LogoImage from '@/public/logo.png';
 
-export function Footer() {
+// Cache the year for 1 day - it only changes once a year anyway
+const getCopyrightYear = unstable_cache(
+  async () => new Date().getFullYear(),
+  ['copyright-year'],
+  { revalidate: 86400 }, // 24 hours
+);
+
+export async function Footer() {
+  const year = await getCopyrightYear();
+
   return (
     <footer
       className="border-t border-border bg-muted/30 px-8 py-16 animate-slide-up"
@@ -20,8 +28,7 @@ export function Footer() {
           />
         </div>
         <p className="text-xs font-mono tracking-widest uppercase text-muted-foreground">
-          © {new Date().getFullYear()} BANANA SPORTSWEAR, INC. ALL RIGHTS
-          RESERVED.
+          © {year} BANANA SPORTSWEAR, INC. ALL RIGHTS RESERVED.
         </p>
       </div>
     </footer>

@@ -12,7 +12,7 @@ import { useState } from 'react';
 import { authClient } from '@/lib/client/auth';
 import EnableTwoFactor from './EnableTwoFactor';
 import { ArrowLeft, AlertTriangle, Crown } from 'lucide-react';
-import Link from 'next/link';
+import { Link } from '@/components/link';
 import { useRouter } from 'next/navigation';
 import { useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
@@ -66,7 +66,7 @@ export default function SettingsPage() {
               className="flex items-center gap-2"
               asChild
             >
-              <Link href="/dashboard">
+              <Link href="/dashboard" prefetchStrategy="always">
                 <ArrowLeft size={16} />
                 Back to Dashboard
               </Link>
@@ -153,7 +153,9 @@ export default function SettingsPage() {
                       </CustomerPortalLink>
                     ) : (
                       <Button asChild>
-                        <Link href="/pricing">View Plans</Link>
+                        <Link href="/pricing" prefetchStrategy="hover">
+                          View Plans
+                        </Link>
                       </Button>
                     )}
                   </div>
