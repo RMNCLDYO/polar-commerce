@@ -57,7 +57,11 @@ export function useCart() {
   const mergeCartMutation = useMutation(api.cart.cart.mergeCart);
 
   // Add to cart with optimistic UI feedback
-  const addToCart = async (catalogId: Id<'catalog'>, quantity: number = 1) => {
+  const addToCart = async (
+    catalogId: Id<'catalog'>,
+    quantity: number = 1,
+    productInfo?: { name: string; image: string; price: string },
+  ) => {
     // For authenticated users, sessionId will be empty but mutation still works via userId from auth
     setIsAddingToCart(true);
     try {
@@ -66,9 +70,34 @@ export function useCart() {
         quantity,
         sessionId: sessionId || undefined,
       });
-      toast.success('Added to cart', {
-        description: `${quantity} item${quantity > 1 ? 's' : ''} added to your cart`,
-      });
+
+      if (productInfo) {
+        toast.custom(
+          (_t) => (
+            <div className="bg-background border rounded-lg shadow-lg p-4 flex items-center gap-3 min-w-[300px]">
+              <img
+                src={productInfo.image}
+                alt={productInfo.name}
+                className="w-12 h-12 object-cover rounded"
+              />
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-sm">Added to cart</p>
+                <p className="font-medium text-sm truncate">
+                  {productInfo.name}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {quantity} × {productInfo.price}
+                </p>
+              </div>
+            </div>
+          ),
+          { duration: 3000 },
+        );
+      } else {
+        toast.success('Added to cart', {
+          description: `${quantity} item${quantity > 1 ? 's' : ''} added to your cart`,
+        });
+      }
     } catch (error) {
       console.error('Error adding to cart:', error);
       toast.error('Failed to add to cart');
@@ -92,13 +121,41 @@ export function useCart() {
   };
 
   // Remove from cart
-  const removeFromCart = async (catalogId: Id<'catalog'>) => {
+  const removeFromCart = async (
+    catalogId: Id<'catalog'>,
+    productInfo?: { name: string; image: string; price: string },
+  ) => {
     try {
       await removeFromCartMutation({
         catalogId,
         sessionId: sessionId || undefined,
       });
-      toast.success('Removed from cart');
+
+      if (productInfo) {
+        toast.custom(
+          (_t) => (
+            <div className="bg-background border rounded-lg shadow-lg p-4 flex items-center gap-3 min-w-[300px]">
+              <img
+                src={productInfo.image}
+                alt={productInfo.name}
+                className="w-12 h-12 object-cover rounded"
+              />
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-sm">Removed from cart</p>
+                <p className="font-medium text-sm truncate">
+                  {productInfo.name}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {productInfo.price}
+                </p>
+              </div>
+            </div>
+          ),
+          { duration: 3000 },
+        );
+      } else {
+        toast.success('Removed from cart');
+      }
     } catch (error) {
       console.error('Error removing from cart:', error);
       toast.error('Failed to remove from cart');

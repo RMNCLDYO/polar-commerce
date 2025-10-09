@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Link } from '@/components/link';
 import { Button } from '@/components/ui/button';
@@ -36,6 +36,17 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
     cartValidation,
   } = useCart();
   const [updatingItems, setUpdatingItems] = useState<Set<string>>(new Set());
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const handleQuantityChange = async (
     catalogId: Id<'catalog'>,
@@ -50,9 +61,12 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
     });
   };
 
-  const handleRemoveItem = async (catalogId: Id<'catalog'>) => {
+  const handleRemoveItem = async (
+    catalogId: Id<'catalog'>,
+    productInfo: { name: string; image: string; price: string },
+  ) => {
     setUpdatingItems((prev) => new Set(prev).add(catalogId));
-    await removeFromCart(catalogId);
+    await removeFromCart(catalogId, productInfo);
     setUpdatingItems((prev) => {
       const next = new Set(prev);
       next.delete(catalogId);
@@ -70,8 +84,17 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
   };
 
   return (
-    <Drawer open={open} onOpenChange={onOpenChange} direction="bottom">
-      <DrawerContent className="max-h-[85vh] flex flex-col">
+    <Drawer
+      open={open}
+      onOpenChange={onOpenChange}
+      direction={isMobile ? 'bottom' : 'right'}
+    >
+      <DrawerContent
+        className={cn(
+          'flex flex-col',
+          isMobile ? 'max-h-[85vh]' : 'h-full max-w-md ml-auto',
+        )}
+      >
         <DrawerHeader className="border-b">
           <DrawerTitle>Shopping Cart</DrawerTitle>
           <DrawerDescription>
@@ -175,7 +198,13 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => handleRemoveItem(item.catalogId)}
+                            onClick={() =>
+                              handleRemoveItem(item.catalogId, {
+                                name: item.product.name,
+                                image: item.product.image,
+                                price: `$${(item.price / 100).toFixed(2)}`,
+                              })
+                            }
                             disabled={isUpdating}
                             className="h-8 w-8 text-destructive hover:text-destructive ml-2"
                           >
