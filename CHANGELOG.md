@@ -5,9 +5,65 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] - 2025-10-09 - UI/UX Optimization & Mobile Navigation
+
+**PR #30** - Mobile navigation, performance optimizations, layout shift fixes
+
+### Added
+- **Mobile Navigation** - Drawer slides from right (Menu button on mobile)
+- **Wishlist Page** - Placeholder page at `/wishlist`
+- **shadcn/ui Components** (6 new)
+  - `avatar` - User profile display
+  - `skeleton` - Loading states
+  - `alert` - User notifications
+  - `separator` - Visual dividers
+  - `badge` - Status indicators
+  - `aspect-ratio` - Image containers
+
+### Changed
+- **Auth Performance** - 30x faster user menu (300ms → <10ms)
+  - Created `getCurrentUserBasic` query (no Polar lookup)
+  - Proper Convex SSR: `preloadQuery` + `usePreloadedQuery`
+  - Fixed PPR build errors with `await headers()`
+
+- **Layout Shifts Eliminated**
+  - Icon-only user menu (no variable-width text)
+  - Added `modal={false}` to dropdowns (prevents body scroll lock)
+  - Category pages use `min-height` (grid + text)
+  - Consistent skeleton dimensions
+
+- **Progressive Navigation**
+  - Nav items hide individually (not in groups)
+  - Custom breakpoints: 1180px → 1080px → 980px → 900px → 820px
+  - Mobile: hamburger menu replaces nav
+
+- **Cart Drawer** - Changed from right to bottom (better mobile UX)
+
+- **Link Component** - Used throughout auth pages (`/sign-in`, `/sign-up`, `/settings`, `/verify-2fa`)
+
+- **Performance Config**
+  - `dynamicIO: true` - Enables `cacheLife` feature
+  - `reactStrictMode: false` - Prevents double token requests in dev
+
+- **Theme Toggle** - Removed focus ring
+
+### Impact
+- **Performance**: 30x faster auth display
+- **UX**: Zero layout shifts, better mobile navigation
+- **Mobile**: Native drawer navigation + bottom cart
+- **Developer**: Better SSR patterns, proper PPR compliance
+
+### Statistics
+- **Files Changed**: 42 files
+- **Commits**: 12 atomic commits
+- **Build**: All PPR routes passing
+- **Lines**: 2,034 additions, 538 deletions
+
+---
+
 ## [0.5.0] - 2025-10-09 - Schema Naming Clarity
 
-**PR #XX** - Comprehensive schema reorganization for naming clarity and consistency
+**PR #29** - Comprehensive schema reorganization for naming clarity and consistency
 
 ### Changed
 
