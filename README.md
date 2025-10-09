@@ -2,7 +2,7 @@
 
 Full-stack e-commerce with **Next.js 15 canary + Convex + Better Auth + Polar**. Showcases real-world integration of experimental features in production architecture.
 
-[![Next.js 15](https://img.shields.io/badge/Next.js-15.6.0--canary.34-black?style=flat-square&logo=next.js)](https://nextjs.org)
+[![Next.js 15](https://img.shields.io/badge/Next.js-15.6.0--canary.54-black?style=flat-square&logo=next.js)](https://nextjs.org)
 [![React 19](https://img.shields.io/badge/React-19.2.0-61DAFB?style=flat-square&logo=react)](https://react.dev)
 [![Convex](https://img.shields.io/badge/Convex-1.27.5-FF6B35?style=flat-square)](https://convex.dev)
 [![Better Auth](https://img.shields.io/badge/Better_Auth-1.3.27-7C3AED?style=flat-square)](https://better-auth.com)
