@@ -18,7 +18,7 @@ export function ThemeToggle() {
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
         <Button
-          variant="outline"
+          variant="ghost"
           size="icon"
           className="focus-visible:ring-0 focus-visible:ring-offset-0"
         >
