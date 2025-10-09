@@ -124,12 +124,14 @@ async function CachedCategoryContent({
           <h1 className="text-3xl font-bold tracking-tight mb-4">
             {config.title}
           </h1>
-          <p className="text-muted-foreground">{getProductCount()}</p>
+          <p className="text-muted-foreground min-h-[24px]">
+            {getProductCount()}
+          </p>
         </div>
 
-        {products.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-            {products.map((product) => (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 min-h-[400px]">
+          {products.length > 0 ? (
+            products.map((product) => (
               <Link
                 key={product.id}
                 href={`/product/${product.id}`}
@@ -175,9 +177,15 @@ async function CachedCategoryContent({
                   </div>
                 </div>
               </Link>
-            ))}
-          </div>
-        )}
+            ))
+          ) : (
+            <div className="col-span-full flex items-center justify-center">
+              <p className="text-muted-foreground text-center">
+                {getEmptyMessage()}
+              </p>
+            </div>
+          )}
+        </div>
       </div>
     </main>
   );
