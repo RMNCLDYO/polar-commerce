@@ -38,6 +38,7 @@ import type * as polarMiddleware from "../polarMiddleware.js";
 import type * as utils_clearDatabase from "../utils/clearDatabase.js";
 import type * as utils_crons from "../utils/crons.js";
 import type * as utils_inspectData from "../utils/inspectData.js";
+import type * as wishlist_wishlist from "../wishlist/wishlist.js";
 
 import type {
   ApiFromModules,
@@ -84,6 +85,7 @@ declare const fullApi: ApiFromModules<{
   "utils/clearDatabase": typeof utils_clearDatabase;
   "utils/crons": typeof utils_crons;
   "utils/inspectData": typeof utils_inspectData;
+  "wishlist/wishlist": typeof wishlist_wishlist;
 }>;
 declare const fullApiWithMounts: typeof fullApi;
 
