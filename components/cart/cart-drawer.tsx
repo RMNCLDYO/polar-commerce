@@ -36,24 +36,24 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
   const [updatingItems, setUpdatingItems] = useState<Set<string>>(new Set());
 
   const handleQuantityChange = async (
-    productId: Id<'products'>,
+    catalogId: Id<'catalog'>,
     newQuantity: number,
   ) => {
-    setUpdatingItems((prev) => new Set(prev).add(productId));
-    await updateQuantity(productId, newQuantity);
+    setUpdatingItems((prev) => new Set(prev).add(catalogId));
+    await updateQuantity(catalogId, newQuantity);
     setUpdatingItems((prev) => {
       const next = new Set(prev);
-      next.delete(productId);
+      next.delete(catalogId);
       return next;
     });
   };
 
-  const handleRemoveItem = async (productId: Id<'products'>) => {
-    setUpdatingItems((prev) => new Set(prev).add(productId));
-    await removeFromCart(productId);
+  const handleRemoveItem = async (catalogId: Id<'catalog'>) => {
+    setUpdatingItems((prev) => new Set(prev).add(catalogId));
+    await removeFromCart(catalogId);
     setUpdatingItems((prev) => {
       const next = new Set(prev);
-      next.delete(productId);
+      next.delete(catalogId);
       return next;
     });
   };
@@ -96,7 +96,7 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
             <div className="space-y-4">
               {cart.items.map((item) => {
                 if (!item) return null;
-                const isUpdating = updatingItems.has(item.productId);
+                const isUpdating = updatingItems.has(item.catalogId);
                 return (
                   <div
                     key={item.id}
@@ -106,7 +106,7 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
                   >
                     {/* Product Image */}
                     <Link
-                      href={`/product/${item.productId}`}
+                      href={`/product/${item.catalogId}`}
                       onClick={handleProductClick}
                       className="relative w-20 h-20 bg-muted rounded-lg overflow-hidden flex-shrink-0"
                     >
@@ -122,7 +122,7 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
                     {/* Product Details */}
                     <div className="flex-1 min-w-0">
                       <Link
-                        href={`/product/${item.productId}`}
+                        href={`/product/${item.catalogId}`}
                         onClick={handleProductClick}
                         className="font-medium hover:underline block truncate"
                       >
@@ -141,7 +141,7 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
                           <button
                             onClick={() =>
                               handleQuantityChange(
-                                item.productId,
+                                item.catalogId,
                                 Math.max(1, item.quantity - 1),
                               )
                             }
@@ -156,7 +156,7 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
                           <button
                             onClick={() =>
                               handleQuantityChange(
-                                item.productId,
+                                item.catalogId,
                                 item.quantity + 1,
                               )
                             }
@@ -166,7 +166,7 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
                             <Plus className="h-4 w-4" />
                           </button>
                           <button
-                            onClick={() => handleRemoveItem(item.productId)}
+                            onClick={() => handleRemoveItem(item.catalogId)}
                             disabled={isUpdating}
                             className="p-1 rounded hover:bg-muted text-destructive disabled:opacity-50 ml-2"
                           >

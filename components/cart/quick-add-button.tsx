@@ -6,13 +6,13 @@ import { Id } from '@/convex/_generated/dataModel';
 import { Loader2 } from 'lucide-react';
 
 interface QuickAddButtonProps {
-  productId: Id<'products'>;
+  catalogId: Id<'catalog'>;
   className?: string;
   inStock?: boolean;
 }
 
 export function QuickAddButton({
-  productId,
+  catalogId,
   className,
   inStock = true,
 }: QuickAddButtonProps) {
@@ -23,7 +23,7 @@ export function QuickAddButton({
     e.preventDefault(); // Prevent navigation when clicking
     if (!inStock) return;
     setIsLoading(true);
-    await addToCart(productId, 1);
+    await addToCart(catalogId, 1);
     setIsLoading(false);
   };
 

@@ -57,12 +57,12 @@ export function useCart() {
   const mergeCartMutation = useMutation(api.cart.cart.mergeCart);
 
   // Add to cart with optimistic UI feedback
-  const addToCart = async (productId: Id<'products'>, quantity: number = 1) => {
+  const addToCart = async (catalogId: Id<'catalog'>, quantity: number = 1) => {
     // For authenticated users, sessionId will be empty but mutation still works via userId from auth
     setIsAddingToCart(true);
     try {
       await addToCartMutation({
-        productId,
+        catalogId,
         quantity,
         sessionId: sessionId || undefined,
       });
@@ -78,13 +78,10 @@ export function useCart() {
   };
 
   // Update cart item quantity
-  const updateQuantity = async (
-    productId: Id<'products'>,
-    quantity: number,
-  ) => {
+  const updateQuantity = async (catalogId: Id<'catalog'>, quantity: number) => {
     try {
       await updateCartItemMutation({
-        productId,
+        catalogId,
         quantity,
         sessionId: sessionId || undefined,
       });
@@ -95,10 +92,10 @@ export function useCart() {
   };
 
   // Remove from cart
-  const removeFromCart = async (productId: Id<'products'>) => {
+  const removeFromCart = async (catalogId: Id<'catalog'>) => {
     try {
       await removeFromCartMutation({
-        productId,
+        catalogId,
         sessionId: sessionId || undefined,
       });
       toast.success('Removed from cart');
