@@ -13,7 +13,7 @@ export function Search() {
   return (
     <Form
       action="/products"
-      className="hidden md:flex items-center border border-border bg-muted px-4 py-2 hover:bg-accent transition-colors rounded-md"
+      className="hidden sm:flex items-center border border-border bg-muted px-4 py-2 hover:bg-accent transition-colors rounded-md"
     >
       <SearchIcon className="mr-3 size-4 text-muted-foreground shrink-0" />
       <Label htmlFor="search" className="sr-only">
