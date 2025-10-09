@@ -5,6 +5,107 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.1] - 2025-10-08 - Domain-Driven Architecture
+
+**PR #28** - Reorganize codebase from flat structure to domain-driven architecture
+
+### Changed
+
+#### Backend Restructure - Convex
+- Organized backend into domain folders for better maintainability
+  - `convex/auth/` - Authentication (auth.ts, sync.ts)
+  - `convex/cart/` - Shopping cart (cart.ts)
+  - `convex/checkout/` - Checkout flow (checkout.ts, http.ts, types.ts)
+  - `convex/orders/` - Order management (http.ts, sync.ts, webhook.ts)
+  - `convex/products/` - Product catalog (products.ts, sync.ts)
+  - `convex/todos/` - Todo list (todos.ts)
+  - `convex/utils/` - Utilities (crons.ts, factoryReset.ts, inspectData.ts, polyfills.ts)
+  - `convex/emails/` - Email templates (email.tsx)
+
+#### Component Restructure
+- Organized components by feature for better discoverability
+  - `components/cart/` - Cart components (cart-drawer.tsx, cart-icon.tsx, add-to-cart-button.tsx, quick-add-button.tsx, cart-manager.tsx)
+  - `components/layout/` - Layout components (footer.tsx)
+  - `components/layout/header/` - Header components (header.tsx, search.tsx, theme-toggle.tsx, user-menu.tsx)
+  - `components/products/` - Product components (product-card.tsx, product-grid.tsx)
+  - `app/(public)/(shop)/components/` - Shop-specific components (uploader.tsx)
+  - `app/(protected)/dashboard/components/` - Dashboard components (todo-components.tsx)
+
+#### Lib Restructure
+- Organized utilities into client/server/shared structure
+  - `lib/client/hooks/` - Client hooks (use-cart.ts)
+  - `lib/client/providers/` - React providers (theme.tsx, convex.tsx)
+  - `lib/server/actions/` - Server actions (revalidate.ts)
+  - `lib/server/data/` - Data fetching (products.ts)
+  - `lib/server/prompts/` - AI prompts (ai.ts)
+  - `lib/server/env.ts` - Environment configuration (renamed from api.ts)
+
+#### Polar Integration Fix
+- Fixed Polar component API references
+  - Updated `convex/polarCustomer.ts` to use `components.polar.lib.*` instead of `polarApi.lib.*`
+  - Fixed pricing page checkout flow (`api.polarCustomer.ensurePolarCustomer`)
+  - Updated all component API accesses (6 locations)
+  - Added proper TypeScript return types to all Polar actions
+
+#### Import Path Updates
+- Updated 50+ files with new import paths
+- All app routes updated (protected, public, auth, shop)
+- All components updated
+- All backend files updated
+- Scripts updated (seedProducts.ts, seedSubscriptions.ts, verifySeeding.ts)
+
+### Removed
+- `convex/checkoutComponent.ts` - Obsolete checkout component (225 lines)
+- `components/client.tsx` - Consolidated into route components (11 lines)
+- `components/dashboard-render-toggle.tsx` - Unused toggle component (43 lines)
+- `components/pricing-card.tsx` - Replaced by pricing page (89 lines)
+- `app/(protected)/dashboard/server/` - Old server components (5 files, 205 lines)
+
+### Breaking Changes
+
+#### File Paths
+All file paths have changed - external references may need updates:
+
+**Convex:**
+```diff
+- convex/auth.ts → convex/auth/auth.ts
+- convex/userSync.ts → convex/auth/sync.ts
+- convex/cart.ts → convex/cart/cart.ts
+- convex/checkout.ts → convex/checkout/checkout.ts
+- convex/products.ts → convex/products/products.ts
+```
+
+**Components:**
+```diff
+- components/header.tsx → components/layout/header/header.tsx
+- components/product-card.tsx → components/products/product-card.tsx
+- hooks/use-cart.ts → lib/client/hooks/use-cart.ts
+```
+
+**API Paths:**
+```diff
+- api.auth.getCurrentUser → api.auth.auth.getCurrentUser
+- api.polar.customer.ensurePolarCustomer → api.polarCustomer.ensurePolarCustomer
+```
+
+### Impact
+- **Architecture**: Clear domain separation for better maintainability
+- **Performance**: No impact (pure refactoring)
+- **Bundle Size**: No change
+- **Developer Experience**: Easier to navigate and understand codebase
+- **Type Safety**: Enhanced with proper return types on Polar actions
+
+### Statistics
+- **Files Changed:** 77 files
+  - 44 files renamed (organized into domains)
+  - 33 files modified (import updates)
+  - 5 files removed (obsolete code)
+- **Lines:** 304 insertions, 793 deletions
+- **Net Change:** -489 lines (removed obsolete code)
+- **Commits:** 1 atomic commit (independently revertable)
+
+---
+
 ## [0.4.0] - 2025-10-08 - Cart and Checkout System
 
 **PR #27** - Complete e-commerce cart and checkout implementation with 13 atomic commits

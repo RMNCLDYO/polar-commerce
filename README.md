@@ -1,217 +1,145 @@
 # AI SDK Storefront
 
-Production-ready e-commerce platform built with Next.js 15, demonstrating experimental features (PPR, Server Components, modern caching) with real-time backend.
+**Experimental SaaS/E-commerce demo** showcasing Next.js 15 Canary features with Better Auth, Polar, Convex, React 19, shadcn/ui, Tailwind, and Vercel AI SDK.
 
-[![Next.js 15](https://img.shields.io/badge/Next.js-15.6.0--canary.45-black?style=flat-square&logo=next.js)](https://nextjs.org)
+⚠️ **Not Production Ready** - Uses experimental Next.js 15 canary features and workarounds for multi-product checkout
+
+Clone → ENV setup → Seed → Run → `https://localhost:3000` 🚀
+
+[![Next.js 15](https://img.shields.io/badge/Next.js-15.6.0--canary.53-black?style=flat-square&logo=next.js)](https://nextjs.org)
 [![React 19](https://img.shields.io/badge/React-19.2.0-61DAFB?style=flat-square&logo=react)](https://react.dev)
 [![Convex](https://img.shields.io/badge/Convex-1.27.4-FF6B35?style=flat-square)](https://convex.dev)
 [![Better Auth](https://img.shields.io/badge/Better_Auth-1.3.8-7C3AED?style=flat-square)](https://better-auth.com)
-[![Polar](https://img.shields.io/badge/Polar-1.0.0-007ACC?style=flat-square)](https://polar.sh)
-[![MIT License](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)](LICENSE)
+[![Polar](https://img.shields.io/badge/Polar-0.35.4-007ACC?style=flat-square)](https://polar.sh)
 
-## What Is This?
+## Features
 
-Full-stack e-commerce application showcasing Next.js 15 experimental features in production. Fork of [v0 Storefront Template](https://v0.app/templates/storefront-w-nano-banana-ai-sdk-ai-gateway-XAMOoZPMUO5) by [@estebansuarez](https://github.com/estebansuarez), upgraded from Next.js 14 → 15.6 with complete backend integration.
-
-## Core Features
-
-### E-Commerce
-- Product catalog with categories (Men's, Women's, Kids, New Arrivals)
-- Real-time search and filtering
-- Product detail pages with optimized images
-- Shopping cart with real-time synchronization
-- Checkout with Polar payment processing
-- Order history and tracking
-- Inventory management
-- Guest and authenticated cart support
-
-### Authentication
-- Email/password with verification
-- GitHub OAuth
-- Two-factor authentication
-- Password reset
-- Protected routes (/dashboard, /settings)
-
-### Subscriptions
-- 3-tier system (Free, Starter $9.99/mo, Premium $19.99/mo)
-- Interactive pricing page with monthly/yearly toggle
-- Automatic customer creation on signup
-- Tier detection in user authentication
-- Polar payment processing
-
-### Database & Real-time
-- Convex real-time database
-- Live queries (no page refresh needed)
-- Type-safe end-to-end TypeScript
-- Bi-directional sync with Polar
-
-### AI Features
-- Virtual try-on (upload photo, see yourself in products)
-- AI product photography
-- Google Gemini 2.5 Flash integration
-
-## Tech Stack
-
-- **Next.js** 15.6.0-canary.45 (PPR, Server Components, modern caching)
-- **React** 19.2.0
-- **Convex** 1.27.4 (real-time database)
-- **Better Auth** 1.3.8 (email + OAuth)
-- **Polar SDK** 0.35.4 (subscriptions)
-- **Tailwind CSS** v4
-- **Vercel AI SDK** 5.0.60
-- **TypeScript** 5
+✅ **Auth** - Email/password, GitHub OAuth, 2FA (Better Auth)
+✅ **Payments** - Subscriptions + one-time purchases (Polar)
+✅ **Database** - Real-time with auto-generated types (Convex)
+✅ **E-commerce** - Cart, checkout, orders, inventory
+✅ **AI** - Virtual try-on with Google Gemini (Vercel AI SDK)
+✅ **Next.js 15** - PPR, Server Components, modern caching
+✅ **shadcn/ui** - Beautiful components (Tailwind v4)
 
 ## Quick Start
 
 ```bash
+# 1. Clone
 git clone https://github.com/RMNCLDYO/aisdk-storefront.git
 cd aisdk-storefront
 npm install
+
+# 2. Setup ENV vars
 cp .env.example .env.local
 
-# Add environment variables to .env.local:
-# - GOOGLE_GENERATIVE_AI_API_KEY
-# - POLAR_ORGANIZATION_TOKEN
-# - POLAR_WEBHOOK_SECRET
-# - GITHUB_CLIENT_ID/SECRET
-# - Convex vars (auto-added by `npx convex dev`)
+# Add to .env.local:
+# - GOOGLE_GENERATIVE_AI_API_KEY      (for AI try-on)
+# - POLAR_ORGANIZATION_TOKEN           (for payments)
+# - POLAR_WEBHOOK_SECRET               (for webhooks)
+# - GITHUB_CLIENT_ID/SECRET            (for OAuth)
+# - Run `npx convex dev` to auto-add Convex vars
 
-# Seed data
-npm run polar:seed              # Seed subscription tiers + products
-# Or individually:
-# npx tsx scripts/seedProducts.ts      # Physical products only
-# npx tsx scripts/seedSubscriptions.ts # Subscription tiers only
+# 3. Seed data
+npm run polar:seed
 
-# Start development (parallel frontend + backend)
+# 4. Start dev server
 npm run dev
+
+# 5. Open https://localhost:3000
 ```
 
-Visit `https://localhost:3000` (HTTPS required for Convex WebSockets)
+**That's it!** You now have a working demo showcasing Next.js 15 canary features in a real-world app.
 
-## Next.js 15 Features Demonstrated
+## What You Get
 
-### Experimental (Main Focus)
-- ✅ Partial Prerendering (PPR) - Static shell + streaming
-- ✅ `use cache` directive - Modern component caching
-- ✅ `unstable_cacheLife()` - Custom cache profiles
-- ✅ `unstable_cacheTag()` - Tag-based invalidation
-- ✅ `experimental.cacheComponents` - Component-level caching
-- ✅ Request Deduplication (RDC) - Auto-enabled with PPR
-- ✅ Turbopack - Next-gen bundler
+- **Authentication**: Sign up/in, GitHub OAuth, 2FA, password reset
+- **Subscriptions**: 3-tier pricing (Free, Starter $9.99, Premium $19.99)
+- **Shopping**: Product catalog, cart, checkout, order history
+- **AI Features**: Virtual try-on (upload photo, see yourself in products)
+- **Dashboard**: Protected routes, user settings, customer portal
+- **Real-time**: Live cart updates, no page refresh needed
 
-### Core Features
-- ✅ Server Components (37% bundle reduction)
-- ✅ Server Actions - `"use server"` mutations
-- ✅ Middleware - Route protection
-- ✅ Async Request APIs - `await params`, `await searchParams`
-- ✅ Smart prefetching (hover strategy)
-- ✅ Native image optimization
-- ✅ Dynamic metadata generation
-- ✅ ISR with time-based revalidation
+## Important Notes
+
+### Multi-Product Checkout Workaround
+
+Polar doesn't currently support multi-product checkout (cart with multiple items). This demo works around this limitation by:
+
+1. **Convex Cart** - Using Convex to store cart state, inventory, and checkout sessions
+2. **Bundle Hack** - When checking out, multiple items are bundled and sent to Polar as custom metadata
+3. **Order Reconstruction** - After payment, we reconstruct the full order from metadata
+
+This gives an e-commerce-like experience but **is not production-ready**. When Polar adds native cart support, this workaround can be replaced.
+
+### Experimental Features
+
+This project uses **Next.js 15 canary** experimental features:
+- Partial Prerendering (PPR)
+- `use cache` directive
+- `unstable_cacheLife()`
+- `experimental.cacheComponents`
+
+These APIs may change before stable release.
+
+## Tech Stack
+
+| Category | Tech |
+|----------|------|
+| **Framework** | Next.js 15.6 (canary), React 19.2 |
+| **Database** | Convex (real-time, type-safe) |
+| **Auth** | Better Auth (email + OAuth + 2FA) |
+| **Payments** | Polar SDK (subscriptions + products) |
+| **UI** | shadcn/ui, Tailwind v4, Radix UI |
+| **AI** | Vercel AI SDK, Google Gemini 2.5 |
 
 ## Project Structure
 
 ```
 app/
-├── (protected)/         # Protected routes (auth required)
-│   ├── (starter)/       # Starter tier routes
-│   ├── (premium)/       # Premium tier routes
-│   ├── dashboard/       # User dashboard with todos
-│   ├── settings/        # Account settings
-│   └── portal/          # Customer portal
-├── (public)/            # Public routes
-│   ├── (shop)/          # Shop routes (PPR enabled)
-│   │   ├── page.tsx     # Home
-│   │   ├── [category]/  # Category pages
-│   │   ├── product/[id]/ # Product details
-│   │   ├── products/    # All products
-│   │   ├── pricing/     # Subscription pricing
-│   │   └── checkout/    # Checkout flow
-│   └── (auth)/          # Auth flows
-│       ├── sign-in/
-│       ├── sign-up/
-│       └── verify-2fa/
+├── (protected)/        # Auth-required routes
+│   ├── dashboard/      # User dashboard
+│   ├── settings/       # Account settings
+│   └── portal/         # Customer portal
+└── (public)/           # Public routes
+    ├── (shop)/         # E-commerce (PPR enabled)
+    └── (auth)/         # Sign in/up flows
 
 convex/
-├── schema.ts            # Database schema (products, carts, orders)
-├── cart.ts              # Cart management
-├── checkout.ts          # Polar checkout integration
-├── orderSync.ts         # Order synchronization
-├── orderWebhook.ts      # Webhook handlers
-├── products.ts          # Product CRUD + inventory
-├── productsSync.ts      # Bi-directional sync
-├── polar/               # Local Polar component
-├── polarCustomer.ts     # Customer management
-├── userSync.ts          # Auto-create customers
-├── auth.ts              # Better Auth + tier detection
-├── factoryReset.ts      # Complete data reset
-└── [other functions]
-
-lib/
-├── client/              # Client-side code
-│   ├── auth.ts          # Auth utilities
-│   └── providers/       # React providers
-├── server/              # Server-side code
-│   ├── api.ts           # API utilities
-│   ├── auth.ts          # Auth utilities
-│   ├── products.ts      # Product queries
-│   └── prompts.ts       # AI prompts
-└── shared/              # Shared utilities
-    ├── types.ts         # Type definitions
-    ├── utils.ts         # Utility functions
-    └── logger.ts        # Logging
+├── auth/               # Authentication
+├── cart/               # Shopping cart
+├── checkout/           # Checkout flow
+├── orders/             # Order management
+├── products/           # Product catalog
+└── polar/              # Polar component
 
 components/
-├── cart/                # Cart components
-│   ├── cart-drawer.tsx  # Shopping cart UI
-│   ├── cart-icon.tsx    # Cart icon with badge
-│   └── add-to-cart-button.tsx
-└── [other components]
+├── cart/               # Cart UI
+├── layout/             # Header, footer
+└── products/           # Product components
 
-hooks/
-└── use-cart.ts          # Cart state management
-
-scripts/
-├── seedAll.ts           # Seed everything
-├── seedProducts.ts      # Physical products
-└── seedSubscriptions.ts # Subscription tiers
-```
-
-## Scripts
-
-```bash
-# Development
-npm run dev                    # Parallel frontend + backend (Turbopack)
-npm run build                  # Production build
-npm run lint                   # Biome linting + Convex typecheck
-
-# Product & Subscription Management
-npm run polar:seed                          # Seed subscription tiers + products
-npx tsx scripts/seedProducts.ts             # Seed physical products only
-npx tsx scripts/seedSubscriptions.ts        # Seed subscription tiers only
-npx tsx scripts/seedAll.ts                  # Seed everything at once
-npx tsx scripts/verifySeeding.ts            # Verify seeding success
-npx convex run factoryReset:factoryReset    # Complete data wipe
-npx convex run inspectData:inspectAll       # Debug database state
+lib/
+├── client/             # Client utilities
+└── server/             # Server utilities
 ```
 
 ## Environment Variables
 
 ```env
-# AI Features
+# AI (optional - for virtual try-on)
 GOOGLE_GENERATIVE_AI_API_KEY=your_key
 
-# Convex Database (auto-configured by `npx convex dev`)
+# Convex (auto-configured by `npx convex dev`)
 CONVEX_DEPLOYMENT=dev:your-deployment
 NEXT_PUBLIC_CONVEX_URL=https://your-deployment.convex.cloud
 NEXT_PUBLIC_CONVEX_SITE_URL=https://your-deployment.convex.site
 
 # Better Auth
-BETTER_AUTH_SECRET=your_secret
-GITHUB_CLIENT_ID=your_github_id
-GITHUB_CLIENT_SECRET=your_github_secret
+BETTER_AUTH_SECRET=your_secret_here
+GITHUB_CLIENT_ID=your_github_client_id
+GITHUB_CLIENT_SECRET=your_github_client_secret
 
-# Polar Subscriptions
+# Polar
 POLAR_ORGANIZATION_TOKEN=your_polar_token
 POLAR_WEBHOOK_SECRET=your_webhook_secret
 POLAR_SERVER=sandbox  # or production
@@ -221,48 +149,35 @@ SITE_URL=https://localhost:3000
 NEXT_PUBLIC_BASE_URL=https://localhost:3000
 ```
 
-## Performance
+## Scripts
 
+```bash
+# Development
+npm run dev                 # Start dev server (https://localhost:3000)
+npm run build               # Production build
+
+# Data Management
+npm run polar:seed          # Seed products + subscriptions
+npx convex run factoryReset:factoryReset  # Wipe all data
 ```
-Build Time:        1079ms (Turbopack)
-Bundle Reduction:  37% vs client components
-Static Pages:      19/19 at build time
-PPR Routes:        4 (home, category, product, products)
-Type Safety:       100% (zero any types)
-```
 
-## Major Upgrades
+## Next.js 15 Canary `Experimental` Features
 
-### From v0 Template
-- Next.js 14 → 15.6.0-canary.45
-- React 18 → 19.2.0
-- Tailwind CSS v3 → v4
-- Added Server Components (37% bundle reduction)
-- Added PPR + modern caching
-- Added Convex real-time database
-- Added Better Auth (email + OAuth + 2FA)
-- Added Polar subscriptions (3-tier system)
-- Added AI virtual try-on
+This project demonstrates:
 
-### Recent Updates
-- **v0.4.0** - Cart and checkout system with Polar integration (13 atomic commits)
-- **v0.3.2** - Better Auth NPM migration and Polar CRUD improvements
-- **v0.3.1** - Fixed duplicate customer creation, downgraded better-auth to 1.3.8
-- **v0.3.0** - Added subscription system with Polar integration
-- **v0.2.0** - Complete backend integration (Convex + Better Auth + Polar)
-
-See [CHANGELOG.md](CHANGELOG.md) for detailed changes.
+- ✅ **Partial Prerendering (PPR)** - Static shell + streaming
+- ✅ **Server Components** - 37% bundle reduction
+- ✅ **Modern Caching** - `use cache` directive
+- ✅ **Request Deduplication** - Automatic with PPR
+- ✅ **Smart Prefetching** - Hover-based navigation
+- ✅ **Turbopack** - Next-gen bundler
 
 ## Credits
 
-**Original Template:** [@estebansuarez](https://github.com/estebansuarez) - DevRel at [@v0](https://v0.dev)
-**Template:** [v0 Storefront](https://v0.app/templates/storefront-w-nano-banana-ai-sdk-ai-gateway-XAMOoZPMUO5)
-**Next.js 15 Upgrade:** [@RMNCLDYO](https://github.com/RMNCLDYO)
+**Original v0 Template:** [@estebansuarez](https://github.com/estebansuarez)
+
+See [CHANGELOG.md](CHANGELOG.md) for detailed changes.
 
 ## License
 
 MIT - See [LICENSE](LICENSE)
-
----
-
-⭐ **Star this repo** if it helped you learn Next.js 15!
