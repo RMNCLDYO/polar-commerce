@@ -1,9 +1,9 @@
 import { v } from 'convex/values';
-import { mutation, query } from '../_generated/server';
-import { Doc } from '../_generated/dataModel';
+import type { Doc } from '../_generated/dataModel';
+import { type MutationCtx, mutation, query } from '../_generated/server';
 
 async function getOrCreateWishlist(
-  ctx: any,
+  ctx: MutationCtx,
   userId?: string | null,
   sessionId?: string | null,
 ) {
@@ -12,12 +12,12 @@ async function getOrCreateWishlist(
   if (userId) {
     wishlist = await ctx.db
       .query('wishlists')
-      .withIndex('userId', (q: any) => q.eq('userId', userId))
+      .withIndex('userId', (q) => q.eq('userId', userId))
       .first();
   } else if (sessionId) {
     wishlist = await ctx.db
       .query('wishlists')
-      .withIndex('sessionId', (q: any) => q.eq('sessionId', sessionId))
+      .withIndex('sessionId', (q) => q.eq('sessionId', sessionId))
       .first();
   }
 
@@ -102,12 +102,12 @@ export const removeFromWishlist = mutation({
     if (userId) {
       wishlist = await ctx.db
         .query('wishlists')
-        .withIndex('userId', (q: any) => q.eq('userId', userId))
+        .withIndex('userId', (q) => q.eq('userId', userId))
         .first();
     } else if (args.sessionId) {
       wishlist = await ctx.db
         .query('wishlists')
-        .withIndex('sessionId', (q: any) => q.eq('sessionId', args.sessionId))
+        .withIndex('sessionId', (q) => q.eq('sessionId', args.sessionId))
         .first();
     }
 
@@ -202,12 +202,12 @@ export const clearWishlist = mutation({
     if (userId) {
       wishlist = await ctx.db
         .query('wishlists')
-        .withIndex('userId', (q: any) => q.eq('userId', userId))
+        .withIndex('userId', (q) => q.eq('userId', userId))
         .first();
     } else if (args.sessionId) {
       wishlist = await ctx.db
         .query('wishlists')
-        .withIndex('sessionId', (q: any) => q.eq('sessionId', args.sessionId))
+        .withIndex('sessionId', (q) => q.eq('sessionId', args.sessionId))
         .first();
     }
 
@@ -248,12 +248,12 @@ export const getWishlist = query({
     if (userId) {
       wishlist = await ctx.db
         .query('wishlists')
-        .withIndex('userId', (q: any) => q.eq('userId', userId))
+        .withIndex('userId', (q) => q.eq('userId', userId))
         .first();
     } else if (args.sessionId) {
       wishlist = await ctx.db
         .query('wishlists')
-        .withIndex('sessionId', (q: any) => q.eq('sessionId', args.sessionId))
+        .withIndex('sessionId', (q) => q.eq('sessionId', args.sessionId))
         .first();
     }
 
@@ -320,12 +320,12 @@ export const getWishlistCount = query({
     if (userId) {
       wishlist = await ctx.db
         .query('wishlists')
-        .withIndex('userId', (q: any) => q.eq('userId', userId))
+        .withIndex('userId', (q) => q.eq('userId', userId))
         .first();
     } else if (args.sessionId) {
       wishlist = await ctx.db
         .query('wishlists')
-        .withIndex('sessionId', (q: any) => q.eq('sessionId', args.sessionId))
+        .withIndex('sessionId', (q) => q.eq('sessionId', args.sessionId))
         .first();
     }
 
@@ -359,12 +359,12 @@ export const isInWishlist = query({
     if (userId) {
       wishlist = await ctx.db
         .query('wishlists')
-        .withIndex('userId', (q: any) => q.eq('userId', userId))
+        .withIndex('userId', (q) => q.eq('userId', userId))
         .first();
     } else if (args.sessionId) {
       wishlist = await ctx.db
         .query('wishlists')
-        .withIndex('sessionId', (q: any) => q.eq('sessionId', args.sessionId))
+        .withIndex('sessionId', (q) => q.eq('sessionId', args.sessionId))
         .first();
     }
 
@@ -397,7 +397,7 @@ export const mergeWishlist = mutation({
 
     const guestWishlist = await ctx.db
       .query('wishlists')
-      .withIndex('sessionId', (q: any) => q.eq('sessionId', args.sessionId))
+      .withIndex('sessionId', (q) => q.eq('sessionId', args.sessionId))
       .first();
 
     if (!guestWishlist) {

@@ -1,6 +1,6 @@
-import { exec } from 'child_process';
+import { exec } from 'node:child_process';
+import { promisify } from 'node:util';
 import * as dotenv from 'dotenv';
-import { promisify } from 'util';
 
 // Load environment variables
 dotenv.config({ path: '.env.local' });
@@ -39,15 +39,27 @@ async function runCommand(
 
     console.log(`${colors.green}✅ ${description} completed${colors.reset}`);
     return true;
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error(`${colors.red}❌ ${description} failed${colors.reset}`);
-    console.error(`   Error: ${error.message}`);
+    const errorMessage =
+      error instanceof Error ? error.message : 'Unknown error';
+    console.error(`   Error: ${errorMessage}`);
 
     // Print the full error output for debugging
-    if (error.stdout) {
+    if (
+      error &&
+      typeof error === 'object' &&
+      'stdout' in error &&
+      typeof error.stdout === 'string'
+    ) {
       console.log(error.stdout);
     }
-    if (error.stderr) {
+    if (
+      error &&
+      typeof error === 'object' &&
+      'stderr' in error &&
+      typeof error.stderr === 'string'
+    ) {
       console.error(error.stderr);
     }
 
@@ -72,10 +84,10 @@ async function seedAll() {
   // Validate environment
   console.log(`\n${colors.yellow}📋 Environment Check:${colors.reset}`);
   console.log(
-    `  Convex URL: ${convexUrl ? colors.green + '✓' : colors.red + '✗'} ${convexUrl || 'Not set'}`,
+    `  Convex URL: ${convexUrl ? `${colors.green}✓` : `${colors.red}✗`} ${convexUrl || 'Not set'}`,
   );
   console.log(
-    `  Polar Token: ${polarToken ? colors.green + '✓' : colors.red + '✗'} ${polarToken ? 'Set' : 'Not set'}`,
+    `  Polar Token: ${polarToken ? `${colors.green}✓` : `${colors.red}✗`} ${polarToken ? 'Set' : 'Not set'}`,
   );
   console.log(`  Polar Server: ${colors.green}${polarServer}${colors.reset}`);
 
@@ -141,7 +153,7 @@ async function seedAll() {
   );
 
   // Summary
-  console.log('\n' + '='.repeat(70));
+  console.log(`\n${'='.repeat(70)}`);
   console.log(`${colors.bright}📊 SEEDING SUMMARY${colors.reset}`);
   console.log('='.repeat(70));
 
@@ -161,7 +173,7 @@ async function seedAll() {
     console.log(
       `\n${colors.bright}${colors.green}🎉 ALL SEEDING COMPLETED SUCCESSFULLY!${colors.reset}`,
     );
-    console.log('\n' + '─'.repeat(70));
+    console.log(`\n${'─'.repeat(70)}`);
     console.log('✨ Your application is now fully seeded with:');
     console.log(
       '  • Subscription tiers (Starter, Premium) synced to Polar & Convex',
@@ -174,7 +186,7 @@ async function seedAll() {
     console.log('  2. Visit /pricing to see subscription tiers');
     console.log('  3. Visit /shop to see products');
     console.log('  4. Test the checkout flow');
-    console.log('\n' + '='.repeat(70));
+    console.log(`\n${'='.repeat(70)}`);
   } else {
     console.log(
       `\n${colors.yellow}⚠️  SEEDING COMPLETED WITH WARNINGS${colors.reset}`,
