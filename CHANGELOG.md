@@ -5,6 +5,106 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.0] - 2025-10-10 - Next.js 16 Migration & Type Safety
+
+**PR #32, #33** - Migrated to Next.js 16 with React Compiler, eliminated type safety violations
+
+### Changed
+
+#### Next.js 16 Migration
+- **next.config.ts**
+  - Enabled `reactCompiler: true` - Automatic React optimization
+  - Enabled `turbopackFileSystemCacheForDev` - Faster dev builds
+  - Removed `dynamicIO` (replaced by `cacheComponents`)
+  - Image cache TTL: 60s → 4 hours (14400s)
+  - Added `qualities: [60, 75, 90]` for e-commerce image optimization
+  - Security: `maximumRedirects: 3`, `dangerouslyAllowLocalIP: false`
+
+- **package.json**
+  - Description: "Next.js 15" → "Next.js 16"
+  - Engines: Node >=20.9.0, npm >=10.0.0
+  - Updated dependencies
+
+#### Type Safety Hardening
+- **convex/wishlist/wishlist.ts** - Removed 13 `any` types
+  - `ctx: any` → `ctx: MutationCtx`
+  - All query callbacks now use proper type inference
+
+- **lib/client/providers/convex.tsx** - Replaced non-null assertion with validation
+  - Added runtime check for `NEXT_PUBLIC_CONVEX_URL`
+  - Throws on missing environment variable
+
+- **scripts/seedAll.ts** - Fixed error handler types
+  - `error: any` → `error: unknown`
+  - Added proper type guards for error properties
+
+- **convex/emails/email.tsx** - Dual tsconfig compatibility
+  - Added React import for `tsc -p convex` compilation
+  - Works with both Next.js build and Convex typecheck
+
+#### UI Improvements
+- **lib/client/hooks/use-cart.tsx** - Replaced `<img>` with Next.js `<Image>`
+- **lib/client/hooks/use-wishlist.tsx** - Replaced `<img>` with Next.js `<Image>`
+  - All toast notifications now use optimized images
+  - Added `width`, `height`, `unoptimized` props
+
+#### Code Formatting
+- **All files** - Biome auto-format applied
+  - Alphabetical import ordering
+  - `import type` for type-only imports
+  - Consistent code style across 78 files
+
+#### Middleware Refactor
+- **middleware.ts** → **proxy.ts**
+  - Renamed for clarity
+  - Applied import formatting
+
+#### Linter Configuration
+- **biome.json**
+  - Excluded `next-env.d.ts` (auto-generated)
+  - Excluded `**/_generated` (Convex types)
+  - Updated schema to 2.2.5
+
+### Breaking Changes
+
+#### Environment
+- **Requires Node.js >=20.9.0**
+- **Requires npm >=10.0.0**
+
+#### Configuration
+- `dynamicIO` removed (use `cacheComponents` instead)
+- Image optimization now requires explicit `unoptimized` prop for instant rendering
+
+### Impact
+
+**Performance**
+- ✅ React Compiler automatic optimizations
+- ✅ Turbopack cache speeds up dev server restarts
+- ✅ Image cache 240x improvement (60s → 4h)
+- ✅ Multiple quality levels for product images
+
+**Type Safety**
+- ✅ Zero `any` types in codebase
+- ✅ Runtime validation for critical env vars
+- ✅ Proper error handling with type guards
+
+**Security**
+- ✅ Redirect loop protection (max 3)
+- ✅ Local IP optimization blocked in production
+
+**Code Quality**
+- ✅ Consistent import organization
+- ✅ All type-only imports properly marked
+- ✅ Dual TypeScript configuration support
+
+### Statistics
+- **Files Changed**: 85 files
+- **Commits**: 7 atomic commits (all GPG signed)
+- **Build**: ✅ Passing
+- **Lint**: ✅ 0 errors, 0 warnings
+
+---
+
 ## [0.7.0] - 2025-10-09 - Wishlist Feature & UX Enhancements
 
 **PR #31** - Complete wishlist implementation with guest support, cart/wishlist toast improvements, mobile navigation enhancements

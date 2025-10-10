@@ -1,23 +1,20 @@
 # AI SDK Storefront
 
-Full-stack e-commerce with **Next.js 15 canary + Convex + Better Auth + Polar**. Showcases real-world integration of experimental features in production architecture.
+Full-stack e-commerce with **Next.js 16 + Convex + Better Auth + Polar**. Showcases real-world integration of experimental features in production architecture.
 
-[![Next.js 15](https://img.shields.io/badge/Next.js-15.6.0--canary.54-black?style=flat-square&logo=next.js)](https://nextjs.org)
+[![Next.js 16](https://img.shields.io/badge/Next.js-16.0.0--canary.0-black?style=flat-square&logo=next.js)](https://nextjs.org)
 [![React 19](https://img.shields.io/badge/React-19.2.0-61DAFB?style=flat-square&logo=react)](https://react.dev)
 [![Convex](https://img.shields.io/badge/Convex-1.27.5-FF6B35?style=flat-square)](https://convex.dev)
 [![Better Auth](https://img.shields.io/badge/Better_Auth-1.3.27-7C3AED?style=flat-square)](https://better-auth.com)
 [![Polar](https://img.shields.io/badge/Polar-0.35.4-007ACC?style=flat-square)](https://polar.sh)
 [![MIT License](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)](LICENSE)
 
-> [!WARNING]
-> Experimental features + custom workarounds. **Use at your own risk.**
-
 ## What's Inside
 
 - **Authentication** - Better Auth (email/password, GitHub OAuth, 2FA)
 - **Database** - Convex (real-time, type-safe, auto-generated API)
 - **Payments** - Polar (subscriptions + one-time purchases)
-- **Frontend** - Next.js 15 (PPR, Server Components, modern caching)
+- **Frontend** - Next.js 16 (React Compiler, PPR, Server Components, modern caching)
 - **UI** - shadcn/ui + Tailwind v4
 - **AI** - Vercel AI SDK + Google Gemini
 
@@ -41,7 +38,7 @@ Demonstrates production-grade integration of:
 - **Convex** - Real-time database with type-safe client, server functions, and webhook handling
 - **Better Auth** - Modern auth with built-in 2FA, social login, and session management
 - **Polar** - Payment processing with subscription management and customer portals
-- **Next.js 15** - PPR, `use cache`, Server Components, Request Deduplication
+- **Next.js 16** - React Compiler, PPR, `use cache`, Server Components, Request Deduplication
 
 Shows how these technologies work together in a real application, not toy examples.
 
@@ -68,12 +65,14 @@ Shows how these technologies work together in a real application, not toy exampl
 - **Cart workaround** - Multi-product checkout via metadata (see [Important Notes](#important-notes))
 - **Portal** - Customer billing portal integration
 
-### Next.js 15 Features
+### Next.js 16 Features
 
+- **React Compiler** - Automatic optimization of React components
 - **PPR** - Static shell + streaming (4 routes)
 - **Modern caching** - `use cache`, `cacheLife()`, `cacheTag()`
 - **Server Components** - 37% bundle reduction
 - **Request Deduplication** - Automatic with PPR
+- **Turbopack** - File system cache for faster dev builds
 
 ## Environment Variables
 
@@ -142,12 +141,14 @@ Polar doesn't support native cart functionality yet. This implementation uses a 
 
 ### Experimental Features
 
-Uses Next.js 15 canary experimental APIs:
+Uses Next.js 16 canary experimental APIs:
+- React Compiler (`experimental.reactCompiler`)
 - Partial Prerendering (PPR)
 - `use cache` directive
 - `unstable_cacheLife()`
 - `unstable_cacheTag()`
 - `experimental.cacheComponents`
+- `experimental.turbopackFileSystemCacheForDev`
 
 APIs may change before stable release.
 
@@ -164,7 +165,7 @@ npm run db:reset              # Reset database
 
 | Layer | Technology |
 |-------|-----------|
-| Framework | Next.js 15.6 canary, React 19.2 |
+| Framework | Next.js 16.0 canary, React 19.2 |
 | Database | Convex 1.27.5 |
 | Auth | Better Auth 1.3.27 |
 | Payments | Polar SDK 0.35.4 |
