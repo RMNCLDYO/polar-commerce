@@ -1,7 +1,7 @@
 'use client';
 
-import SignUp from './SignUp';
 import { Link } from '@/components/link';
+import SignUp from './SignUp';
 
 export default function SignUpPage() {
   return (

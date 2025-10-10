@@ -5,14 +5,13 @@ import {
 } from 'next/cache';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
+import { QuickAddButton } from '@/components/cart/quick-add-button';
 import { Link } from '@/components/link';
-import { getProducts, type ProductFilters } from '@/lib/server/data/products';
-import { cn } from '@/lib/shared/utils';
 import { Badge } from '@/components/ui/badge';
 import { AddToWishlistButton } from '@/components/wishlist/add-to-wishlist-button';
-import { QuickAddButton } from '@/components/cart/quick-add-button';
-
-export const experimental_ppr = true;
+import type { Id } from '@/convex/_generated/dataModel';
+import { getProducts, type ProductFilters } from '@/lib/server/data/products';
+import { cn } from '@/lib/shared/utils';
 
 type CategoryConfig = {
   title: string;
@@ -184,7 +183,7 @@ async function CachedCategoryContent({
                     </span>
                     <div className="flex items-center gap-2">
                       <AddToWishlistButton
-                        catalogId={product.id as any}
+                        catalogId={product.id as Id<'catalog'>}
                         variant="outline"
                         size="sm"
                         productInfo={{
@@ -197,7 +196,7 @@ async function CachedCategoryContent({
                         }}
                       />
                       <QuickAddButton
-                        catalogId={product.id as any}
+                        catalogId={product.id as Id<'catalog'>}
                         inStock={product.inStock}
                         productInfo={{
                           name: product.name,

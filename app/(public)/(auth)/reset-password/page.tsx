@@ -1,20 +1,25 @@
 'use client';
 
+import { Loader2 } from 'lucide-react';
+import { redirect, useSearchParams } from 'next/navigation';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
-  CardDescription,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useState } from 'react';
-import { Loader2 } from 'lucide-react';
 import { authClient } from '@/lib/client/auth';
-import { useSearchParams } from 'next/navigation';
-import { redirect } from 'next/navigation';
+
+interface AuthErrorContext {
+  error: {
+    message: string;
+  };
+}
 
 export default function ResetPassword() {
   const [password, setPassword] = useState('');
@@ -45,7 +50,7 @@ export default function ResetPassword() {
           setLoading(false);
           redirect('/');
         },
-        onError: (ctx: any) => {
+        onError: (ctx: AuthErrorContext) => {
           setLoading(false);
           alert(ctx.error.message);
         },

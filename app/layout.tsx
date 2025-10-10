@@ -1,10 +1,10 @@
 import type { Metadata } from 'next';
+import { CartManager } from '@/components/cart/cart-manager';
+import { Toaster } from '@/components/ui/sonner';
+import { WishlistManager } from '@/components/wishlist/wishlist-manager';
+import { ConvexProvider } from '@/lib/client/providers/convex';
 import { ThemeProvider } from '@/lib/client/providers/theme';
 import { geistMono, geistSans } from '@/lib/shared/fonts';
-import { ConvexProvider } from '@/lib/client/providers/convex';
-import { CartManager } from '@/components/cart/cart-manager';
-import { WishlistManager } from '@/components/wishlist/wishlist-manager';
-import { Toaster } from '@/components/ui/sonner';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -15,7 +15,7 @@ export const metadata: Metadata = {
   ),
   title: 'BANANA SPORTSWEAR - Premium Athletic Gear | Vercel AI SDK Showcase',
   description:
-    'Shop premium sportswear with AI-powered virtual try-on and product mashup. Built with Vercel AI SDK, Next.js 15, and React 19.',
+    'Shop premium sportswear with AI-powered virtual try-on and product mashup. Built with Vercel AI SDK, Next.js 16, and React 19.2.',
   keywords: [
     'Vercel AI SDK',
     'sportswear',

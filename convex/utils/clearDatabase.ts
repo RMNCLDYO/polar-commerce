@@ -23,8 +23,40 @@
  */
 
 import { Polar } from '@polar-sh/sdk';
+import { components, internal } from '../_generated/api';
 import { action, internalAction, internalMutation } from '../_generated/server';
-import { internal, components } from '../_generated/api';
+
+// Local type definitions for Polar SDK
+interface PolarCustomer {
+  id: string;
+  email: string;
+  [key: string]: unknown;
+}
+
+interface PolarProduct {
+  id: string;
+  name: string;
+  isArchived?: boolean;
+  is_archived?: boolean;
+  [key: string]: unknown;
+}
+
+interface CustomersListResponse {
+  result?: {
+    items?: PolarCustomer[];
+  };
+}
+
+interface ProductsListResponse {
+  result?: {
+    items?: PolarProduct[];
+  };
+}
+
+interface PageIteratorResponse {
+  ok: boolean;
+  value?: CustomersListResponse | ProductsListResponse;
+}
 
 /**
  * Clear Database - Complete System Cleanup
@@ -42,7 +74,14 @@ export const clearDatabase = action({
     console.log('='.repeat(60));
 
     const results = {
-      betterAuth: {} as Record<string, any>,
+      betterAuth: {} as {
+        sessions: number;
+        accounts: number;
+        verifications: number;
+        twoFactor: number;
+        jwks: number;
+        users: number;
+      },
       polar: {} as Record<string, number>,
       convex: {} as Record<string, number>,
     };
@@ -51,7 +90,6 @@ export const clearDatabase = action({
     console.log('\n📋 STEP 1: Deleting Better Auth data...');
     try {
       const authResults = await ctx.runMutation(
-        // @ts-ignore - Type instantiation is excessively deep (known Convex issue)
         internal.utils.clearDatabase.clearBetterAuthData,
       );
       results.betterAuth = authResults;
@@ -100,7 +138,7 @@ export const clearDatabase = action({
       throw error;
     }
 
-    console.log('\n' + '='.repeat(60));
+    console.log(`\n${'='.repeat(60)}`);
     console.log('🎉 DATABASE RESET COMPLETE!');
     console.log('='.repeat(60));
     console.log('\n📊 Summary:');
@@ -159,7 +197,7 @@ export const clearBetterAuthData = internalMutation({
       );
       results.sessions = sessionsResult?.deletedCount || 0;
       console.log(`  ✅ Deleted ${results.sessions} sessions`);
-    } catch (e) {
+    } catch (_e) {
       console.log('  ⚠️  Could not delete sessions');
     }
 
@@ -174,7 +212,7 @@ export const clearBetterAuthData = internalMutation({
       );
       results.accounts = accountsResult?.deletedCount || 0;
       console.log(`  ✅ Deleted ${results.accounts} accounts`);
-    } catch (e) {
+    } catch (_e) {
       console.log('  ⚠️  Could not delete accounts');
     }
 
@@ -189,7 +227,7 @@ export const clearBetterAuthData = internalMutation({
       );
       results.verifications = verificationsResult?.deletedCount || 0;
       console.log(`  ✅ Deleted ${results.verifications} verifications`);
-    } catch (e) {
+    } catch (_e) {
       console.log('  ⚠️  Could not delete verifications');
     }
 
@@ -204,7 +242,7 @@ export const clearBetterAuthData = internalMutation({
       );
       results.twoFactor = twoFactorResult?.deletedCount || 0;
       console.log(`  ✅ Deleted ${results.twoFactor} two-factor records`);
-    } catch (e) {
+    } catch (_e) {
       console.log('  ⚠️  Could not delete two-factor');
     }
 
@@ -219,7 +257,7 @@ export const clearBetterAuthData = internalMutation({
       );
       results.jwks = jwksResult?.deletedCount || 0;
       console.log(`  ✅ Deleted ${results.jwks} jwks`);
-    } catch (e) {
+    } catch (_e) {
       console.log('  ⚠️  Could not delete jwks');
     }
 
@@ -234,7 +272,7 @@ export const clearBetterAuthData = internalMutation({
       );
       results.users = usersResult?.deletedCount || 0;
       console.log(`  ✅ Deleted ${results.users} users`);
-    } catch (e) {
+    } catch (_e) {
       console.log('  ⚠️  Could not delete users');
     }
 
@@ -312,10 +350,15 @@ export const clearPolarDataInternal = internalAction({
       products: 0,
     };
 
+    const token = process.env.POLAR_ORGANIZATION_TOKEN;
+    if (!token) {
+      throw new Error('POLAR_ORGANIZATION_TOKEN not set');
+    }
+
     const server =
       (process.env.POLAR_SERVER as 'sandbox' | 'production') || 'sandbox';
     const polarClient = new Polar({
-      accessToken: process.env.POLAR_ORGANIZATION_TOKEN!,
+      accessToken: token,
       server: server,
     });
 
@@ -325,11 +368,15 @@ export const clearPolarDataInternal = internalAction({
     try {
       console.log('  📋 Fetching customers...');
       const customersIter = await polarClient.customers.list({ limit: 100 });
-      const customers: any[] = [];
+      const customers: PolarCustomer[] = [];
 
       for await (const page of customersIter) {
-        const items = (page as any).result?.items || [];
-        customers.push(...items);
+        const resp = page as unknown as PageIteratorResponse;
+        if (resp.ok && resp.value) {
+          const items =
+            (resp.value as CustomersListResponse).result?.items || [];
+          customers.push(...items);
+        }
       }
 
       console.log(`  Found ${customers.length} customers`);
@@ -339,10 +386,12 @@ export const clearPolarDataInternal = internalAction({
           await polarClient.customers.delete({ id: customer.id });
           results.customers++;
           console.log(`    ✅ Deleted customer: ${customer.email}`);
-        } catch (error: any) {
+        } catch (error: unknown) {
+          const errorMessage =
+            error instanceof Error ? error.message : 'Unknown error';
           console.log(
             `    ⚠️  Could not delete customer ${customer.email}:`,
-            error.message,
+            errorMessage,
           );
         }
       }
@@ -354,11 +403,15 @@ export const clearPolarDataInternal = internalAction({
     try {
       console.log('  📦 Fetching products...');
       const productsIter = await polarClient.products.list({ limit: 100 });
-      const products: any[] = [];
+      const products: PolarProduct[] = [];
 
       for await (const page of productsIter) {
-        const items = (page as any).result?.items || [];
-        products.push(...items);
+        const resp = page as unknown as PageIteratorResponse;
+        if (resp.ok && resp.value) {
+          const items =
+            (resp.value as ProductsListResponse).result?.items || [];
+          products.push(...items);
+        }
       }
 
       console.log(`  Found ${products.length} products`);
@@ -366,7 +419,7 @@ export const clearPolarDataInternal = internalAction({
       for (const product of products) {
         try {
           // Skip if already archived
-          if (product.isArchived) {
+          if (product.isArchived || product.is_archived) {
             console.log(`    ⏭️  Already archived: ${product.name}`);
             continue;
           }
@@ -379,10 +432,12 @@ export const clearPolarDataInternal = internalAction({
           });
           results.products++;
           console.log(`    ✅ Archived product: ${product.name}`);
-        } catch (error: any) {
+        } catch (error: unknown) {
+          const errorMessage =
+            error instanceof Error ? error.message : 'Unknown error';
           console.log(
             `    ⚠️  Could not archive product ${product.name}:`,
-            error.message,
+            errorMessage,
           );
         }
       }

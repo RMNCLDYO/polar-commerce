@@ -6,19 +6,17 @@ import {
 } from 'next/cache';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
+import { QuickAddButton } from '@/components/cart/quick-add-button';
 import { Link } from '@/components/link';
 import { ProductActions } from '@/components/products/product-actions';
+import { AddToWishlistButton } from '@/components/wishlist/add-to-wishlist-button';
+import type { Id } from '@/convex/_generated/dataModel';
 import {
   getProduct,
   getProducts,
   type Product,
 } from '@/lib/server/data/products';
 import { cn } from '@/lib/shared/utils';
-import { Badge } from '@/components/ui/badge';
-import { AddToWishlistButton } from '@/components/wishlist/add-to-wishlist-button';
-import { QuickAddButton } from '@/components/cart/quick-add-button';
-
-export const experimental_ppr = true;
 
 interface ProductPageProps {
   params: Promise<{ id: string }>;
@@ -201,7 +199,7 @@ async function CachedProductContent({ id }: { id: string }) {
                       </span>
                       <div className="flex items-center gap-2">
                         <AddToWishlistButton
-                          catalogId={relatedProduct.id as any}
+                          catalogId={relatedProduct.id as Id<'catalog'>}
                           variant="outline"
                           size="sm"
                           productInfo={{
@@ -214,7 +212,7 @@ async function CachedProductContent({ id }: { id: string }) {
                           }}
                         />
                         <QuickAddButton
-                          catalogId={relatedProduct.id as any}
+                          catalogId={relatedProduct.id as Id<'catalog'>}
                           inStock={relatedProduct.inStock}
                           productInfo={{
                             name: relatedProduct.name,

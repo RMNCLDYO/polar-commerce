@@ -1,15 +1,16 @@
 import { v } from 'convex/values';
+import type { Doc } from '../_generated/dataModel';
 import {
-  mutation,
-  query,
   internalMutation,
   internalQuery,
+  type MutationCtx,
+  mutation,
+  query,
 } from '../_generated/server';
-import { Doc } from '../_generated/dataModel';
 
 // Helper to get or create cart for a user/session
 async function getOrCreateCart(
-  ctx: any,
+  ctx: MutationCtx,
   userId?: string | null,
   sessionId?: string | null,
 ) {
@@ -19,12 +20,12 @@ async function getOrCreateCart(
   if (userId) {
     cart = await ctx.db
       .query('carts')
-      .withIndex('userId', (q: any) => q.eq('userId', userId))
+      .withIndex('userId', (q) => q.eq('userId', userId))
       .first();
   } else if (sessionId) {
     cart = await ctx.db
       .query('carts')
-      .withIndex('sessionId', (q: any) => q.eq('sessionId', sessionId))
+      .withIndex('sessionId', (q) => q.eq('sessionId', sessionId))
       .first();
   }
 
@@ -140,12 +141,12 @@ export const updateCartItem = mutation({
     if (userId) {
       cart = await ctx.db
         .query('carts')
-        .withIndex('userId', (q: any) => q.eq('userId', userId))
+        .withIndex('userId', (q) => q.eq('userId', userId))
         .first();
     } else if (args.sessionId) {
       cart = await ctx.db
         .query('carts')
-        .withIndex('sessionId', (q: any) => q.eq('sessionId', args.sessionId))
+        .withIndex('sessionId', (q) => q.eq('sessionId', args.sessionId))
         .first();
     }
 
@@ -204,12 +205,12 @@ export const removeFromCart = mutation({
     if (userId) {
       cart = await ctx.db
         .query('carts')
-        .withIndex('userId', (q: any) => q.eq('userId', userId))
+        .withIndex('userId', (q) => q.eq('userId', userId))
         .first();
     } else if (args.sessionId) {
       cart = await ctx.db
         .query('carts')
-        .withIndex('sessionId', (q: any) => q.eq('sessionId', args.sessionId))
+        .withIndex('sessionId', (q) => q.eq('sessionId', args.sessionId))
         .first();
     }
 
@@ -256,12 +257,12 @@ export const clearCart = mutation({
     if (userId) {
       cart = await ctx.db
         .query('carts')
-        .withIndex('userId', (q: any) => q.eq('userId', userId))
+        .withIndex('userId', (q) => q.eq('userId', userId))
         .first();
     } else if (args.sessionId) {
       cart = await ctx.db
         .query('carts')
-        .withIndex('sessionId', (q: any) => q.eq('sessionId', args.sessionId))
+        .withIndex('sessionId', (q) => q.eq('sessionId', args.sessionId))
         .first();
     }
 
@@ -306,12 +307,12 @@ export const getCart = query({
     if (userId) {
       cart = await ctx.db
         .query('carts')
-        .withIndex('userId', (q: any) => q.eq('userId', userId))
+        .withIndex('userId', (q) => q.eq('userId', userId))
         .first();
     } else if (args.sessionId) {
       cart = await ctx.db
         .query('carts')
-        .withIndex('sessionId', (q: any) => q.eq('sessionId', args.sessionId))
+        .withIndex('sessionId', (q) => q.eq('sessionId', args.sessionId))
         .first();
     }
 
@@ -350,15 +351,20 @@ export const getCart = query({
     );
 
     // Filter out null items (deleted products)
-    const validItems = itemsWithProducts.filter(Boolean);
+    const validItems = itemsWithProducts.filter(
+      (item): item is NonNullable<typeof item> => item !== null,
+    );
 
     // Calculate totals
     const subtotal = validItems.reduce(
-      (sum, item) => sum + item!.price * item!.quantity,
+      (sum, item) => sum + (item.price ?? 0) * (item.quantity ?? 0),
       0,
     );
 
-    const itemCount = validItems.reduce((sum, item) => sum + item!.quantity, 0);
+    const itemCount = validItems.reduce(
+      (sum, item) => sum + (item.quantity ?? 0),
+      0,
+    );
 
     return {
       id: cart._id,
@@ -389,12 +395,12 @@ export const getCartCount = query({
     if (userId) {
       cart = await ctx.db
         .query('carts')
-        .withIndex('userId', (q: any) => q.eq('userId', userId))
+        .withIndex('userId', (q) => q.eq('userId', userId))
         .first();
     } else if (args.sessionId) {
       cart = await ctx.db
         .query('carts')
-        .withIndex('sessionId', (q: any) => q.eq('sessionId', args.sessionId))
+        .withIndex('sessionId', (q) => q.eq('sessionId', args.sessionId))
         .first();
     }
 
@@ -428,7 +434,7 @@ export const mergeCart = mutation({
     // Find guest cart
     const guestCart = await ctx.db
       .query('carts')
-      .withIndex('sessionId', (q: any) => q.eq('sessionId', args.sessionId))
+      .withIndex('sessionId', (q) => q.eq('sessionId', args.sessionId))
       .first();
 
     if (!guestCart) {
@@ -521,12 +527,12 @@ export const validateCart = query({
     if (userId) {
       cart = await ctx.db
         .query('carts')
-        .withIndex('userId', (q: any) => q.eq('userId', userId))
+        .withIndex('userId', (q) => q.eq('userId', userId))
         .first();
     } else if (args.sessionId) {
       cart = await ctx.db
         .query('carts')
-        .withIndex('sessionId', (q: any) => q.eq('sessionId', args.sessionId))
+        .withIndex('sessionId', (q) => q.eq('sessionId', args.sessionId))
         .first();
     }
 
@@ -551,7 +557,8 @@ export const validateCart = query({
     }
 
     const errors: string[] = [];
-    const validItems: any[] = [];
+    const validItems: Array<Doc<'cartItems'> & { product: Doc<'catalog'> }> =
+      [];
 
     // Check each item
     for (const item of cartItems) {
@@ -598,7 +605,7 @@ export const internal_getCartByUserId = internalQuery({
   handler: async (ctx, { userId }) => {
     return await ctx.db
       .query('carts')
-      .withIndex('userId', (q: any) => q.eq('userId', userId))
+      .withIndex('userId', (q) => q.eq('userId', userId))
       .first();
   },
 });
@@ -610,7 +617,7 @@ export const internal_getCartBySessionId = internalQuery({
   handler: async (ctx, { sessionId }) => {
     return await ctx.db
       .query('carts')
-      .withIndex('sessionId', (q: any) => q.eq('sessionId', sessionId))
+      .withIndex('sessionId', (q) => q.eq('sessionId', sessionId))
       .first();
   },
 });
@@ -647,8 +654,10 @@ export const internal_getAuthUser = internalQuery({
   },
   handler: async (ctx, { userId }) => {
     const user = await ctx.db
-      .query('betterAuth_user' as any)
-      .filter((q: any) => q.eq(q.field('id'), userId))
+      // @ts-expect-error - Better Auth table name and fields not in generated schema
+      .query('betterAuth_user')
+      // @ts-expect-error - Better Auth table fields not in generated schema
+      .filter((q) => q.eq(q.field('id'), userId))
       .first();
     return user;
   },
@@ -661,10 +670,17 @@ export const internal_updateCartCheckout = internalMutation({
     checkoutUrl: v.string(),
     discountId: v.optional(v.string()),
     discountCode: v.optional(v.string()),
-    customFieldData: v.optional(v.any()),
+    customFieldData: v.optional(v.record(v.string(), v.any())),
   },
   handler: async (ctx, args) => {
-    const updateData: any = {
+    const updateData: {
+      lastCheckoutId: string;
+      lastCheckoutUrl: string;
+      updatedAt: number;
+      discountId?: string;
+      discountCode?: string;
+      customFieldData?: typeof args.customFieldData;
+    } = {
       lastCheckoutId: args.checkoutId,
       lastCheckoutUrl: args.checkoutUrl,
       updatedAt: Date.now(),
@@ -752,17 +768,39 @@ export const internal_createOrder = internalMutation({
     subscriptionId: v.optional(v.string()),
 
     // Metadata
-    metadata: v.optional(v.any()),
-    customFieldData: v.optional(v.any()),
+    metadata: v.optional(v.record(v.string(), v.any())),
+    customFieldData: v.optional(v.record(v.string(), v.any())),
   },
   handler: async (ctx, args) => {
     // Check if order already exists
     const existingOrder = await ctx.db
       .query('orders')
-      .withIndex('checkoutId', (q: any) => q.eq('checkoutId', args.checkoutId))
+      .withIndex('checkoutId', (q) => q.eq('checkoutId', args.checkoutId))
       .first();
 
-    const orderData: any = {
+    const orderData: {
+      status: string;
+      email?: string;
+      completedAt?: number;
+      amount: number;
+      discountAmount?: number;
+      taxAmount?: number;
+      totalAmount: number;
+      currency: string;
+      customerName?: string;
+      customerIpAddress?: string;
+      isBusinessCustomer?: boolean;
+      customerTaxId?: string;
+      billingAddress?: typeof args.billingAddress;
+      discountId?: string;
+      discountCode?: string;
+      trialInterval?: string;
+      trialIntervalCount?: number;
+      trialEnd?: number;
+      subscriptionId?: string;
+      metadata?: typeof args.metadata;
+      customFieldData?: typeof args.customFieldData;
+    } = {
       status: args.status,
       email: args.email,
       completedAt: args.status === 'succeeded' ? Date.now() : undefined,

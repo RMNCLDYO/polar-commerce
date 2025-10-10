@@ -4,8 +4,9 @@
  * for fraud prevention and tax calculations
  */
 
-import { httpAction } from '../_generated/server';
 import { api } from '../_generated/api';
+import { httpAction } from '../_generated/server';
+import type { CheckoutSessionResponse } from './types';
 
 /**
  * Extract customer IP address from request headers
@@ -57,12 +58,13 @@ export const createCheckout = httpAction(async (ctx, request) => {
     // Authenticated users call the action directly from the frontend
     console.log('[Checkout HTTP] Guest checkout with IP tracking');
     console.log('[Checkout HTTP] Calling createCheckoutSession...');
-    const result: any =
-      // @ts-ignore
-      await ctx.runAction(api.checkout.checkout.createCheckoutSession, {
+    const result = (await ctx.runAction(
+      api.checkout.checkout.createCheckoutSession,
+      {
         ...body,
         customerIpAddress: customerIpAddress || undefined,
-      });
+      },
+    )) as CheckoutSessionResponse;
 
     console.log('[Checkout HTTP] Checkout created successfully');
 
@@ -75,12 +77,16 @@ export const createCheckout = httpAction(async (ctx, request) => {
         'Access-Control-Allow-Headers': 'Content-Type, Authorization',
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage =
+      error instanceof Error
+        ? error.message
+        : 'Failed to create checkout session';
     console.error('Checkout creation error:', error);
     return new Response(
       JSON.stringify({
         success: false,
-        error: error.message || 'Failed to create checkout session',
+        error: errorMessage,
       }),
       {
         status: 500,

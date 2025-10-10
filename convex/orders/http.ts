@@ -8,8 +8,8 @@
  * - Secret: Same as your main webhook
  */
 
-import { httpAction } from '../_generated/server';
 import { internal } from '../_generated/api';
+import { httpAction } from '../_generated/server';
 
 export const handleOrderWebhook = httpAction(async (ctx, request) => {
   try {
@@ -59,9 +59,11 @@ export const handleOrderWebhook = httpAction(async (ctx, request) => {
         headers: { 'Content-Type': 'application/json' },
       },
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage =
+      error instanceof Error ? error.message : 'Unknown error';
     console.error('[Order Webhook] Error:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ error: errorMessage }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },
     });

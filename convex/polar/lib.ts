@@ -1,8 +1,7 @@
 import { PolarCore } from '@polar-sh/sdk/core';
 import { productsList } from '@polar-sh/sdk/funcs/productsList.js';
-
-import { asyncMap } from 'convex-helpers';
 import { v } from 'convex/values';
+import { asyncMap } from 'convex-helpers';
 import { api } from './_generated/api';
 import { action, mutation, query } from './_generated/server';
 import schema from './schema';
@@ -363,7 +362,7 @@ export const syncProducts = action({
       server: args.server,
     });
     let page = 1;
-    let maxPage;
+    let maxPage: number;
     do {
       const products = await productsList(polar, {
         page,

@@ -194,56 +194,56 @@
 
   /* Sonner toast styles using CSS variables from theme */
   .toaster [data-sonner-toast] {
-    background-color: var(--color-background) !important;
-    color: var(--color-foreground) !important;
-    border: 1px solid var(--color-border) !important;
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    border: 1px solid var(--color-border);
     font-family: var(--font-mono);
     border-radius: var(--radius);
     box-shadow: var(--shadow-lg);
   }
 
   .toaster [data-sonner-toast][data-type="success"] {
-    background-color: var(--color-background) !important;
-    color: var(--color-foreground) !important;
-    border-color: var(--color-border) !important;
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    border-color: var(--color-border);
   }
 
   .toaster [data-sonner-toast][data-type="error"] {
-    background-color: var(--color-background) !important;
-    color: var(--color-destructive) !important;
-    border-color: var(--color-destructive) !important;
+    background-color: var(--color-background);
+    color: var(--color-destructive);
+    border-color: var(--color-destructive);
   }
 
   .toaster [data-sonner-toast][data-description] {
-    color: var(--color-muted-foreground) !important;
+    color: var(--color-muted-foreground);
   }
 
   .toaster [data-sonner-toast] [data-action] {
-    background-color: var(--color-primary) !important;
-    color: var(--color-primary-foreground) !important;
+    background-color: var(--color-primary);
+    color: var(--color-primary-foreground);
     border-radius: var(--radius-sm);
   }
 
   .toaster [data-sonner-toast] [data-cancel] {
-    background-color: var(--color-muted) !important;
-    color: var(--color-muted-foreground) !important;
+    background-color: var(--color-muted);
+    color: var(--color-muted-foreground);
     border-radius: var(--radius-sm);
   }
 
   .toaster [data-sonner-toast] [data-close-button] {
-    background-color: var(--color-muted) !important;
-    border-color: var(--color-border) !important;
+    background-color: var(--color-muted);
+    border-color: var(--color-border);
   }
 
   .toaster [data-sonner-toast] [data-close-button]:hover {
-    background-color: var(--color-accent) !important;
+    background-color: var(--color-accent);
   }
 
   /* Remove default Sonner theme colors */
   .toaster {
-    --normal-bg: var(--color-background) !important;
-    --normal-text: var(--color-foreground) !important;
-    --normal-border: var(--color-border) !important;
+    --normal-bg: var(--color-background);
+    --normal-text: var(--color-foreground);
+    --normal-border: var(--color-border);
   }
 }
 

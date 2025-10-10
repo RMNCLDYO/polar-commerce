@@ -1,4 +1,3 @@
-import type { auth } from '@/convex/auth/auth';
 import { convexClient } from '@convex-dev/better-auth/client/plugins';
 import {
   anonymousClient,
@@ -9,6 +8,7 @@ import {
   twoFactorClient,
 } from 'better-auth/client/plugins';
 import { createAuthClient } from 'better-auth/react';
+import type { auth } from '@/convex/auth/auth';
 
 export const authClient = createAuthClient({
   plugins: [

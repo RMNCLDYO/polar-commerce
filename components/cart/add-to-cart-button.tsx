@@ -1,10 +1,10 @@
 'use client';
 
+import { Loader2, ShoppingBag } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { ShoppingBag, Loader2 } from 'lucide-react';
+import type { Id } from '@/convex/_generated/dataModel';
 import { useCart } from '@/lib/client/hooks/use-cart';
-import { Id } from '@/convex/_generated/dataModel';
 
 interface AddToCartButtonProps {
   catalogId: Id<'catalog'>;

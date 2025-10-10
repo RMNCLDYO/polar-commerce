@@ -1,18 +1,19 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useAction, useConvexAuth } from 'convex/react';
+import { AlertCircle, Gift, Loader2, ShoppingBag, Tag } from 'lucide-react';
 import Image from 'next/image';
-import { Loader2, AlertCircle, ShoppingBag, Tag, Gift } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { Link } from '@/components/link';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
-import { useCart } from '@/lib/client/hooks/use-cart';
-import { Link } from '@/components/link';
-import { useConvexAuth, useAction } from 'convex/react';
 import { api } from '@/convex/_generated/api';
+import type { CheckoutSessionResponse } from '@/convex/checkout/types';
+import { useCart } from '@/lib/client/hooks/use-cart';
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -76,13 +77,23 @@ export default function CheckoutPage() {
 
     try {
       // Build custom field data
-      const customFieldData: Record<string, any> = {};
+      const customFieldData: Record<string, unknown> = {};
       if (orderNotes.trim()) {
         customFieldData.orderNotes = orderNotes;
       }
 
       // Build checkout options
-      const checkoutOptions: any = {
+      const checkoutOptions: {
+        sessionId?: string;
+        successUrl: string;
+        allowDiscountCodes?: boolean;
+        isBusinessCustomer?: boolean;
+        discountCode?: string;
+        customerBillingName?: string;
+        customerTaxId?: string;
+        requireBillingAddress?: boolean;
+        customFieldData?: Record<string, unknown>;
+      } = {
         // Include sessionId for both guest and logged-in users for better tracking
         sessionId: sessionId || undefined,
         successUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/checkout/success?checkout_id={CHECKOUT_ID}`,
@@ -116,7 +127,7 @@ export default function CheckoutPage() {
         checkoutOptions.customFieldData = customFieldData;
       }
 
-      let result: any;
+      let result: CheckoutSessionResponse;
 
       if (isAuthenticated) {
         // For authenticated users, call action directly (preserves auth context)
@@ -124,7 +135,10 @@ export default function CheckoutPage() {
         result = await createCheckoutAction(checkoutOptions);
       } else {
         // For guest users, use HTTP endpoint to capture IP address
-        const convexSiteUrl = process.env.NEXT_PUBLIC_CONVEX_SITE_URL!;
+        const convexSiteUrl = process.env.NEXT_PUBLIC_CONVEX_SITE_URL;
+        if (!convexSiteUrl) {
+          throw new Error('NEXT_PUBLIC_CONVEX_SITE_URL is not configured');
+        }
         console.log(
           '[Checkout] Guest user - using HTTP endpoint for IP tracking',
         );
@@ -144,11 +158,16 @@ export default function CheckoutPage() {
           );
         }
 
-        result = await response.json();
+        const data = await response.json();
 
         if (!response.ok) {
-          throw new Error(result.error || 'Failed to create checkout session');
+          throw new Error(
+            (data as { error?: string }).error ||
+              'Failed to create checkout session',
+          );
         }
+
+        result = data;
       }
 
       if (!result.success || !result.checkoutUrl) {
@@ -227,16 +246,18 @@ export default function CheckoutPage() {
                     <p className="font-semibold mb-1">
                       Please review your cart:
                     </p>
-                    {cartValidation.errors.map((error, index) => (
-                      <p key={index}>{error}</p>
-                    ))}
+                    {cartValidation.errors.map(
+                      (error: string, index: number) => (
+                        <p key={index}>{error}</p>
+                      ),
+                    )}
                   </div>
                 </div>
               )}
 
               {/* Cart Items */}
               <div className="space-y-4">
-                {cart.items.map((item) =>
+                {cart.items.map((item: (typeof cart.items)[number]) =>
                   item ? (
                     <div
                       key={item.id}

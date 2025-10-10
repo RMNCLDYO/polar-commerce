@@ -1,12 +1,12 @@
-import { v } from 'convex/values';
-import { action, query } from '../_generated/server';
-import { components, internal } from '../_generated/api';
 import { Polar as PolarSDK } from '@polar-sh/sdk';
-import { Doc, Id } from '../_generated/dataModel';
-import {
+import { v } from 'convex/values';
+import { components, internal } from '../_generated/api';
+import type { Doc, Id } from '../_generated/dataModel';
+import { action, query } from '../_generated/server';
+import type {
+  Address,
   CartItemForCheckout,
   CheckoutSessionResponse,
-  Address,
   Metadata,
 } from './types';
 
@@ -37,25 +37,26 @@ async function createBundleProduct(
       description: bundleDescription,
       prices: [
         {
-          type: 'one_time',
           amountType: 'fixed',
           priceAmount: totalAmount,
           priceCurrency: 'usd',
-        } as any, // Polar SDK type inference issue
+        },
       ],
       // Store bundle metadata for tracking
       metadata: {
         bundleType: 'checkout',
       },
-    } as any);
+    });
 
     console.log(
       `[Bundle] Created ${bundleProduct.id} for ${polarProducts.length} items (${totalAmount / 100} USD)`,
     );
     return bundleProduct.id;
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage =
+      error instanceof Error ? error.message : 'Unknown error';
     console.error('[Bundle] Failed to create:', error);
-    throw new Error('Failed to create checkout bundle: ' + error.message);
+    throw new Error(`Failed to create checkout bundle: ${errorMessage}`);
   }
 }
 
@@ -117,13 +118,11 @@ export const createCheckoutSession = action({
     let cart: Doc<'carts'> | null = null;
     if (userId) {
       console.log('[Checkout] Looking up cart by userId');
-      // @ts-ignore - Type instantiation is excessively deep (known Convex issue)
       cart = await ctx.runQuery(internal.cart.cart.internal_getCartByUserId, {
         userId,
       });
     } else if (args.sessionId) {
       console.log('[Checkout] Looking up cart by sessionId:', args.sessionId);
-      // @ts-ignore - Type instantiation is excessively deep (known Convex issue)
       cart = await ctx.runQuery(
         internal.cart.cart.internal_getCartBySessionId,
         {
@@ -153,7 +152,9 @@ export const createCheckoutSession = action({
 
     // Filter out null items (TypeScript safety)
     const cartItems = cartItemsRaw.filter(
-      (item: any): item is NonNullable<typeof item> => item !== null,
+      (
+        item: (typeof cartItemsRaw)[number],
+      ): item is NonNullable<(typeof cartItemsRaw)[number]> => item !== null,
     );
 
     if (cartItems.length === 0) {
@@ -180,7 +181,9 @@ export const createCheckoutSession = action({
       }
 
       // Find the active price
-      const activePrice = polarProduct.prices.find((p: any) => !p.isArchived);
+      const activePrice = polarProduct.prices.find(
+        (p: (typeof polarProduct.prices)[number]) => !p.isArchived,
+      );
 
       polarProducts.push({
         polarProductId: item.product.polarProductId,
@@ -255,8 +258,13 @@ export const createCheckoutSession = action({
     }
 
     // Initialize Polar SDK
+    const token = process.env.POLAR_ORGANIZATION_TOKEN;
+    if (!token) {
+      throw new Error('POLAR_ORGANIZATION_TOKEN not set');
+    }
+
     const polarClient = new PolarSDK({
-      accessToken: process.env.POLAR_ORGANIZATION_TOKEN!,
+      accessToken: token,
       server:
         (process.env.POLAR_SERVER as 'sandbox' | 'production') || 'sandbox',
     });
@@ -328,7 +336,7 @@ export const createCheckoutSession = action({
         checkoutProductId = firstProduct.polarProductId;
       }
 
-      const checkoutData: any = {
+      const checkoutData = {
         // Required fields - Polar only supports one product in checkout
         // For multi-item carts, we create a bundle product
         products: [checkoutProductId],
@@ -392,6 +400,7 @@ export const createCheckoutSession = action({
       // For bundle checkouts, the amount is already set in the bundle product
       // For single products with quantity > 1, set custom amount
       if (!isBundleCheckout && firstProduct.quantity > 1) {
+        // @ts-expect-error - Dynamic property assignment for checkout data
         checkoutData.amount = totalAmount;
       }
 
@@ -448,9 +457,13 @@ export const createCheckoutSession = action({
       };
 
       return response;
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : 'Failed to create checkout session';
       console.error('Failed to create checkout session:', error);
-      throw new Error(error.message || 'Failed to create checkout session');
+      throw new Error(errorMessage);
     }
   },
 });
@@ -500,12 +513,10 @@ export const createCheckoutSessionWithIP = action({
     // Get the cart with items
     let cart: Doc<'carts'> | null = null;
     if (userId) {
-      // @ts-ignore - Type instantiation is excessively deep (known Convex issue)
       cart = await ctx.runQuery(internal.cart.cart.internal_getCartByUserId, {
         userId,
       });
     } else if (args.sessionId) {
-      // @ts-ignore - Type instantiation is excessively deep (known Convex issue)
       cart = await ctx.runQuery(
         internal.cart.cart.internal_getCartBySessionId,
         {
@@ -528,7 +539,9 @@ export const createCheckoutSessionWithIP = action({
 
     // Filter out null items (TypeScript safety)
     const cartItems = cartItemsRaw.filter(
-      (item: any): item is NonNullable<typeof item> => item !== null,
+      (
+        item: (typeof cartItemsRaw)[number],
+      ): item is NonNullable<(typeof cartItemsRaw)[number]> => item !== null,
     );
 
     if (cartItems.length === 0) {
@@ -555,7 +568,9 @@ export const createCheckoutSessionWithIP = action({
       }
 
       // Find the active price
-      const activePrice = polarProduct.prices.find((p: any) => !p.isArchived);
+      const activePrice = polarProduct.prices.find(
+        (p: (typeof polarProduct.prices)[number]) => !p.isArchived,
+      );
 
       polarProducts.push({
         polarProductId: item.product.polarProductId,
@@ -630,8 +645,13 @@ export const createCheckoutSessionWithIP = action({
     }
 
     // Initialize Polar SDK
+    const token = process.env.POLAR_ORGANIZATION_TOKEN;
+    if (!token) {
+      throw new Error('POLAR_ORGANIZATION_TOKEN not set');
+    }
+
     const polarClient = new PolarSDK({
-      accessToken: process.env.POLAR_ORGANIZATION_TOKEN!,
+      accessToken: token,
       server:
         (process.env.POLAR_SERVER as 'sandbox' | 'production') || 'sandbox',
     });
@@ -703,7 +723,7 @@ export const createCheckoutSessionWithIP = action({
         checkoutProductId = firstProduct.polarProductId;
       }
 
-      const checkoutData: any = {
+      const checkoutData = {
         // Required fields - Polar only supports one product in checkout
         // For multi-item carts, we create a bundle product
         products: [checkoutProductId],
@@ -767,6 +787,7 @@ export const createCheckoutSessionWithIP = action({
       // For bundle checkouts, the amount is already set in the bundle product
       // For single products with quantity > 1, set custom amount
       if (!isBundleCheckout && firstProduct.quantity > 1) {
+        // @ts-expect-error - Dynamic property assignment for checkout data
         checkoutData.amount = totalAmount;
       }
 
@@ -823,9 +844,13 @@ export const createCheckoutSessionWithIP = action({
       };
 
       return response;
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : 'Failed to create checkout session';
       console.error('Failed to create checkout session:', error);
-      throw new Error(error.message || 'Failed to create checkout session');
+      throw new Error(errorMessage);
     }
   },
 });
@@ -839,8 +864,12 @@ export const handleCheckoutSuccess = action({
     checkoutId: v.string(),
   },
   handler: async (ctx, { checkoutId }) => {
+    const token = process.env.POLAR_ORGANIZATION_TOKEN;
+    if (!token) {
+      throw new Error('POLAR_ORGANIZATION_TOKEN not set');
+    }
     const polarClient = new PolarSDK({
-      accessToken: process.env.POLAR_ORGANIZATION_TOKEN!,
+      accessToken: token,
       server:
         (process.env.POLAR_SERVER as 'sandbox' | 'production') || 'sandbox',
     });
@@ -947,9 +976,12 @@ export const handleCheckoutSuccess = action({
         subscriptionId: checkout.subscriptionId || undefined,
 
         // Metadata
-        metadata: metadata as Record<string, any>,
+        metadata: metadata as Record<string, string | number | boolean>,
         customFieldData: checkout.customFieldData
-          ? (checkout.customFieldData as Record<string, any>)
+          ? (checkout.customFieldData as Record<
+              string,
+              string | number | boolean
+            >)
           : undefined,
       });
 
@@ -968,7 +1000,7 @@ export const handleCheckoutSuccess = action({
               await ctx.runMutation(
                 internal.catalog.catalog.decrementInventoryInternal,
                 {
-                  productId: productId as any,
+                  productId: productId as Id<'catalog'>,
                   quantity,
                 },
               );
@@ -1016,9 +1048,11 @@ export const handleCheckoutSuccess = action({
         status: checkout.status,
         orderId: checkoutId,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Failed to process checkout';
       console.error('Failed to handle checkout success:', error);
-      throw new Error(error.message || 'Failed to process checkout');
+      throw new Error(errorMessage);
     }
   },
 });
@@ -1051,8 +1085,12 @@ export const getCheckout = action({
     checkoutId: v.string(),
   },
   handler: async (_ctx, { checkoutId }) => {
+    const token = process.env.POLAR_ORGANIZATION_TOKEN;
+    if (!token) {
+      throw new Error('POLAR_ORGANIZATION_TOKEN not set');
+    }
     const polarClient = new PolarSDK({
-      accessToken: process.env.POLAR_ORGANIZATION_TOKEN!,
+      accessToken: token,
       server:
         (process.env.POLAR_SERVER as 'sandbox' | 'production') || 'sandbox',
     });
@@ -1060,7 +1098,7 @@ export const getCheckout = action({
     try {
       const checkout = await polarClient.checkouts.get({ id: checkoutId });
       return checkout;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to get checkout:', error);
       return null;
     }
@@ -1084,8 +1122,10 @@ export const getUserOrders = query({
 
     // Get user's email from Better Auth
     const user = await ctx.db
-      .query('betterAuth_user' as any)
-      .filter((q: any) => q.eq(q.field('id'), userId))
+      // @ts-expect-error - Better Auth table name not in generated schema
+      .query('betterAuth_user')
+      // @ts-expect-error - Better Auth table fields not in generated schema
+      .filter((q) => q.eq(q.field('id'), userId))
       .first();
 
     const orders = [];
@@ -1099,11 +1139,13 @@ export const getUserOrders = query({
     orders.push(...userOrders);
 
     // Also get any guest orders with the same email that haven't been linked yet
+    // @ts-expect-error - Better Auth user fields not in generated schema
     if (user?.email) {
       const guestOrders = await ctx.db
         .query('orders')
-        .withIndex('email', (q: any) => q.eq('email', user.email))
-        .filter((q: any) => q.eq(q.field('userId'), undefined))
+        // @ts-expect-error - Better Auth user fields not in generated schema
+        .withIndex('email', (q) => q.eq('email', user.email))
+        .filter((q) => q.eq(q.field('userId'), undefined))
         .order('desc')
         .collect();
       orders.push(...guestOrders);

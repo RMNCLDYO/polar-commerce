@@ -2,6 +2,7 @@ import type { NextConfig } from 'next';
 
 const nextConfig = {
   reactStrictMode: false, // Disable double token requests in dev
+  reactCompiler: true,
   logging: {
     fetches: {
       fullUrl: true,
@@ -10,7 +11,7 @@ const nextConfig = {
   experimental: {
     cssChunking: true,
     cacheComponents: true,
-    dynamicIO: true, // Enable cacheLife feature
+    turbopackFileSystemCacheForDev: true,
     cacheLife: {
       default: {
         stale: 3600,
@@ -26,9 +27,13 @@ const nextConfig = {
   },
   images: {
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
-    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    imageSizes: [32, 48, 64, 96, 128, 256, 384],
     formats: ['image/avif', 'image/webp'],
+    minimumCacheTTL: 14400, // 4 hours - Next.js 16 default (improved from 60s)
+    qualities: [60, 75, 90], // Multiple quality levels for e-commerce product images
+    maximumRedirects: 3, // Next.js 16 default (improved from unlimited)
     dangerouslyAllowSVG: false,
+    dangerouslyAllowLocalIP: false, // Next.js 16 security restriction - blocks local IP optimization
     remotePatterns: [
       {
         protocol: 'https',

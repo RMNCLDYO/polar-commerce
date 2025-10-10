@@ -1,19 +1,19 @@
+import type { Product } from '@polar-sh/sdk/models/components/product.js';
+import type { Subscription } from '@polar-sh/sdk/models/components/subscription.js';
 import type {
-  FunctionHandle,
-  FunctionType,
-  WithoutSystemFields,
   Expand,
+  FunctionHandle,
   FunctionReference,
-  GenericMutationCtx,
+  FunctionType,
   GenericActionCtx,
-  GenericQueryCtx,
   GenericDataModel,
+  GenericMutationCtx,
+  GenericQueryCtx,
+  WithoutSystemFields,
 } from 'convex/server';
-import { GenericId } from 'convex/values';
+import type { GenericId } from 'convex/values';
 import type { api } from './_generated/api';
 import type { Doc } from './_generated/dataModel';
-import type { Subscription } from '@polar-sh/sdk/models/components/subscription.js';
-import type { Product } from '@polar-sh/sdk/models/components/product.js';
 
 export const omitSystemFields = <
   T extends { _id: string; _creationTime: number } | null | undefined,

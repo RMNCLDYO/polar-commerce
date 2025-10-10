@@ -1,10 +1,10 @@
 'use client';
 
+import { Heart, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Heart, Loader2 } from 'lucide-react';
-import { useWishlist, useIsInWishlist } from '@/lib/client/hooks/use-wishlist';
-import { Id } from '@/convex/_generated/dataModel';
+import type { Id } from '@/convex/_generated/dataModel';
+import { useIsInWishlist, useWishlist } from '@/lib/client/hooks/use-wishlist';
 import { cn } from '@/lib/shared/utils';
 
 interface AddToWishlistButtonProps {

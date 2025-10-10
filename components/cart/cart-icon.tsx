@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
 import { ShoppingBag } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { useCart } from '@/lib/client/hooks/use-cart';
 import { CartDrawer } from './cart-drawer';
 

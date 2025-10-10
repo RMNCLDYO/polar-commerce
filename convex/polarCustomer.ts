@@ -1,14 +1,67 @@
-import { v } from 'convex/values';
-import { action, internalAction } from './_generated/server';
-import { components } from './_generated/api';
 import { Polar as PolarSDK } from '@polar-sh/sdk';
+import { v } from 'convex/values';
+import { components } from './_generated/api';
+import { action, internalAction } from './_generated/server';
 import { validateMetadata } from './polar/types';
+
+// Local type definitions for Polar SDK
+interface PolarCustomer {
+  id: string;
+  email: string;
+  emailVerified?: boolean;
+  name?: string | null;
+  externalId?: string | null;
+  avatarUrl?: string | null;
+  billingAddress?: {
+    line1?: string | null;
+    line2?: string | null;
+    postalCode?: string | null;
+    city?: string | null;
+    state?: string | null;
+    country: string;
+  } | null;
+  taxId?: string[] | null;
+  createdAt: string | Date;
+  modifiedAt?: string | Date | null;
+  deletedAt?: string | Date | null;
+  metadata?: Record<string, unknown>;
+  [key: string]: unknown;
+}
+
+interface CustomersListResponse {
+  result?: {
+    items?: PolarCustomer[];
+  };
+}
+
+interface PageIteratorResponse {
+  ok: boolean;
+  value?: CustomersListResponse;
+}
+
+interface PolarCustomerUpdate {
+  email?: string;
+  name?: string | null;
+  billingAddress?: {
+    line1?: string | null;
+    line2?: string | null;
+    postalCode?: string | null;
+    city?: string | null;
+    state?: string | null;
+    country: string;
+  } | null;
+  taxId?: string[] | null;
+  metadata?: Record<string, string | number | boolean>;
+}
 
 /**
  * Helper to map Polar API customer to our schema
  * Converts dates to ISO strings for Convex Polar component
  */
-function mapPolarCustomerToSchema(polarCustomer: any, userId: string) {
+function mapPolarCustomerToSchema(
+  polarCustomer: PolarCustomer,
+  userId: string,
+) {
   return {
     id: polarCustomer.id,
     userId,
@@ -98,8 +151,13 @@ export const ensurePolarCustomer = action({
 
     // Customer not in Convex - create in Polar
     // Webhook will automatically sync it back to Convex
+    const token = process.env.POLAR_ORGANIZATION_TOKEN;
+    if (!token) {
+      throw new Error('POLAR_ORGANIZATION_TOKEN not set');
+    }
+
     const polarClient = new PolarSDK({
-      accessToken: process.env.POLAR_ORGANIZATION_TOKEN!,
+      accessToken: token,
       server:
         (process.env.POLAR_SERVER as 'sandbox' | 'production') || 'sandbox',
     });
@@ -123,6 +181,7 @@ export const ensurePolarCustomer = action({
       // But we can also sync it immediately for better UX
       await ctx.runMutation(
         components.polar.lib.insertCustomer,
+        // @ts-expect-error - Polar SDK country type vs component country code type mismatch
         mapPolarCustomerToSchema(result, userId),
       );
 
@@ -131,15 +190,16 @@ export const ensurePolarCustomer = action({
         customerId: result.id,
         source: 'created',
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to ensure Polar customer:', error);
 
       // If customer already exists in Polar but not in Convex
       // (can happen if webhook hasn't fired yet or failed)
-      if (
-        error.statusCode === 422 ||
-        error.message?.includes('already exists')
-      ) {
+      const isExistingCustomerError =
+        (error as { statusCode?: number }).statusCode === 422 ||
+        (error as { message?: string }).message?.includes('already exists');
+
+      if (isExistingCustomerError) {
         // Try to find the existing customer in Polar
         try {
           const customersIter = await polarClient.customers.list({
@@ -148,9 +208,12 @@ export const ensurePolarCustomer = action({
           });
 
           for await (const response of customersIter) {
-            const items = (response as any).result?.items || [];
+            const resp = response as unknown as PageIteratorResponse;
+            const items =
+              resp.ok && resp.value ? resp.value.result?.items || [] : [];
             if (items.length > 0) {
               const customer = items[0];
+              if (!customer) continue;
 
               // Update metadata to include userId
               const updatedMetadata = {
@@ -176,6 +239,7 @@ export const ensurePolarCustomer = action({
               // Sync to Convex immediately
               await ctx.runMutation(
                 components.polar.lib.insertCustomer,
+                // @ts-expect-error - Polar SDK country type vs component country code type mismatch
                 mapPolarCustomerToSchema(
                   { ...customer, metadata: updatedMetadata },
                   userId,
@@ -253,14 +317,19 @@ export const updateCustomer = action({
       throw new Error(`Customer not found for user: ${userId}`);
     }
 
+    const token = process.env.POLAR_ORGANIZATION_TOKEN;
+    if (!token) {
+      throw new Error('POLAR_ORGANIZATION_TOKEN not set');
+    }
+
     const polarClient = new PolarSDK({
-      accessToken: process.env.POLAR_ORGANIZATION_TOKEN!,
+      accessToken: token,
       server:
         (process.env.POLAR_SERVER as 'sandbox' | 'production') || 'sandbox',
     });
 
     try {
-      const polarUpdates: any = {};
+      const polarUpdates: PolarCustomerUpdate = {};
 
       if (updates.email !== undefined) polarUpdates.email = updates.email;
       if (updates.name !== undefined) polarUpdates.name = updates.name;
@@ -272,6 +341,7 @@ export const updateCustomer = action({
 
       const updatedCustomer = await polarClient.customers.update({
         id: existingCustomer.id,
+        // @ts-expect-error - Polar SDK country type vs generic string type mismatch
         customerUpdate: polarUpdates,
       });
 
@@ -283,6 +353,7 @@ export const updateCustomer = action({
       // (webhook will also do this, but we do it immediately for better UX)
       await ctx.runMutation(
         components.polar.lib.upsertCustomer,
+        // @ts-expect-error - Polar SDK country type vs component country code type mismatch
         mapPolarCustomerToSchema(updatedCustomer, userId),
       );
 
@@ -290,7 +361,7 @@ export const updateCustomer = action({
         success: true,
         customerId: updatedCustomer.id,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to update Polar customer:', error);
       throw error;
     }
@@ -325,8 +396,13 @@ export const deleteCustomer = internalAction({
       return { success: true, message: 'No customer to delete' };
     }
 
+    const token = process.env.POLAR_ORGANIZATION_TOKEN;
+    if (!token) {
+      throw new Error('POLAR_ORGANIZATION_TOKEN not set');
+    }
+
     const polarClient = new PolarSDK({
-      accessToken: process.env.POLAR_ORGANIZATION_TOKEN!,
+      accessToken: token,
       server:
         (process.env.POLAR_SERVER as 'sandbox' | 'production') || 'sandbox',
     });
@@ -338,7 +414,7 @@ export const deleteCustomer = internalAction({
 
       // Webhook will handle Convex cleanup via customer.deleted event
       return { success: true, customerId: existingCustomer.id };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to delete Polar customer:', error);
       throw error;
     }

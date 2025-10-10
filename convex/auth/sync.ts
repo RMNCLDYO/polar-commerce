@@ -1,7 +1,42 @@
-import { v } from 'convex/values';
-import { action, internalAction } from '../_generated/server';
-import { api, internal, components } from '../_generated/api';
 import { Polar as PolarSDK } from '@polar-sh/sdk';
+import { v } from 'convex/values';
+import { api, components, internal } from '../_generated/api';
+import { action, internalAction } from '../_generated/server';
+
+// Local type definitions for Polar SDK
+interface PolarCustomer {
+  id: string;
+  email: string;
+  emailVerified?: boolean;
+  name?: string | null;
+  externalId?: string | null;
+  avatarUrl?: string | null;
+  billingAddress?: {
+    line1?: string | null;
+    line2?: string | null;
+    postalCode?: string | null;
+    city?: string | null;
+    state?: string | null;
+    country: string;
+  } | null;
+  taxId?: string[] | null;
+  createdAt: string;
+  modifiedAt?: string | null;
+  deletedAt?: string | null;
+  metadata?: Record<string, unknown>;
+  [key: string]: unknown;
+}
+
+interface CustomersListResponse {
+  result?: {
+    items?: PolarCustomer[];
+  };
+}
+
+interface PageIteratorResponse {
+  ok: boolean;
+  value?: CustomersListResponse;
+}
 
 /**
  * Auto-sync user to Polar when they sign up
@@ -27,7 +62,8 @@ export const onUserCreated = internalAction({
     try {
       // 1. Ensure Polar customer exists
       const result = await ctx.runAction(
-        // @ts-ignore - Type instantiation depth issue when types are stale (run npm run generate)
+        // biome-ignore lint/suspicious/noTsIgnore: Type instantiation depth requires @ts-ignore for dual tsconfig
+        // @ts-ignore - Type instantiation depth issue with Convex generated types (tsc -p convex only)
         api.polarCustomer.ensurePolarCustomer,
         {
           userId,
@@ -62,10 +98,12 @@ export const onUserCreated = internalAction({
         customerId: result.customerId,
         linkedOrders: orderLinkResult.linkedOrders,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
       console.error(`❌ Failed to sync user ${email}:`, error);
       // Don't throw - user account still created, they can checkout later
-      return { success: false, error: error.message };
+      return { success: false, error: errorMessage };
     }
   },
 });
@@ -134,8 +172,14 @@ export const syncOrphanedCustomers = internalAction({
   handler: async (ctx) => {
     console.log('🔄 [CRON] Checking for orphaned Polar customers...');
 
+    const token = process.env.POLAR_ORGANIZATION_TOKEN;
+    if (!token) {
+      console.error('❌ POLAR_ORGANIZATION_TOKEN not set');
+      return;
+    }
+
     const polarClient = new PolarSDK({
-      accessToken: process.env.POLAR_ORGANIZATION_TOKEN!,
+      accessToken: token,
       server:
         (process.env.POLAR_SERVER as 'sandbox' | 'production') || 'sandbox',
     });
@@ -143,11 +187,15 @@ export const syncOrphanedCustomers = internalAction({
     try {
       // Get all customers from Polar
       const customersIter = await polarClient.customers.list({ limit: 100 });
-      const allCustomers: any[] = [];
+      const allCustomers: PolarCustomer[] = [];
 
       for await (const response of customersIter) {
-        const items = (response as any).result?.items || [];
-        allCustomers.push(...items);
+        const resp = response as unknown as PageIteratorResponse;
+        if (resp.ok && resp.value) {
+          const data = resp.value;
+          const items = data.result?.items || [];
+          allCustomers.push(...items);
+        }
       }
 
       console.log(`Found ${allCustomers.length} customers in Polar`);
@@ -156,12 +204,14 @@ export const syncOrphanedCustomers = internalAction({
       let alreadyLinked = 0;
 
       for (const customer of allCustomers) {
-        const userId = customer.metadata?.userId;
+        const userIdRaw = customer.metadata?.userId;
 
-        if (!userId) {
+        if (!userIdRaw || typeof userIdRaw !== 'string') {
           console.log(`⚠️  Customer ${customer.email} has no userId metadata`);
           continue;
         }
+
+        const userId: string = userIdRaw;
 
         // Check if customer is already linked in Convex
         const existing = await ctx.runQuery(
@@ -184,6 +234,7 @@ export const syncOrphanedCustomers = internalAction({
             name: customer.name ?? null,
             external_id: customer.externalId ?? null,
             avatar_url: customer.avatarUrl ?? null,
+            // @ts-expect-error - Polar API country string doesn't match Convex strict country code union
             billing_address: customer.billingAddress
               ? {
                   line1: customer.billingAddress.line1 ?? null,
@@ -202,7 +253,10 @@ export const syncOrphanedCustomers = internalAction({
             created_at: customer.createdAt,
             modified_at: customer.modifiedAt ?? null,
             deleted_at: customer.deletedAt ?? null,
-            metadata: customer.metadata || {},
+            metadata: (customer.metadata || {}) as Record<
+              string,
+              string | number | boolean
+            >,
           });
 
           console.log(`✅ Synced orphaned customer: ${customer.email}`);
@@ -215,7 +269,7 @@ export const syncOrphanedCustomers = internalAction({
       console.log(`✅ [CRON] Orphaned customer sync complete`);
       console.log(`   - Already linked: ${alreadyLinked}`);
       console.log(`   - Newly synced: ${synced}`);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('❌ [CRON] Orphaned customer sync failed:', error);
     }
   },

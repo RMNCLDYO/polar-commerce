@@ -11,9 +11,9 @@
  */
 
 import { CheckoutLink } from '@convex-dev/polar/react';
-import { api } from '@/convex/_generated/api';
-import { Card } from '@/components/ui/card';
 import { useQuery } from 'convex/react';
+import { Card } from '@/components/ui/card';
+import { api } from '@/convex/_generated/api';
 
 export function SimpleCheckout() {
   // Get products using the component's built-in query
@@ -25,16 +25,17 @@ export function SimpleCheckout() {
 
   // Filter for subscription products
   const monthlyProducts = products.filter(
-    (p) => p.prices[0]?.recurringInterval === 'month',
+    (p: (typeof products)[number]) =>
+      p.prices[0]?.recurringInterval === 'month',
   );
   const yearlyProducts = products.filter(
-    (p) => p.prices[0]?.recurringInterval === 'year',
+    (p: (typeof products)[number]) => p.prices[0]?.recurringInterval === 'year',
   );
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       {/* Monthly Plan */}
-      {monthlyProducts.map((product) => (
+      {monthlyProducts.map((product: (typeof monthlyProducts)[number]) => (
         <Card key={product.id} className="p-6">
           <h3 className="text-2xl font-bold mb-2">{product.name}</h3>
           <p className="text-muted-foreground mb-4">{product.description}</p>
@@ -59,7 +60,7 @@ export function SimpleCheckout() {
       ))}
 
       {/* Yearly Plan */}
-      {yearlyProducts.map((product) => (
+      {yearlyProducts.map((product: (typeof yearlyProducts)[number]) => (
         <Card key={product.id} className="p-6 border-primary">
           <div className="text-xs font-semibold text-primary mb-2">
             BEST VALUE

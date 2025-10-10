@@ -1,13 +1,21 @@
-import { v } from 'convex/values';
-import {
-  query,
-  mutation,
-  internalMutation,
-  internalAction,
-  internalQuery,
-} from '../_generated/server';
-import { internal } from '../_generated/api';
 import { Polar as PolarSDK } from '@polar-sh/sdk';
+import { v } from 'convex/values';
+import { internal } from '../_generated/api';
+import {
+  internalAction,
+  internalMutation,
+  internalQuery,
+  mutation,
+  query,
+} from '../_generated/server';
+
+// Local type definitions for Polar SDK price objects
+interface PolarPriceInput {
+  type: 'one_time';
+  amountType: 'fixed';
+  priceAmount: number;
+  priceCurrency: 'usd';
+}
 
 /**
  * Create a product in catalog AND automatically sync to Polar
@@ -126,11 +134,24 @@ export const syncProductToPolar = internalAction({
       return;
     }
 
+    const token = process.env.POLAR_ORGANIZATION_TOKEN;
+    if (!token) {
+      console.error('❌ POLAR_ORGANIZATION_TOKEN not set');
+      return;
+    }
+
     const polarClient = new PolarSDK({
-      accessToken: process.env.POLAR_ORGANIZATION_TOKEN!,
+      accessToken: token,
       server:
         (process.env.POLAR_SERVER as 'sandbox' | 'production') || 'sandbox',
     });
+
+    const priceInput: PolarPriceInput = {
+      type: 'one_time',
+      amountType: 'fixed',
+      priceAmount: product.price,
+      priceCurrency: 'usd',
+    };
 
     try {
       if (product.polarProductId) {
@@ -142,14 +163,7 @@ export const syncProductToPolar = internalAction({
           productUpdate: {
             name: product.name,
             description: product.description,
-            prices: [
-              {
-                type: 'one_time',
-                amountType: 'fixed',
-                priceAmount: product.price,
-                priceCurrency: 'usd',
-              } as any, // Polar SDK type inference issue
-            ],
+            prices: [priceInput],
           },
         });
       } else {
@@ -159,14 +173,7 @@ export const syncProductToPolar = internalAction({
         const result = await polarClient.products.create({
           name: product.name,
           description: product.description,
-          prices: [
-            {
-              type: 'one_time',
-              amountType: 'fixed',
-              priceAmount: product.price,
-              priceCurrency: 'usd',
-            } as any, // Polar SDK type inference issue
-          ],
+          prices: [priceInput],
         });
 
         if (result) {
@@ -179,7 +186,7 @@ export const syncProductToPolar = internalAction({
       }
 
       console.log(`✅ Synced product to Polar: ${product.name}`);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(`❌ Failed to sync product to Polar:`, error);
       // Don't throw - we don't want to block the mutation
     }
@@ -194,8 +201,14 @@ export const archivePolarProduct = internalAction({
     polarProductId: v.string(),
   },
   handler: async (_ctx, { polarProductId }) => {
+    const token = process.env.POLAR_ORGANIZATION_TOKEN;
+    if (!token) {
+      console.error('❌ POLAR_ORGANIZATION_TOKEN not set');
+      return;
+    }
+
     const polarClient = new PolarSDK({
-      accessToken: process.env.POLAR_ORGANIZATION_TOKEN!,
+      accessToken: token,
       server:
         (process.env.POLAR_SERVER as 'sandbox' | 'production') || 'sandbox',
     });
@@ -209,7 +222,7 @@ export const archivePolarProduct = internalAction({
       });
 
       console.log(`✅ Archived Polar product: ${polarProductId}`);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(`❌ Failed to archive Polar product:`, error);
     }
   },

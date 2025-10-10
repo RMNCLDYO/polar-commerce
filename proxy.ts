@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { getSessionCookie } from 'better-auth/cookies';
 //import { createAuth } from "./convex/auth";
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 
 //type Session = ReturnType<typeof createAuth>["$Infer"]["Session"];
 /*
@@ -36,7 +36,7 @@ const starterRoutes: string[] = []; // Add starter-specific routes here
 const premiumRoutes: string[] = []; // Add premium-specific routes here
 
 // Just check cookie, recommended approach
-export default async function middleware(request: NextRequest) {
+export default async function proxy(request: NextRequest) {
   const sessionCookie = getSessionCookie(request);
   const pathname = request.nextUrl.pathname;
 
@@ -94,6 +94,6 @@ export default async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  // Run middleware on all routes except static assets and api routes
+  // Run proxy on all routes except static assets and api routes
   matcher: ['/((?!.*\\..*|_next|api/auth).*)', '/', '/trpc(.*)'],
 };

@@ -1,10 +1,10 @@
-import { api } from '@/convex/_generated/api';
-import type { Id } from '@/convex/_generated/dataModel';
 import { fetchQuery } from 'convex/nextjs';
 import {
   unstable_cacheLife as cacheLife,
   unstable_cacheTag as cacheTag,
 } from 'next/cache';
+import { api } from '@/convex/_generated/api';
+import type { Id } from '@/convex/_generated/dataModel';
 import 'server-only';
 import type { Product, ProductFilters } from '@/lib/shared/types';
 

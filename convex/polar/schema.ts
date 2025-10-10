@@ -1,6 +1,6 @@
 import { defineSchema, defineTable } from 'convex/server';
 import { v } from 'convex/values';
-import { CountryAlpha2, TaxIDFormat, CustomerMetadata } from './types';
+import { CountryAlpha2, CustomerMetadata, TaxIDFormat } from './types';
 
 export default defineSchema(
   {

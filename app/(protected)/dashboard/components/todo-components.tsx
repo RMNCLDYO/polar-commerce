@@ -1,7 +1,8 @@
+import { Check, Settings, Trash2, X } from 'lucide-react';
+import Image from 'next/image';
+import type { FormEvent, PropsWithChildren } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Check, Settings, Trash2, X } from 'lucide-react';
-import { FormEvent, PropsWithChildren } from 'react';
 
 export const UserProfile = ({
   user,
@@ -11,8 +12,7 @@ export const UserProfile = ({
   return (
     <div className="flex items-center space-x-2">
       {user?.image ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
+        <Image
           src={user.image}
           alt={user.name}
           width={40}
@@ -101,7 +101,7 @@ export const TodoCompleteButton = ({
 }: {
   completed: boolean;
   type?: 'button' | 'submit';
-  onClick?: () => any;
+  onClick?: () => void;
 }) => (
   <Button
     variant="ghost"
@@ -118,7 +118,7 @@ export const TodoCompleteButton = ({
   </Button>
 );
 
-export const TodoRemoveButton = ({ onClick }: { onClick: () => any }) => (
+export const TodoRemoveButton = ({ onClick }: { onClick: () => void }) => (
   <Button
     variant="ghost"
     size="icon"

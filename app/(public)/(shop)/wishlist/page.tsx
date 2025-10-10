@@ -1,17 +1,36 @@
 'use client';
 
-import Image from 'next/image';
-import { Heart, ShoppingBag, Trash2, Loader2, AlertCircle } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Link } from '@/components/link';
-import { useWishlist } from '@/lib/client/hooks/use-wishlist';
-import { useCart } from '@/lib/client/hooks/use-cart';
-import { Id } from '@/convex/_generated/dataModel';
-import { useState } from 'react';
-import { cn } from '@/lib/shared/utils';
 import { useConvexAuth } from 'convex/react';
+import { AlertCircle, Heart, Loader2, ShoppingBag, Trash2 } from 'lucide-react';
+import Image from 'next/image';
+import { useState } from 'react';
+import { Link } from '@/components/link';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import type { Id } from '@/convex/_generated/dataModel';
+import { useCart } from '@/lib/client/hooks/use-cart';
+import { useWishlist } from '@/lib/client/hooks/use-wishlist';
+import { cn } from '@/lib/shared/utils';
+
+interface WishlistItem {
+  id: Id<'wishlistItems'>;
+  catalogId: Id<'catalog'>;
+  addedAt: number;
+  notes: string | undefined;
+  product: {
+    id: Id<'catalog'>;
+    name: string;
+    description: string;
+    category: string;
+    price: number;
+    image: string | null;
+    polarProductId: string | undefined;
+    isActive: boolean;
+    inStock: boolean;
+    inventory_qty: number;
+  };
+}
 
 export default function WishlistPage() {
   const { wishlist, removeFromWishlist, clearWishlist } = useWishlist();
@@ -73,7 +92,8 @@ export default function WishlistPage() {
             <AlertCircle className="h-4 w-4 text-yellow-600 dark:text-yellow-500" />
             <AlertDescription className="flex items-center justify-between gap-4">
               <span className="text-sm text-yellow-800 dark:text-yellow-200">
-                Your wishlist is temporary and will be lost if you clear your browser data.{' '}
+                Your wishlist is temporary and will be lost if you clear your
+                browser data.{' '}
                 <strong>Sign in to save your wishlist permanently.</strong>
               </span>
               <Link href="/sign-in">
@@ -103,7 +123,7 @@ export default function WishlistPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {wishlist.items.map((item: any) => {
+            {wishlist.items.map((item: WishlistItem | null) => {
               if (!item) return null;
 
               const isRemoving = removingItems.has(item.catalogId);
@@ -123,7 +143,7 @@ export default function WishlistPage() {
                     className="block relative aspect-[3/4] bg-muted"
                   >
                     <Image
-                      src={item.product.image}
+                      src={item.product.image || '/placeholder.png'}
                       alt={item.product.name}
                       fill
                       className="object-cover transition-transform group-hover:scale-105"
@@ -171,7 +191,7 @@ export default function WishlistPage() {
                         onClick={() =>
                           handleMoveToCart(item.catalogId, {
                             name: item.product.name,
-                            image: item.product.image,
+                            image: item.product.image || '/placeholder.png',
                             price: `$${(item.product.price / 100).toFixed(2)}`,
                           })
                         }
@@ -190,7 +210,7 @@ export default function WishlistPage() {
                         onClick={() =>
                           handleRemove(item.catalogId, {
                             name: item.product.name,
-                            image: item.product.image,
+                            image: item.product.image || '/placeholder.png',
                             price: `$${(item.product.price / 100).toFixed(2)}`,
                           })
                         }

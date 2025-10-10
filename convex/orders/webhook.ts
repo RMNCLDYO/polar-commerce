@@ -3,9 +3,10 @@
  * Handles inventory decrement and cart clearing when orders are paid
  */
 
-import { internalMutation } from '../_generated/server';
-import { internal } from '../_generated/api';
 import { v } from 'convex/values';
+import { internal } from '../_generated/api';
+import type { Id } from '../_generated/dataModel';
+import { internalMutation } from '../_generated/server';
 
 /**
  * Process order.paid webhook
@@ -15,13 +16,16 @@ export const handleOrderPaid = internalMutation({
   args: {
     checkoutId: v.string(),
     orderId: v.string(),
-    metadata: v.record(v.string(), v.any()),
+    metadata: v.record(
+      v.string(),
+      v.union(v.string(), v.number(), v.boolean()),
+    ),
   },
   handler: async (ctx, args) => {
     console.log('[Order Webhook] Processing order.paid:', args.orderId);
     console.log('[Order Webhook] Checkout ID:', args.checkoutId);
 
-    const metadata = args.metadata as Record<string, any>;
+    const metadata = args.metadata as Record<string, string | number | boolean>;
     const cartId = metadata.cartId as string;
     const itemCount = metadata.itemCount as number;
 
@@ -46,7 +50,7 @@ export const handleOrderPaid = internalMutation({
             0,
             internal.catalog.catalog.decrementInventoryInternal,
             {
-              productId: productId as any,
+              productId: productId as Id<'catalog'>,
               quantity,
             },
           );
@@ -69,7 +73,7 @@ export const handleOrderPaid = internalMutation({
           0,
           internal.cart.cart.internal_clearCartItems,
           {
-            cartId: cartId as any,
+            cartId: cartId as Id<'carts'>,
           },
         );
         console.log('  ✓ Scheduled cart clearing');

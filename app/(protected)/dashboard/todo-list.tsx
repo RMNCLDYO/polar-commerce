@@ -1,13 +1,13 @@
-import { useMutation } from 'convex/react';
+import { useMutation, useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
-import { useQuery } from 'convex/react';
+import type { Doc } from '@/convex/_generated/dataModel';
 import {
   AddTodoForm,
-  TodoListContainer,
   TodoCompleteButton,
   TodoEmptyState,
   TodoItem,
   TodoList as TodoListComponent,
+  TodoListContainer,
   TodoRemoveButton,
   TodoText,
 } from './components/todo-components';
@@ -30,7 +30,7 @@ export const TodoList = () => {
     <TodoListContainer>
       <AddTodoForm onSubmit={handleSubmit} />
       <TodoListComponent>
-        {todos.map((todo) => (
+        {todos.map((todo: Doc<'demoTodos'>) => (
           <TodoItem key={todo._id}>
             <TodoCompleteButton
               completed={todo.completed}

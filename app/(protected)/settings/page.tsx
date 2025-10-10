@@ -1,22 +1,22 @@
 'use client';
 
+import { CustomerPortalLink } from '@convex-dev/polar/react';
+import { useQuery } from 'convex/react';
+import { AlertTriangle, ArrowLeft, Crown } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { Link } from '@/components/link';
 import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
-  CardDescription,
 } from '@/components/ui/card';
-import { useState } from 'react';
+import { api } from '@/convex/_generated/api';
 import { authClient } from '@/lib/client/auth';
 import EnableTwoFactor from './EnableTwoFactor';
-import { ArrowLeft, AlertTriangle, Crown } from 'lucide-react';
-import { Link } from '@/components/link';
-import { useRouter } from 'next/navigation';
-import { useQuery } from 'convex/react';
-import { api } from '@/convex/_generated/api';
-import { CustomerPortalLink } from '@convex-dev/polar/react';
 
 export default function SettingsPage() {
   const [showEnable2FA, setShowEnable2FA] = useState(false);
@@ -26,7 +26,6 @@ export default function SettingsPage() {
 
   const handleDisable2FA = async () => {
     try {
-      throw new Error('Not implemented');
       setLoading(true);
       await authClient.twoFactor.disable({
         password: '',
