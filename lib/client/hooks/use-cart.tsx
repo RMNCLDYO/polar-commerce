@@ -1,10 +1,11 @@
 'use client';
 
+import { useConvexAuth, useMutation, useQuery } from 'convex/react';
+import Image from 'next/image';
 import { useEffect, useState } from 'react';
-import { useMutation, useQuery, useConvexAuth } from 'convex/react';
-import { api } from '@/convex/_generated/api';
-import { Id } from '@/convex/_generated/dataModel';
 import { toast } from 'sonner';
+import { api } from '@/convex/_generated/api';
+import type { Id } from '@/convex/_generated/dataModel';
 
 // Generate or get session ID for guest users
 function getSessionId(): string {
@@ -75,10 +76,13 @@ export function useCart() {
         toast.custom(
           (_t) => (
             <div className="bg-background border rounded-lg shadow-lg p-4 flex items-center gap-3 min-w-[300px]">
-              <img
+              <Image
                 src={productInfo.image}
                 alt={productInfo.name}
+                width={48}
+                height={48}
                 className="w-12 h-12 object-cover rounded"
+                unoptimized
               />
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-sm">Added to cart</p>
@@ -135,10 +139,13 @@ export function useCart() {
         toast.custom(
           (_t) => (
             <div className="bg-background border rounded-lg shadow-lg p-4 flex items-center gap-3 min-w-[300px]">
-              <img
+              <Image
                 src={productInfo.image}
                 alt={productInfo.name}
+                width={48}
+                height={48}
                 className="w-12 h-12 object-cover rounded"
+                unoptimized
               />
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-sm">Removed from cart</p>
