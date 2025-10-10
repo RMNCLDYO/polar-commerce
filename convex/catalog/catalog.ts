@@ -1,5 +1,6 @@
 import { v } from 'convex/values';
 import { internal } from '../_generated/api';
+import type { Id } from '../_generated/dataModel';
 import {
   action,
   internalMutation,
@@ -7,6 +8,35 @@ import {
   mutation,
   query,
 } from '../_generated/server';
+
+// Local type definitions for Polar SDK
+interface PolarProduct {
+  id: string;
+  name: string;
+  description?: string | null;
+  isArchived?: boolean;
+  is_archived?: boolean;
+  [key: string]: unknown;
+}
+
+interface ProductsListResponse {
+  result?: {
+    items?: PolarProduct[];
+  };
+}
+
+interface PageIteratorResponse {
+  ok: boolean;
+  value?: ProductsListResponse;
+}
+
+// Sync result type
+interface SyncResult {
+  convexId: Id<'catalog'>;
+  name: string;
+  status: 'already_linked' | 'found_existing' | 'created_new';
+  polarProductId: string;
+}
 
 // Get all products with filters
 export const getProducts = query({
@@ -206,7 +236,7 @@ export const list = query({
 // Sync all Convex products to Polar and link them
 export const syncProductsToPolar = action({
   args: {},
-  handler: async (ctx): Promise<any[]> => {
+  handler: async (ctx): Promise<SyncResult[]> => {
     const { Polar } = await import('@polar-sh/sdk');
 
     const polarClient = new Polar({
@@ -222,13 +252,17 @@ export const syncProductsToPolar = action({
 
     // Get all Polar products - Polar API returns paginated response
     const polarProductsIter = await polarClient.products.list({ limit: 100 });
-    const polarProducts: any[] = [];
+    const polarProducts: PolarProduct[] = [];
     for await (const response of polarProductsIter) {
-      const items = (response as any).result?.items || [];
-      polarProducts.push(...items);
+      const resp = response as unknown as PageIteratorResponse;
+      if (resp.ok && resp.value) {
+        const data = resp.value;
+        const items = data.result?.items || [];
+        polarProducts.push(...items);
+      }
     }
 
-    const results = [];
+    const results: SyncResult[] = [];
 
     for (const convexProduct of convexProducts) {
       // Check if product already linked
@@ -244,7 +278,7 @@ export const syncProductsToPolar = action({
 
       // Check if product exists in Polar by name
       const existingPolarProduct = polarProducts.find(
-        (p: any) => p.name === convexProduct.name,
+        (p) => p.name === convexProduct.name,
       );
 
       let polarProductId: string;
@@ -343,7 +377,10 @@ export const updatePolarProductId = mutation({
     polarProductId: v.union(v.string(), v.null()),
   },
   handler: async (ctx, args) => {
-    const updateData: any = {
+    const updateData: {
+      updatedAt: number;
+      polarProductId?: string;
+    } = {
       updatedAt: Date.now(),
     };
 

@@ -1,5 +1,5 @@
-import Image from 'next/image';
 import { unstable_cache } from 'next/cache';
+import Image from 'next/image';
 import LogoImage from '@/public/logo.png';
 
 // Cache the year for 1 day - it only changes once a year anyway

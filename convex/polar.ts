@@ -1,13 +1,14 @@
 import { Polar } from '@convex-dev/polar';
-import { action, query, internalAction } from './_generated/server';
-import { api, components } from './_generated/api';
-import { v } from 'convex/values';
 import { Polar as PolarSDK } from '@polar-sh/sdk';
+import { v } from 'convex/values';
+import { api, components } from './_generated/api';
+import { action, internalAction, query } from './_generated/server';
 
 export const polar = new Polar(components.polar, {
   // Required: provide a function the component can use to get the current user's ID and email
   getUserInfo: async (ctx): Promise<{ userId: string; email: string }> => {
-    // @ts-ignore - Type instantiation is excessively deep (known Convex issue)
+    // biome-ignore lint/suspicious/noTsIgnore: @ts-ignore needed for dual tsconfig compatibility
+    // @ts-ignore - Type instantiation depth issue (Next.js build only, not tsc -p convex)
     const user = await ctx.runQuery(api.auth.auth.getCurrentUser);
     if (!user) {
       throw new Error('User not authenticated');
@@ -56,11 +57,14 @@ export const syncProducts = action({
 // Matches products by name to subscription tiers
 export const getSubscriptionProducts = query({
   args: {},
-  handler: async (ctx) => {
+  handler: async (
+    ctx,
+  ): Promise<Record<string, { id: string; [key: string]: unknown }>> => {
     const allProducts = await ctx.runQuery(api.polar.listAllProducts, {});
 
     // Filter for subscription products and map them by tier and billing cycle
-    const subscriptionProducts: Record<string, any> = {};
+    const subscriptionProducts: Record<string, (typeof allProducts)[number]> =
+      {};
 
     for (const product of allProducts) {
       const name = product.name.toLowerCase();
@@ -91,9 +95,15 @@ export const archiveBundleProduct = internalAction({
   handler: async (_ctx, args) => {
     console.log('[Polar] Archiving bundle product:', args.productId);
 
+    const token = process.env.POLAR_ORGANIZATION_TOKEN;
+    if (!token) {
+      console.error('[Polar] POLAR_ORGANIZATION_TOKEN not set');
+      return;
+    }
+
     try {
       const polarClient = new PolarSDK({
-        accessToken: process.env.POLAR_ORGANIZATION_TOKEN!,
+        accessToken: token,
         server:
           (process.env.POLAR_SERVER as 'sandbox' | 'production') || 'sandbox',
       });
@@ -106,8 +116,10 @@ export const archiveBundleProduct = internalAction({
       });
 
       console.log('[Polar] ✓ Bundle product archived');
-    } catch (error: any) {
-      console.error('[Polar] Failed to archive bundle product:', error.message);
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
+      console.error('[Polar] Failed to archive bundle product:', errorMessage);
       // Don't throw - this is cleanup and shouldn't block order processing
     }
   },

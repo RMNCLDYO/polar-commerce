@@ -1,17 +1,17 @@
-import Image from 'next/image';
-import { Link } from '@/components/link';
-import { ThemeToggle } from '@/components/layout/header/theme-toggle';
-import { Search } from '@/components/layout/header/search';
-import { UserMenuClient } from '@/components/layout/header/user-menu-client';
-import { CartIcon } from '@/components/cart/cart-icon';
-import { WishlistIcon } from '@/components/wishlist/wishlist-icon';
-import { MobileNav } from '@/components/layout/header/mobile-nav';
-import LogoImage from '@/public/logo.png';
 import { preloadQuery } from 'convex/nextjs';
-import { api } from '@/convex/_generated/api';
-import { Suspense } from 'react';
-import { Skeleton } from '@/components/ui/skeleton';
 import { headers } from 'next/headers';
+import Image from 'next/image';
+import { Suspense } from 'react';
+import { CartIcon } from '@/components/cart/cart-icon';
+import { MobileNav } from '@/components/layout/header/mobile-nav';
+import { Search } from '@/components/layout/header/search';
+import { ThemeToggle } from '@/components/layout/header/theme-toggle';
+import { UserMenuClient } from '@/components/layout/header/user-menu-client';
+import { Link } from '@/components/link';
+import { Skeleton } from '@/components/ui/skeleton';
+import { WishlistIcon } from '@/components/wishlist/wishlist-icon';
+import { api } from '@/convex/_generated/api';
+import LogoImage from '@/public/logo.png';
 
 const NAV_ITEMS = [
   { label: 'NEW', hideBelow: '' }, // Always visible when nav is visible

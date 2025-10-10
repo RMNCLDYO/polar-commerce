@@ -7,8 +7,8 @@
  * https://your-deployment.convex.site/api/webhooks/polar
  */
 
-import { httpAction } from './_generated/server';
 import { internal } from './_generated/api';
+import { httpAction } from './_generated/server';
 
 export const polarWebhookHandler = httpAction(async (ctx, request) => {
   try {
@@ -34,10 +34,12 @@ export const polarWebhookHandler = httpAction(async (ctx, request) => {
             metadata,
           });
           console.log('[Polar Webhook] ✓ Order processing initiated');
-        } catch (error: any) {
+        } catch (error: unknown) {
+          const errorMessage =
+            error instanceof Error ? error.message : 'Unknown error';
           console.error(
             '[Polar Webhook] ✗ Failed to process order:',
-            error.message,
+            errorMessage,
           );
         }
       }
@@ -81,9 +83,11 @@ export const polarWebhookHandler = httpAction(async (ctx, request) => {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage =
+      error instanceof Error ? error.message : 'Unknown error';
     console.error('[Polar Webhook] Error:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ error: errorMessage }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },
     });

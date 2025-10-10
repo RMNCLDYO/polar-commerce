@@ -8,10 +8,10 @@
  */
 
 import { CustomerPortalLink } from '@convex-dev/polar/react';
-import { api } from '@/convex/_generated/api';
-import { Card } from '@/components/ui/card';
 import { useQuery } from 'convex/react';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { api } from '@/convex/_generated/api';
 
 export default function CustomerPortalPage() {
   const user = useQuery(api.auth.auth.getCurrentUser);

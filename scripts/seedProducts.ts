@@ -1,13 +1,50 @@
+import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { Polar } from '@polar-sh/sdk';
 import { ConvexHttpClient } from 'convex/browser';
-import { api } from '../convex/_generated/api';
 import * as dotenv from 'dotenv';
-import { readFileSync } from 'fs';
-import { join } from 'path';
-import { createHash } from 'crypto';
+import { api } from '../convex/_generated/api';
+import type { Id } from '../convex/_generated/dataModel';
 
 // Load environment variables
 dotenv.config({ path: '.env.local' });
+
+// Local type definitions for Polar SDK (to avoid build issues with deep imports)
+interface PolarProduct {
+  id: string;
+  name: string;
+  description?: string | null;
+  isArchived?: boolean;
+  is_archived?: boolean;
+  medias?: Array<{ id: string; publicUrl?: string }>;
+  [key: string]: unknown;
+}
+
+interface ProductsListResponse {
+  result?: {
+    items?: PolarProduct[];
+  };
+}
+
+interface PageIteratorResponse {
+  ok: boolean;
+  value?: ProductsListResponse;
+}
+
+interface PolarFile {
+  id: string;
+  publicUrl?: string;
+  [key: string]: unknown;
+}
+
+interface ConvexProduct {
+  _id: string;
+  name: string;
+  polarProductId?: string | null;
+  polarImageUrl?: string | null;
+  [key: string]: unknown;
+}
 
 const colors = {
   reset: '\x1b[0m',
@@ -80,12 +117,16 @@ async function seedProducts() {
     );
 
     const polarProductsIter = await polarClient.products.list({ limit: 100 });
-    const existingPolarProducts: any[] = [];
+    const existingPolarProducts: PolarProduct[] = [];
     for await (const response of polarProductsIter) {
-      const items = (response as any).result?.items || [];
-      existingPolarProducts.push(
-        ...items.filter((p: any) => !p.isArchived && !p.is_archived),
-      );
+      const resp = response as unknown as PageIteratorResponse;
+      if (resp.ok && resp.value) {
+        const data = resp.value;
+        const items = data.result?.items || [];
+        existingPolarProducts.push(
+          ...items.filter((p) => !p.isArchived && !p.is_archived),
+        );
+      }
     }
     console.log(
       `  Found ${existingPolarProducts.length} existing Polar products`,
@@ -118,10 +159,10 @@ async function seedProducts() {
       try {
         // Check/Create in Polar
         const existingPolarProduct = existingPolarProducts.find(
-          (p: any) => p.name === product.name,
+          (p) => p.name === product.name,
         );
 
-        let polarProduct: any;
+        let polarProduct: PolarProduct;
         if (existingPolarProduct) {
           console.log(
             `  ${colors.yellow}✓ Polar product exists, updating...${colors.reset}`,
@@ -222,7 +263,7 @@ async function seedProducts() {
         const s3Response = await fetch(part.url, {
           method: 'PUT',
           headers: uploadHeaders,
-          body: imageBuffer as any,
+          body: imageBuffer as BodyInit,
         });
 
         if (!s3Response.ok) {
@@ -262,12 +303,12 @@ async function seedProducts() {
         );
 
         // Add/Update in Convex
-        const existingConvexProduct = existingConvexProducts.find(
-          (p: any) => p.name === product.name,
-        );
+        const existingConvexProduct = (
+          existingConvexProducts as ConvexProduct[]
+        ).find((p) => p.name === product.name);
 
-        const polarImageUrl =
-          'publicUrl' in uploadedFile ? uploadedFile.publicUrl : undefined;
+        const uploadedFileTyped = uploadedFile as PolarFile;
+        const polarImageUrl = uploadedFileTyped.publicUrl;
         let convexId: string;
 
         if (existingConvexProduct) {
@@ -275,7 +316,7 @@ async function seedProducts() {
             `  ${colors.yellow}✓ Convex product exists, updating...${colors.reset}`,
           );
           await convexClient.mutation(api.catalog.catalog.updateProduct, {
-            productId: existingConvexProduct._id,
+            productId: existingConvexProduct._id as Id<'catalog'>,
             updates: {
               price: product.price,
               category: product.category,
@@ -322,9 +363,11 @@ async function seedProducts() {
           polarId: polarProduct.id,
           convexId: convexId,
         });
-      } catch (error: any) {
+      } catch (error: unknown) {
+        const errorMessage =
+          error instanceof Error ? error.message : 'Unknown error';
         console.error(
-          `  ${colors.red}❌ Error: ${error.message}${colors.reset}\n`,
+          `  ${colors.red}❌ Error: ${errorMessage}${colors.reset}\n`,
         );
       }
     }
@@ -334,19 +377,19 @@ async function seedProducts() {
       `${colors.yellow}✅ Step 3: Verifying product sync...${colors.reset}`,
     );
 
-    const finalConvexProducts = await convexClient.query(
+    const finalConvexProducts = (await convexClient.query(
       api.catalog.catalog.getAllProductsRaw,
       {},
-    );
+    )) as ConvexProduct[];
     console.log(
       `  ${colors.green}✓ Total products in Convex: ${finalConvexProducts.length}${colors.reset}`,
     );
 
     const syncedCount = finalConvexProducts.filter(
-      (p: any) => p.polarProductId,
+      (p) => p.polarProductId,
     ).length;
     const imagesCount = finalConvexProducts.filter(
-      (p: any) => p.polarImageUrl,
+      (p) => p.polarImageUrl,
     ).length;
 
     console.log(
@@ -357,11 +400,11 @@ async function seedProducts() {
     );
 
     // Display summary
-    console.log('\n' + '='.repeat(70));
+    console.log(`\n${'='.repeat(70)}`);
     console.log(
       `${colors.bright}${colors.green}✅ PRODUCT SEEDING COMPLETE!${colors.reset}`,
     );
-    console.log('='.repeat(70) + '\n');
+    console.log(`${'='.repeat(70)}\n`);
 
     console.log('Processed Products:');
     console.log('─'.repeat(70));
@@ -374,23 +417,25 @@ async function seedProducts() {
 
     console.log('─'.repeat(70));
     console.log('Product Status:');
-    finalConvexProducts.forEach((p: any) => {
+    finalConvexProducts.forEach((p) => {
       const hasImage = p.polarImageUrl ? '✅' : '❌';
       const hasLink = p.polarProductId ? '✅' : '❌';
       console.log(`  ${hasLink} Linked  ${hasImage} Image  - ${p.name}`);
     });
 
-    console.log('\n' + '='.repeat(70));
+    console.log(`\n${'='.repeat(70)}`);
     console.log('Next steps:');
     console.log('  1. Verify products in Polar dashboard');
     console.log("  2. Test product pages with 'npm run dev'");
     console.log('  3. Check image display on /shop page');
     console.log('='.repeat(70));
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage =
+      error instanceof Error ? error.message : 'Unknown error';
     console.error(`\n${colors.red}❌ Seeding failed!${colors.reset}`);
-    console.error(`Error: ${error.message}`);
+    console.error(`Error: ${errorMessage}`);
 
-    if (error.message.includes('401')) {
+    if (errorMessage.includes('401')) {
       console.error('\n🔑 Authentication failed. Please check:');
       console.error('   1. POLAR_ORGANIZATION_TOKEN is correct');
       console.error('   2. Token has not expired');

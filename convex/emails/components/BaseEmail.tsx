@@ -3,12 +3,13 @@ import {
   Container,
   Head,
   Html,
-  Link,
-  Text,
   Img,
+  Link,
   Preview,
+  Text,
 } from '@react-email/components';
-import React from 'react';
+// biome-ignore lint/style/useImportType: React is needed for JSX runtime
+import React, { Fragment } from 'react';
 
 export interface BaseEmailProps {
   children: React.ReactNode;
@@ -100,7 +101,7 @@ export function BaseEmail({
 
           <Text style={styles.footer}>
             {footerLinks.map((link, i) => (
-              <React.Fragment key={link.href}>
+              <Fragment key={link.href}>
                 <Link
                   href={link.href}
                   target="_blank"
@@ -109,7 +110,7 @@ export function BaseEmail({
                   {link.text}
                 </Link>
                 {i < footerLinks.length - 1 && ' • '}
-              </React.Fragment>
+              </Fragment>
             ))}
             {footerLinks.length > 0 && <br />}
             {footerText || (

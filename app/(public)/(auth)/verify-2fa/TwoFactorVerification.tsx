@@ -1,21 +1,21 @@
 'use client';
 
+import { Loader2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { Link } from '@/components/link';
 import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
-  CardDescription,
 } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
-import { useState } from 'react';
-import { Loader2 } from 'lucide-react';
 import { authClient } from '@/lib/client/auth';
-import { useRouter } from 'next/navigation';
-import { Link } from '@/components/link';
 
 type VerificationMethod = 'totp' | 'otp' | 'backup';
 

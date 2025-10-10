@@ -1,6 +1,9 @@
 'use client';
 
+import { LayoutDashboard, LogOut, Settings, User } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { Link } from '@/components/link';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -10,10 +13,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { User, LayoutDashboard, Settings, LogOut } from 'lucide-react';
 import { authClient } from '@/lib/client/auth';
-import { useRouter } from 'next/navigation';
 
 interface UserMenuProps {
   user: {

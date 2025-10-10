@@ -1,11 +1,11 @@
 import {
   createClient,
-  GenericCtx,
+  type GenericCtx,
   getStaticAuth,
 } from '@convex-dev/better-auth';
 import { convex } from '@convex-dev/better-auth/plugins';
 import { requireActionCtx } from '@convex-dev/better-auth/utils';
-import { betterAuth, BetterAuthOptions } from 'better-auth';
+import { type BetterAuthOptions, betterAuth } from 'better-auth';
 import {
   anonymous,
   emailOTP,
@@ -14,22 +14,22 @@ import {
   twoFactor,
   username,
 } from 'better-auth/plugins';
+import { components, internal } from '../_generated/api';
+import type { DataModel } from '../_generated/dataModel';
+import { type QueryCtx, query } from '../_generated/server';
 import {
   sendEmailVerification,
   sendMagicLink,
   sendOTPVerification,
   sendResetPassword,
 } from '../emails/email';
-import { components, internal } from '../_generated/api';
-import { DataModel } from '../_generated/dataModel';
-import { query, QueryCtx } from '../_generated/server';
 import { polar } from '../polar';
 
 const siteUrl = process.env.SITE_URL;
 
 // @ts-expect-error - Circular type reference with internal.auth
 export const authComponent = createClient<DataModel>(components.betterAuth, {
-  authFunctions: internal.auth.auth as any,
+  authFunctions: internal.auth.auth,
   verbose: false,
   triggers: {
     user: {
@@ -226,7 +226,7 @@ export const getCurrentUser = query({
         isStarter: tier === 'starter',
         isPremium: tier === 'premium',
       };
-    } catch (error) {
+    } catch (_error) {
       // If subscription check fails, return user without subscription data
       return {
         ...user,

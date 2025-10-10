@@ -1,4 +1,8 @@
 'use client';
+import { Loader2, X } from 'lucide-react';
+import Image from 'next/image';
+import { useState } from 'react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -9,10 +13,14 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useState } from 'react';
-import { Loader2, X } from 'lucide-react';
 import { authClient } from '@/lib/client/auth';
-import { toast } from 'sonner';
+
+interface AuthErrorContext {
+  error: {
+    message: string;
+  };
+  response?: unknown;
+}
 
 export default function SignUp() {
   const [firstName, setFirstName] = useState('');
@@ -51,7 +59,7 @@ export default function SignUp() {
         onSuccess: () => {
           setLoading(false);
         },
-        onError: async (ctx: any) => {
+        onError: async (ctx: AuthErrorContext) => {
           setLoading(false);
           console.error(ctx.error);
           console.error('response', ctx.response);
@@ -137,10 +145,12 @@ export default function SignUp() {
             <div className="flex items-end gap-4">
               {imagePreview && (
                 <div className="relative w-16 h-16 rounded-sm overflow-hidden">
-                  <img
+                  <Image
                     src={imagePreview}
                     alt="Profile preview"
-                    className="w-full h-full object-cover"
+                    fill
+                    className="object-cover"
+                    unoptimized
                   />
                 </div>
               )}

@@ -1,7 +1,7 @@
 'use client';
 
-import { usePreloadedQuery, Preloaded } from 'convex/react';
-import { api } from '@/convex/_generated/api';
+import { type Preloaded, usePreloadedQuery } from 'convex/react';
+import type { api } from '@/convex/_generated/api';
 import { UserMenu } from './user-menu';
 
 interface UserMenuClientProps {

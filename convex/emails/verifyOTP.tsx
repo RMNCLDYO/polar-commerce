@@ -1,5 +1,4 @@
-// @ts-ignore - React is required for JSX syntax
-import React from 'react';
+// @ts-nocheck - React needed for convex TypeScript compilation
 import { Heading, Text } from '@react-email/components';
 import { BaseEmail, styles } from './components/BaseEmail';
 

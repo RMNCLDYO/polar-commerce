@@ -1,19 +1,19 @@
 'use client';
 
+import { Loader2 } from 'lucide-react';
 import Image from 'next/image';
 import { useRef, useState } from 'react';
 import { Link } from '@/components/link';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import { AddToWishlistButton } from '@/components/wishlist/add-to-wishlist-button';
+import type { Id } from '@/convex/_generated/dataModel';
 import { useCart } from '@/lib/client/hooks/use-cart';
 import { logger } from '@/lib/shared/logger';
 import type { Product } from '@/lib/shared/types';
 import { cn } from '@/lib/shared/utils';
-import { Loader2 } from 'lucide-react';
-import { Id } from '@/convex/_generated/dataModel';
-import { AddToWishlistButton } from '@/components/wishlist/add-to-wishlist-button';
 
 interface ProductCardProps {
   product: Product;

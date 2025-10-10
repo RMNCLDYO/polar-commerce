@@ -1,10 +1,10 @@
 'use client';
 
 import { Heart } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { useWishlist } from '@/lib/client/hooks/use-wishlist';
 import { Link } from '@/components/link';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { useWishlist } from '@/lib/client/hooks/use-wishlist';
 
 export function WishlistIcon() {
   const { wishlistCount } = useWishlist();

@@ -1,9 +1,12 @@
 'use client';
 
+import { useConvexAuth } from 'convex/react';
+import { Menu, Search as SearchIcon, X } from 'lucide-react';
+import Form from 'next/form';
+import { useSearchParams } from 'next/navigation';
 import { useState } from 'react';
-import { Menu, X, Search as SearchIcon } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { Link } from '@/components/link';
+import { Button } from '@/components/ui/button';
 import {
   Drawer,
   DrawerClose,
@@ -11,12 +14,9 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from '@/components/ui/drawer';
-import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import Form from 'next/form';
-import { useSearchParams } from 'next/navigation';
-import { useConvexAuth } from 'convex/react';
+import { Separator } from '@/components/ui/separator';
 
 const NAV_ITEMS = [
   { label: 'NEW', href: '/new' },

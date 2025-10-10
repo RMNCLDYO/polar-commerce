@@ -1,10 +1,10 @@
 'use client';
 
+import { Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import type { Id } from '@/convex/_generated/dataModel';
 import { useCart } from '@/lib/client/hooks/use-cart';
-import { Id } from '@/convex/_generated/dataModel';
-import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/shared/utils';
 
 interface QuickAddButtonProps {

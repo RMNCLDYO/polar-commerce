@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useAction, useQuery } from 'convex/react';
+import { AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
-import { CheckCircle, Loader2, AlertCircle } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { Link } from '@/components/link';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { useAction, useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 
 export default function CheckoutSuccessPage() {
@@ -110,14 +110,16 @@ export default function CheckoutSuccessPage() {
               </div>
               <div className="border-t pt-3 mt-3">
                 <p className="text-sm font-semibold mb-2">Items:</p>
-                {order.products.map((product, index) => (
-                  <div key={index} className="text-sm flex justify-between">
-                    <span>
-                      {product.name} × {product.quantity}
-                    </span>
-                    <span>${(product.price / 100).toFixed(2)}</span>
-                  </div>
-                ))}
+                {order.products.map(
+                  (product: (typeof order.products)[number], index: number) => (
+                    <div key={index} className="text-sm flex justify-between">
+                      <span>
+                        {product.name} × {product.quantity}
+                      </span>
+                      <span>${(product.price / 100).toFixed(2)}</span>
+                    </div>
+                  ),
+                )}
               </div>
             </div>
           </Card>

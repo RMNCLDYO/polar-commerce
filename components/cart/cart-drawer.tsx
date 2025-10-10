@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { AlertCircle, Minus, Plus, ShoppingBag, Trash2 } from 'lucide-react';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { Link } from '@/components/link';
-import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { ShoppingBag, Plus, Minus, Trash2, AlertCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import {
   Drawer,
   DrawerClose,
@@ -15,9 +16,8 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from '@/components/ui/drawer';
+import type { Id } from '@/convex/_generated/dataModel';
 import { useCart } from '@/lib/client/hooks/use-cart';
-import { Id } from '@/convex/_generated/dataModel';
-import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/shared/utils';
 
 interface CartDrawerProps {
@@ -119,7 +119,7 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
             </div>
           ) : (
             <div className="space-y-4">
-              {cart.items.map((item) => {
+              {cart.items.map((item: (typeof cart.items)[number]) => {
                 if (!item) return null;
                 const isUpdating = updatingItems.has(item.catalogId);
                 return (
@@ -247,7 +247,7 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
               <Alert variant="destructive" className="mb-4">
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>
-                  {cartValidation.errors.map((error, index) => (
+                  {cartValidation.errors.map((error: string, index: number) => (
                     <p key={index}>{error}</p>
                   ))}
                 </AlertDescription>

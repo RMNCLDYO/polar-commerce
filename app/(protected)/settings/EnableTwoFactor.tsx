@@ -1,21 +1,21 @@
 'use client';
 
+import { useQuery } from 'convex/react';
+import { ArrowLeft, Check, Copy, Loader2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import QRCode from 'react-qr-code';
 import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
-  CardDescription,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useState, useEffect } from 'react';
-import { Loader2, Copy, Check, ArrowLeft } from 'lucide-react';
-import { authClient } from '@/lib/client/auth';
-import QRCode from 'react-qr-code';
 import { api } from '@/convex/_generated/api';
-import { useQuery } from 'convex/react';
+import { authClient } from '@/lib/client/auth';
 
 type SetupStep =
   | 'loading'
@@ -23,6 +23,11 @@ type SetupStep =
   | 'password'
   | 'qr-verify'
   | 'backup';
+
+interface AccountInfo {
+  providerId: string;
+  [key: string]: unknown;
+}
 
 export default function EnableTwoFactor() {
   const user = useQuery(api.auth.auth.getCurrentUser);
@@ -39,7 +44,7 @@ export default function EnableTwoFactor() {
       const accounts = await authClient.listAccounts();
       if ('data' in accounts && accounts.data) {
         const hasCredential = accounts.data.some(
-          (account: any) => account.providerId === 'credential',
+          (account: AccountInfo) => account.providerId === 'credential',
         );
         setStep(hasCredential ? 'password' : 'need-password');
       }

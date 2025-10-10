@@ -1,6 +1,6 @@
 import 'server-only';
-import { generateText } from 'ai';
 import { google } from '@ai-sdk/google';
+import { generateText } from 'ai';
 import { type NextRequest, NextResponse } from 'next/server';
 import { logger } from '@/lib/shared/logger';
 

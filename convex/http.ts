@@ -1,7 +1,7 @@
 import { httpRouter } from 'convex/server';
 import { authComponent, createAuth } from './auth/auth';
+import { checkoutOptions, createCheckout } from './checkout/http';
 import { polar } from './polar';
-import { createCheckout, checkoutOptions } from './checkout/http';
 import './utils/polyfills';
 
 const http = httpRouter();
@@ -27,7 +27,7 @@ authComponent.registerRoutes(http, createAuth);
 // - Customers (created, updated, deleted)
 // - Products (created, updated)
 // - Subscriptions (created, updated, active, canceled, uncanceled, revoked)
-polar.registerRoutes(http as any, {
+polar.registerRoutes(http, {
   // Optional: Custom path (defaults to "/polar/events")
   // path: "/polar/events",
 

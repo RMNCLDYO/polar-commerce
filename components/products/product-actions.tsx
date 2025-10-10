@@ -2,7 +2,7 @@
 
 import { AddToCartButton } from '@/components/cart/add-to-cart-button';
 import { AddToWishlistButton } from '@/components/wishlist/add-to-wishlist-button';
-import { Id } from '@/convex/_generated/dataModel';
+import type { Id } from '@/convex/_generated/dataModel';
 
 interface ProductActionsProps {
   catalogId: string;
