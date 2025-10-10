@@ -1,14 +1,16 @@
 import '../utils/polyfills';
-// @ts-ignore - React is required for JSX syntax in render() calls
-import React from 'react';
-import VerifyEmail from './verifyEmail';
-import MagicLinkEmail from './magicLink';
-import VerifyOTP from './verifyOTP';
-import { render } from '@react-email/components';
-import ResetPasswordEmail from './resetPassword';
-import { components } from '../_generated/api';
 import { Resend } from '@convex-dev/resend';
-import { type ActionCtx } from '../_generated/server';
+import { render } from '@react-email/components';
+// biome-ignore lint/suspicious/noTsIgnore: dual tsconfig compatibility
+// @ts-ignore - React needed for tsc but not Next.js
+// biome-ignore lint/correctness/noUnusedImports: React needed for tsc JSX
+import React from 'react';
+import { components } from '../_generated/api';
+import type { ActionCtx } from '../_generated/server';
+import MagicLinkEmail from './magicLink';
+import ResetPasswordEmail from './resetPassword';
+import VerifyEmail from './verifyEmail';
+import VerifyOTP from './verifyOTP';
 
 export const resend: Resend = new Resend(components.resend, {
   testMode: false,
