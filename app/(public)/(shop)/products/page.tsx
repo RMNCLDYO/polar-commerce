@@ -12,8 +12,6 @@ import type { Id } from '@/convex/_generated/dataModel';
 import { getProducts, type ProductFilters } from '@/lib/server/data/products';
 import { cn } from '@/lib/shared/utils';
 
-export const experimental_ppr = true;
-
 interface ProductsPageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
@@ -47,10 +45,16 @@ async function CachedProductsContent({
   const products = await getProducts(filters);
 
   return (
-    <main className="px-8 py-12">
+    <main
+      className="px-8 py-12"
+      style={{ viewTransitionName: 'products-content' }}
+    >
       <div className="mx-auto max-w-7xl">
         <div className="mb-12">
-          <h1 className="text-3xl font-bold tracking-tight mb-4">
+          <h1
+            className="text-3xl font-bold tracking-tight mb-4"
+            style={{ viewTransitionName: 'page-title' }}
+          >
             {search
               ? `Search results for "${search}"`
               : category

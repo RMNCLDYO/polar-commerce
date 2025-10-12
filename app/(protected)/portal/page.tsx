@@ -9,6 +9,7 @@
 
 import { CustomerPortalLink } from '@convex-dev/polar/react';
 import { useQuery } from 'convex/react';
+import { Link } from '@/components/link';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { api } from '@/convex/_generated/api';
@@ -20,12 +21,20 @@ export default function CustomerPortalPage() {
     return <div>Loading...</div>;
   }
 
-  const subscription = user?.subscription;
+  const subscription = user.subscription;
 
   return (
-    <main className="min-h-screen px-8 py-12">
+    <main
+      className="min-h-screen px-8 py-12"
+      style={{ viewTransitionName: 'portal-content' }}
+    >
       <div className="mx-auto max-w-4xl">
-        <h1 className="text-3xl font-bold mb-8">Manage Subscription</h1>
+        <h1
+          className="text-3xl font-bold mb-8"
+          style={{ viewTransitionName: 'page-title' }}
+        >
+          Manage Subscription
+        </h1>
 
         {subscription ? (
           <Card className="p-6">
@@ -80,7 +89,9 @@ export default function CustomerPortalPage() {
               You don&apos;t have an active subscription yet.
             </p>
             <Button asChild>
-              <a href="/pricing">View Plans</a>
+              <Link href="/pricing" prefetchStrategy="hover">
+                View Plans
+              </Link>
             </Button>
           </Card>
         )}

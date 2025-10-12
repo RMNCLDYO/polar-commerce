@@ -113,7 +113,10 @@ export default function EnableTwoFactor() {
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center p-4">
+    <div
+      className="min-h-screen w-full flex items-center justify-center p-4"
+      style={{ viewTransitionName: 'twofa-setup' }}
+    >
       <div className="w-full max-w-md">
         {(step === 'password' || step === 'need-password') && (
           <Button

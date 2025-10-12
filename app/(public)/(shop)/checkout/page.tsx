@@ -227,9 +227,17 @@ export default function CheckoutPage() {
   const total = subtotal - discountAmount + shipping;
 
   return (
-    <main className="min-h-screen px-8 py-12">
+    <main
+      className="min-h-screen px-8 py-12"
+      style={{ viewTransitionName: 'checkout-content' }}
+    >
       <div className="mx-auto max-w-6xl">
-        <h1 className="text-3xl font-bold mb-8">Checkout</h1>
+        <h1
+          className="text-3xl font-bold mb-8"
+          style={{ viewTransitionName: 'page-title' }}
+        >
+          Checkout
+        </h1>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column: Order Details & Options */}

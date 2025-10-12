@@ -120,10 +120,16 @@ async function CachedCategoryContent({
   };
 
   return (
-    <main className="px-8 py-12">
+    <main
+      className="px-8 py-12"
+      style={{ viewTransitionName: 'category-content' }}
+    >
       <div className="mx-auto max-w-7xl">
         <div className="mb-12">
-          <h1 className="text-3xl font-bold tracking-tight mb-4">
+          <h1
+            className="text-3xl font-bold tracking-tight mb-4"
+            style={{ viewTransitionName: 'page-title' }}
+          >
             {config.title}
           </h1>
           <p className="text-muted-foreground min-h-[24px]">

@@ -53,7 +53,10 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div
+      className="container mx-auto px-4 py-8"
+      style={{ viewTransitionName: 'settings-content' }}
+    >
       <div className="max-w-2xl mx-auto">
         {showEnable2FA ? (
           <EnableTwoFactor />
