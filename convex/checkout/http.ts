@@ -6,6 +6,8 @@
 
 import { api } from '../_generated/api';
 import { httpAction } from '../_generated/server';
+import { getCorsHeaders, getPreflightHeaders } from '../utils/cors';
+import { logger } from '../utils/logger';
 import type { CheckoutSessionResponse } from './types';
 
 /**
@@ -40,24 +42,25 @@ function getClientIp(headers: Headers): string | null {
  * Request body should include all checkout options
  */
 export const createCheckout = httpAction(async (ctx, request) => {
-  try {
-    // Parse request body
-    const body = await request.json();
-    console.log('[Checkout HTTP] Request body:', JSON.stringify(body, null, 2));
+  const origin = request.headers.get('origin');
 
-    // Extract customer IP from headers
+  try {
+    const body = await request.json();
+    logger.debug(
+      '[Checkout HTTP] Request body:',
+      JSON.stringify(body, null, 2),
+    );
+
     const customerIpAddress = getClientIp(request.headers);
 
     if (customerIpAddress) {
-      console.log('[Checkout HTTP] Customer IP:', customerIpAddress);
+      logger.info('[Checkout HTTP] Customer IP:', customerIpAddress);
     } else {
-      console.warn('[Checkout HTTP] Could not determine customer IP address');
+      logger.warn('[Checkout HTTP] Could not determine customer IP address');
     }
 
-    // This endpoint is only used for guest checkouts (IP tracking)
-    // Authenticated users call the action directly from the frontend
-    console.log('[Checkout HTTP] Guest checkout with IP tracking');
-    console.log('[Checkout HTTP] Calling createCheckoutSession...');
+    logger.info('[Checkout HTTP] Guest checkout with IP tracking');
+    logger.debug('[Checkout HTTP] Calling createCheckoutSession...');
     const result = (await ctx.runAction(
       api.checkout.checkout.createCheckoutSession,
       {
@@ -66,23 +69,18 @@ export const createCheckout = httpAction(async (ctx, request) => {
       },
     )) as CheckoutSessionResponse;
 
-    console.log('[Checkout HTTP] Checkout created successfully');
+    logger.info('[Checkout HTTP] Checkout created successfully');
 
     return new Response(JSON.stringify(result), {
       status: 200,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*', // Configure based on your domain
-        'Access-Control-Allow-Methods': 'POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-      },
+      headers: getCorsHeaders(origin),
     });
   } catch (error: unknown) {
     const errorMessage =
       error instanceof Error
         ? error.message
         : 'Failed to create checkout session';
-    console.error('Checkout creation error:', error);
+    logger.error('Checkout creation error:', error);
     return new Response(
       JSON.stringify({
         success: false,
@@ -90,12 +88,7 @@ export const createCheckout = httpAction(async (ctx, request) => {
       }),
       {
         status: 500,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'POST, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-        },
+        headers: getCorsHeaders(origin),
       },
     );
   }
@@ -107,11 +100,6 @@ export const createCheckout = httpAction(async (ctx, request) => {
 export const checkoutOptions = httpAction(async (_ctx, _request) => {
   return new Response(null, {
     status: 204,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-      'Access-Control-Max-Age': '86400',
-    },
+    headers: getPreflightHeaders(),
   });
 });

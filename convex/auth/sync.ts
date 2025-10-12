@@ -2,6 +2,7 @@ import { Polar as PolarSDK } from '@polar-sh/sdk';
 import { v } from 'convex/values';
 import { api, components, internal } from '../_generated/api';
 import { action, internalAction } from '../_generated/server';
+import { logger } from '../utils/logger';
 
 // Local type definitions for Polar SDK
 interface PolarCustomer {
@@ -57,10 +58,9 @@ export const onUserCreated = internalAction({
     linkedOrders?: number;
     error?: string;
   }> => {
-    console.log(`🆕 New user created: ${email}`);
+    logger.info(`New user created: ${email}`);
 
     try {
-      // 1. Ensure Polar customer exists
       const result = await ctx.runAction(
         // biome-ignore lint/suspicious/noTsIgnore: Type instantiation depth requires @ts-ignore for dual tsconfig
         // @ts-ignore - Type instantiation depth issue with Convex generated types (tsc -p convex only)
@@ -72,9 +72,8 @@ export const onUserCreated = internalAction({
         },
       );
 
-      console.log(`✅ Polar customer ready for ${email} (${result.source})`);
+      logger.info(`Polar customer ready for ${email} (${result.source})`);
 
-      // 2. Link any existing guest orders to this user
       const orderLinkResult = await ctx.runMutation(
         internal.orders.sync.linkOrdersToUser,
         {
@@ -84,14 +83,12 @@ export const onUserCreated = internalAction({
       );
 
       if (orderLinkResult.linkedOrders > 0) {
-        console.log(
-          `✅ Linked ${orderLinkResult.linkedOrders} guest orders to user ${email}`,
+        logger.info(
+          `Linked ${orderLinkResult.linkedOrders} guest orders to user ${email}`,
         );
       }
 
-      // 3. User starts on free tier by default
-      // No subscription needed - tier detection handles this
-      console.log(`✅ User ${email} assigned to FREE tier (default)`);
+      logger.info(`User ${email} assigned to FREE tier (default)`);
 
       return {
         success: true,
@@ -101,8 +98,7 @@ export const onUserCreated = internalAction({
     } catch (error: unknown) {
       const errorMessage =
         error instanceof Error ? error.message : 'Unknown error';
-      console.error(`❌ Failed to sync user ${email}:`, error);
-      // Don't throw - user account still created, they can checkout later
+      logger.error(`Failed to sync user ${email}:`, error);
       return { success: false, error: errorMessage };
     }
   },
@@ -115,12 +111,10 @@ export const onUserCreated = internalAction({
 export const syncAllUsers = action({
   args: {},
   handler: async (_ctx) => {
-    console.log('🔄 Syncing all users to Polar...\n');
+    logger.info('Syncing all users to Polar...');
 
-    // Note: We can't directly query betterAuth.users
-    // This would need to be called from client context with authenticated users
-    console.log('⚠️  This action should be called per-user from the client');
-    console.log('   Use: api.userSync.ensureCurrentUserSynced');
+    logger.warn('This action should be called per-user from the client');
+    logger.info('Use: api.userSync.ensureCurrentUserSynced');
 
     return { message: 'Use ensureCurrentUserSynced for each user' };
   },
@@ -143,7 +137,7 @@ export const ensureUserSynced = action({
     customerId: string;
     source: string;
   }> => {
-    console.log(`Ensuring user is synced: ${email}`);
+    logger.debug(`Ensuring user is synced: ${email}`);
 
     const result = await ctx.runAction(api.polarCustomer.ensurePolarCustomer, {
       userId,
@@ -170,11 +164,11 @@ export const ensureUserSynced = action({
 export const syncOrphanedCustomers = internalAction({
   args: {},
   handler: async (ctx) => {
-    console.log('🔄 [CRON] Checking for orphaned Polar customers...');
+    logger.info('[CRON] Checking for orphaned Polar customers...');
 
     const token = process.env.POLAR_ORGANIZATION_TOKEN;
     if (!token) {
-      console.error('❌ POLAR_ORGANIZATION_TOKEN not set');
+      logger.error('POLAR_ORGANIZATION_TOKEN not set');
       return;
     }
 
@@ -185,7 +179,6 @@ export const syncOrphanedCustomers = internalAction({
     });
 
     try {
-      // Get all customers from Polar
       const customersIter = await polarClient.customers.list({ limit: 100 });
       const allCustomers: PolarCustomer[] = [];
 
@@ -198,7 +191,7 @@ export const syncOrphanedCustomers = internalAction({
         }
       }
 
-      console.log(`Found ${allCustomers.length} customers in Polar`);
+      logger.info(`Found ${allCustomers.length} customers in Polar`);
 
       let synced = 0;
       let alreadyLinked = 0;
@@ -207,13 +200,12 @@ export const syncOrphanedCustomers = internalAction({
         const userIdRaw = customer.metadata?.userId;
 
         if (!userIdRaw || typeof userIdRaw !== 'string') {
-          console.log(`⚠️  Customer ${customer.email} has no userId metadata`);
+          logger.warn(`Customer ${customer.email} has no userId metadata`);
           continue;
         }
 
         const userId: string = userIdRaw;
 
-        // Check if customer is already linked in Convex
         const existing = await ctx.runQuery(
           components.polar.lib.getCustomerByUserId,
           { userId },
@@ -224,7 +216,6 @@ export const syncOrphanedCustomers = internalAction({
           continue;
         }
 
-        // Customer is orphaned - sync it
         try {
           await ctx.runMutation(components.polar.lib.insertCustomer, {
             id: customer.id,
@@ -259,18 +250,17 @@ export const syncOrphanedCustomers = internalAction({
             >,
           });
 
-          console.log(`✅ Synced orphaned customer: ${customer.email}`);
+          logger.info(`Synced orphaned customer: ${customer.email}`);
           synced++;
         } catch (error) {
-          console.error(`Failed to sync customer ${customer.email}:`, error);
+          logger.error(`Failed to sync customer ${customer.email}:`, error);
         }
       }
 
-      console.log(`✅ [CRON] Orphaned customer sync complete`);
-      console.log(`   - Already linked: ${alreadyLinked}`);
-      console.log(`   - Newly synced: ${synced}`);
+      logger.info('[CRON] Orphaned customer sync complete');
+      logger.info(`Already linked: ${alreadyLinked}, Newly synced: ${synced}`);
     } catch (error: unknown) {
-      console.error('❌ [CRON] Orphaned customer sync failed:', error);
+      logger.error('[CRON] Orphaned customer sync failed:', error);
     }
   },
 });

@@ -8,6 +8,7 @@ import {
   mutation,
   query,
 } from '../_generated/server';
+import { logger } from '../utils/logger';
 
 // Local type definitions for Polar SDK price objects
 interface PolarPriceInput {
@@ -130,13 +131,13 @@ export const syncProductToPolar = internalAction({
     });
 
     if (!product) {
-      console.error(`Product ${productId} not found`);
+      logger.error(`Product ${productId} not found`);
       return;
     }
 
     const token = process.env.POLAR_ORGANIZATION_TOKEN;
     if (!token) {
-      console.error('❌ POLAR_ORGANIZATION_TOKEN not set');
+      logger.error('POLAR_ORGANIZATION_TOKEN not set');
       return;
     }
 
@@ -156,7 +157,7 @@ export const syncProductToPolar = internalAction({
     try {
       if (product.polarProductId) {
         // Update existing Polar product
-        console.log(`Updating Polar product: ${product.name}`);
+        logger.info(`Updating Polar product: ${product.name}`);
 
         await polarClient.products.update({
           id: product.polarProductId,
@@ -168,7 +169,7 @@ export const syncProductToPolar = internalAction({
         });
       } else {
         // Create new Polar product
-        console.log(`Creating Polar product: ${product.name}`);
+        logger.info(`Creating Polar product: ${product.name}`);
 
         const result = await polarClient.products.create({
           name: product.name,
@@ -185,9 +186,9 @@ export const syncProductToPolar = internalAction({
         }
       }
 
-      console.log(`✅ Synced product to Polar: ${product.name}`);
+      logger.info(`Synced product to Polar: ${product.name}`);
     } catch (error: unknown) {
-      console.error(`❌ Failed to sync product to Polar:`, error);
+      logger.error(`Failed to sync product to Polar:`, error);
       // Don't throw - we don't want to block the mutation
     }
   },
@@ -203,7 +204,7 @@ export const archivePolarProduct = internalAction({
   handler: async (_ctx, { polarProductId }) => {
     const token = process.env.POLAR_ORGANIZATION_TOKEN;
     if (!token) {
-      console.error('❌ POLAR_ORGANIZATION_TOKEN not set');
+      logger.error('POLAR_ORGANIZATION_TOKEN not set');
       return;
     }
 
@@ -221,9 +222,9 @@ export const archivePolarProduct = internalAction({
         },
       });
 
-      console.log(`✅ Archived Polar product: ${polarProductId}`);
+      logger.info(`Archived Polar product: ${polarProductId}`);
     } catch (error: unknown) {
-      console.error(`❌ Failed to archive Polar product:`, error);
+      logger.error(`Failed to archive Polar product:`, error);
     }
   },
 });
@@ -293,7 +294,7 @@ export const syncAllProductsToPolar = internalMutation({
       .filter((q) => q.eq(q.field('isActive'), true))
       .collect();
 
-    console.log(`🔄 [CRON] Syncing ${products.length} products to Polar...`);
+    logger.info(`[CRON] Syncing ${products.length} products to Polar...`);
 
     let synced = 0;
     for (const product of products) {
@@ -307,12 +308,10 @@ export const syncAllProductsToPolar = internalMutation({
         );
         synced++;
       } catch (error) {
-        console.error(`Failed to schedule sync for ${product.name}:`, error);
+        logger.error(`Failed to schedule sync for ${product.name}:`, error);
       }
     }
 
-    console.log(
-      `✅ [CRON] Scheduled ${synced}/${products.length} product syncs`,
-    );
+    logger.info(`[CRON] Scheduled ${synced}/${products.length} product syncs`);
   },
 });

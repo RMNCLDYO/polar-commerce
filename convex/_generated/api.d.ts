@@ -36,8 +36,11 @@ import type * as polar from "../polar.js";
 import type * as polarCustomer from "../polarCustomer.js";
 import type * as polarMiddleware from "../polarMiddleware.js";
 import type * as utils_clearDatabase from "../utils/clearDatabase.js";
+import type * as utils_cors from "../utils/cors.js";
 import type * as utils_crons from "../utils/crons.js";
 import type * as utils_inspectData from "../utils/inspectData.js";
+import type * as utils_logger from "../utils/logger.js";
+import type * as utils_validation from "../utils/validation.js";
 import type * as wishlist_wishlist from "../wishlist/wishlist.js";
 
 import type {
@@ -83,8 +86,11 @@ declare const fullApi: ApiFromModules<{
   polarCustomer: typeof polarCustomer;
   polarMiddleware: typeof polarMiddleware;
   "utils/clearDatabase": typeof utils_clearDatabase;
+  "utils/cors": typeof utils_cors;
   "utils/crons": typeof utils_crons;
   "utils/inspectData": typeof utils_inspectData;
+  "utils/logger": typeof utils_logger;
+  "utils/validation": typeof utils_validation;
   "wishlist/wishlist": typeof wishlist_wishlist;
 }>;
 declare const fullApiWithMounts: typeof fullApi;

@@ -25,6 +25,7 @@
 import { Polar } from '@polar-sh/sdk';
 import { components, internal } from '../_generated/api';
 import { action, internalAction, internalMutation } from '../_generated/server';
+import { logger } from './logger';
 
 // Local type definitions for Polar SDK
 interface PolarCustomer {
@@ -65,13 +66,13 @@ interface PageIteratorResponse {
 export const clearDatabase = action({
   args: {},
   handler: async (ctx) => {
-    console.log('🚨 DATABASE RESET INITIATED');
-    console.log('='.repeat(60));
-    console.log('This will delete ALL data from:');
-    console.log('  • Better Auth (users, sessions, accounts, etc.)');
-    console.log('  • Polar (customers, archived products)');
-    console.log('  • Convex (catalog, carts, orders, demos)');
-    console.log('='.repeat(60));
+    logger.info('🚨 DATABASE RESET INITIATED');
+    logger.info('='.repeat(60));
+    logger.info('This will delete ALL data from:');
+    logger.info('  • Better Auth (users, sessions, accounts, etc.)');
+    logger.info('  • Polar (customers, archived products)');
+    logger.info('  • Convex (catalog, carts, orders, demos)');
+    logger.info('='.repeat(60));
 
     const results = {
       betterAuth: {} as {
@@ -87,20 +88,20 @@ export const clearDatabase = action({
     };
 
     // STEP 1: Delete Better Auth Data
-    console.log('\n📋 STEP 1: Deleting Better Auth data...');
+    logger.info('\n📋 STEP 1: Deleting Better Auth data...');
     try {
       const authResults = await ctx.runMutation(
         internal.utils.clearDatabase.clearBetterAuthData,
       );
       results.betterAuth = authResults;
-      console.log('✅ Better Auth data deleted');
+      logger.info('✅ Better Auth data deleted');
     } catch (error) {
-      console.error('❌ Error deleting Better Auth data:', error);
+      logger.error('❌ Error deleting Better Auth data:', error);
       throw error;
     }
 
     // STEP 2: Delete Polar Data from API and Convex component
-    console.log('\n🐻 STEP 2: Deleting Polar data...');
+    logger.info('\n🐻 STEP 2: Deleting Polar data...');
     try {
       // Delete from Polar component in Convex first
       const polarComponentResults = await ctx.runAction(
@@ -119,40 +120,40 @@ export const clearDatabase = action({
         apiCustomers: polarApiResults.customers ?? 0,
         apiProducts: polarApiResults.products ?? 0,
       };
-      console.log('✅ Polar data deleted from Convex and API');
+      logger.info('✅ Polar data deleted from Convex and API');
     } catch (error) {
-      console.error('❌ Error deleting Polar data:', error);
+      logger.error('❌ Error deleting Polar data:', error);
       throw error;
     }
 
     // STEP 3: Delete Convex App Data
-    console.log('\n🗄️  STEP 3: Deleting Convex app data...');
+    logger.info('\n🗄️  STEP 3: Deleting Convex app data...');
     try {
       const convexResults = await ctx.runMutation(
         internal.utils.clearDatabase.clearConvexData,
       );
       results.convex = convexResults;
-      console.log('✅ Convex app data deleted');
+      logger.info('✅ Convex app data deleted');
     } catch (error) {
-      console.error('❌ Error deleting Convex data:', error);
+      logger.error('❌ Error deleting Convex data:', error);
       throw error;
     }
 
-    console.log(`\n${'='.repeat(60)}`);
-    console.log('🎉 DATABASE RESET COMPLETE!');
-    console.log('='.repeat(60));
-    console.log('\n📊 Summary:');
-    console.log('\nBetter Auth:');
+    logger.info(`\n${'='.repeat(60)}`);
+    logger.info('🎉 DATABASE RESET COMPLETE!');
+    logger.info('='.repeat(60));
+    logger.info('\n📊 Summary:');
+    logger.info('\nBetter Auth:');
     Object.entries(results.betterAuth).forEach(([table, count]) => {
-      console.log(`  • ${table}: ${count} deleted`);
+      logger.info(`  • ${table}: ${count} deleted`);
     });
-    console.log('\nPolar:');
+    logger.info('\nPolar:');
     Object.entries(results.polar).forEach(([type, count]) => {
-      console.log(`  • ${type}: ${count} deleted`);
+      logger.info(`  • ${type}: ${count} deleted`);
     });
-    console.log('\nConvex:');
+    logger.info('\nConvex:');
     Object.entries(results.convex).forEach(([table, count]) => {
-      console.log(`  • ${table}: ${count} deleted`);
+      logger.info(`  • ${table}: ${count} deleted`);
     });
 
     return results;
@@ -174,7 +175,7 @@ export const clearBetterAuthData = internalMutation({
     jwks: number;
     users: number;
   }> => {
-    console.log('🔐 Clearing Better Auth component data...');
+    logger.info('🔐 Clearing Better Auth component data...');
 
     const results = {
       sessions: 0,
@@ -196,9 +197,9 @@ export const clearBetterAuthData = internalMutation({
         },
       );
       results.sessions = sessionsResult?.deletedCount || 0;
-      console.log(`  ✅ Deleted ${results.sessions} sessions`);
+      logger.info(`  ✅ Deleted ${results.sessions} sessions`);
     } catch (_e) {
-      console.log('  ⚠️  Could not delete sessions');
+      logger.info('  ⚠️  Could not delete sessions');
     }
 
     try {
@@ -211,9 +212,9 @@ export const clearBetterAuthData = internalMutation({
         },
       );
       results.accounts = accountsResult?.deletedCount || 0;
-      console.log(`  ✅ Deleted ${results.accounts} accounts`);
+      logger.info(`  ✅ Deleted ${results.accounts} accounts`);
     } catch (_e) {
-      console.log('  ⚠️  Could not delete accounts');
+      logger.info('  ⚠️  Could not delete accounts');
     }
 
     try {
@@ -226,9 +227,9 @@ export const clearBetterAuthData = internalMutation({
         },
       );
       results.verifications = verificationsResult?.deletedCount || 0;
-      console.log(`  ✅ Deleted ${results.verifications} verifications`);
+      logger.info(`  ✅ Deleted ${results.verifications} verifications`);
     } catch (_e) {
-      console.log('  ⚠️  Could not delete verifications');
+      logger.info('  ⚠️  Could not delete verifications');
     }
 
     try {
@@ -241,9 +242,9 @@ export const clearBetterAuthData = internalMutation({
         },
       );
       results.twoFactor = twoFactorResult?.deletedCount || 0;
-      console.log(`  ✅ Deleted ${results.twoFactor} two-factor records`);
+      logger.info(`  ✅ Deleted ${results.twoFactor} two-factor records`);
     } catch (_e) {
-      console.log('  ⚠️  Could not delete two-factor');
+      logger.info('  ⚠️  Could not delete two-factor');
     }
 
     try {
@@ -256,9 +257,9 @@ export const clearBetterAuthData = internalMutation({
         },
       );
       results.jwks = jwksResult?.deletedCount || 0;
-      console.log(`  ✅ Deleted ${results.jwks} jwks`);
+      logger.info(`  ✅ Deleted ${results.jwks} jwks`);
     } catch (_e) {
-      console.log('  ⚠️  Could not delete jwks');
+      logger.info('  ⚠️  Could not delete jwks');
     }
 
     try {
@@ -271,12 +272,12 @@ export const clearBetterAuthData = internalMutation({
         },
       );
       results.users = usersResult?.deletedCount || 0;
-      console.log(`  ✅ Deleted ${results.users} users`);
+      logger.info(`  ✅ Deleted ${results.users} users`);
     } catch (_e) {
-      console.log('  ⚠️  Could not delete users');
+      logger.info('  ⚠️  Could not delete users');
     }
 
-    console.log('✅ Better Auth data cleared from Convex');
+    logger.info('✅ Better Auth data cleared from Convex');
     return results;
   },
 });
@@ -288,7 +289,7 @@ export const clearBetterAuthData = internalMutation({
 export const clearPolarComponentData = internalAction({
   args: {},
   handler: async (ctx) => {
-    console.log('🐻 Clearing Polar component data from Convex...');
+    logger.info('🐻 Clearing Polar component data from Convex...');
 
     const results = {
       subscriptions: 0,
@@ -307,7 +308,7 @@ export const clearPolarComponentData = internalAction({
       });
       results.subscriptions++;
     }
-    console.log(`  ✅ Deleted ${results.subscriptions} subscriptions`);
+    logger.info(`  ✅ Deleted ${results.subscriptions} subscriptions`);
 
     // Delete customers
     const customers = await ctx.runQuery(components.polar.lib.listCustomers);
@@ -317,7 +318,7 @@ export const clearPolarComponentData = internalAction({
       });
       results.customers++;
     }
-    console.log(`  ✅ Deleted ${results.customers} customers`);
+    logger.info(`  ✅ Deleted ${results.customers} customers`);
 
     // Delete products
     const products = await ctx.runQuery(components.polar.lib.listProducts, {
@@ -329,9 +330,9 @@ export const clearPolarComponentData = internalAction({
       });
       results.products++;
     }
-    console.log(`  ✅ Deleted ${results.products} products`);
+    logger.info(`  ✅ Deleted ${results.products} products`);
 
-    console.log('✅ Polar component data cleared from Convex');
+    logger.info('✅ Polar component data cleared from Convex');
     return results;
   },
 });
@@ -343,7 +344,7 @@ export const clearPolarComponentData = internalAction({
 export const clearPolarDataInternal = internalAction({
   args: {},
   handler: async () => {
-    console.log('🐻 Clearing Polar data...');
+    logger.info('🐻 Clearing Polar data...');
 
     const results = {
       customers: 0,
@@ -362,11 +363,11 @@ export const clearPolarDataInternal = internalAction({
       server: server,
     });
 
-    console.log(`  Using Polar ${server} environment`);
+    logger.info(`  Using Polar ${server} environment`);
 
     // Delete all customers
     try {
-      console.log('  📋 Fetching customers...');
+      logger.info('  📋 Fetching customers...');
       const customersIter = await polarClient.customers.list({ limit: 100 });
       const customers: PolarCustomer[] = [];
 
@@ -379,29 +380,29 @@ export const clearPolarDataInternal = internalAction({
         }
       }
 
-      console.log(`  Found ${customers.length} customers`);
+      logger.info(`  Found ${customers.length} customers`);
 
       for (const customer of customers) {
         try {
           await polarClient.customers.delete({ id: customer.id });
           results.customers++;
-          console.log(`    ✅ Deleted customer: ${customer.email}`);
+          logger.info(`    ✅ Deleted customer: ${customer.email}`);
         } catch (error: unknown) {
           const errorMessage =
             error instanceof Error ? error.message : 'Unknown error';
-          console.log(
+          logger.info(
             `    ⚠️  Could not delete customer ${customer.email}:`,
             errorMessage,
           );
         }
       }
     } catch (error) {
-      console.error('  ❌ Error deleting customers:', error);
+      logger.error('  ❌ Error deleting customers:', error);
     }
 
     // Archive all products (Polar doesn't allow deletion, only archiving)
     try {
-      console.log('  📦 Fetching products...');
+      logger.info('  📦 Fetching products...');
       const productsIter = await polarClient.products.list({ limit: 100 });
       const products: PolarProduct[] = [];
 
@@ -414,13 +415,13 @@ export const clearPolarDataInternal = internalAction({
         }
       }
 
-      console.log(`  Found ${products.length} products`);
+      logger.info(`  Found ${products.length} products`);
 
       for (const product of products) {
         try {
           // Skip if already archived
           if (product.isArchived || product.is_archived) {
-            console.log(`    ⏭️  Already archived: ${product.name}`);
+            logger.info(`    ⏭️  Already archived: ${product.name}`);
             continue;
           }
 
@@ -431,18 +432,18 @@ export const clearPolarDataInternal = internalAction({
             },
           });
           results.products++;
-          console.log(`    ✅ Archived product: ${product.name}`);
+          logger.info(`    ✅ Archived product: ${product.name}`);
         } catch (error: unknown) {
           const errorMessage =
             error instanceof Error ? error.message : 'Unknown error';
-          console.log(
+          logger.info(
             `    ⚠️  Could not archive product ${product.name}:`,
             errorMessage,
           );
         }
       }
     } catch (error) {
-      console.error('  ❌ Error archiving products:', error);
+      logger.error('  ❌ Error archiving products:', error);
     }
 
     return results;
@@ -455,7 +456,7 @@ export const clearPolarDataInternal = internalAction({
 export const clearConvexData = internalMutation({
   args: {},
   handler: async (ctx) => {
-    console.log('🗄️  Clearing Convex app data...');
+    logger.info('🗄️  Clearing Convex app data...');
 
     const results: Record<string, number> = {};
 
@@ -465,7 +466,7 @@ export const clearConvexData = internalMutation({
       await ctx.db.delete(item._id);
     }
     results.catalog = catalog.length;
-    console.log(`  ✅ Deleted ${catalog.length} catalog items`);
+    logger.info(`  ✅ Deleted ${catalog.length} catalog items`);
 
     // Delete demo todos
     const demoTodos = await ctx.db.query('demoTodos').collect();
@@ -473,7 +474,7 @@ export const clearConvexData = internalMutation({
       await ctx.db.delete(todo._id);
     }
     results.demoTodos = demoTodos.length;
-    console.log(`  ✅ Deleted ${demoTodos.length} demo todos`);
+    logger.info(`  ✅ Deleted ${demoTodos.length} demo todos`);
 
     // Delete cart items
     const cartItems = await ctx.db.query('cartItems').collect();
@@ -481,7 +482,7 @@ export const clearConvexData = internalMutation({
       await ctx.db.delete(item._id);
     }
     results.cartItems = cartItems.length;
-    console.log(`  ✅ Deleted ${cartItems.length} cart items`);
+    logger.info(`  ✅ Deleted ${cartItems.length} cart items`);
 
     // Delete carts
     const carts = await ctx.db.query('carts').collect();
@@ -489,7 +490,7 @@ export const clearConvexData = internalMutation({
       await ctx.db.delete(cart._id);
     }
     results.carts = carts.length;
-    console.log(`  ✅ Deleted ${carts.length} carts`);
+    logger.info(`  ✅ Deleted ${carts.length} carts`);
 
     // Delete orders
     const orders = await ctx.db.query('orders').collect();
@@ -497,7 +498,7 @@ export const clearConvexData = internalMutation({
       await ctx.db.delete(order._id);
     }
     results.orders = orders.length;
-    console.log(`  ✅ Deleted ${orders.length} orders`);
+    logger.info(`  ✅ Deleted ${orders.length} orders`);
 
     return results;
   },

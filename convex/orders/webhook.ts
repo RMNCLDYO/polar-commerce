@@ -7,6 +7,7 @@ import { v } from 'convex/values';
 import { internal } from '../_generated/api';
 import type { Id } from '../_generated/dataModel';
 import { internalMutation } from '../_generated/server';
+import { logger } from '../utils/logger';
 
 /**
  * Process order.paid webhook
@@ -22,19 +23,19 @@ export const handleOrderPaid = internalMutation({
     ),
   },
   handler: async (ctx, args) => {
-    console.log('[Order Webhook] Processing order.paid:', args.orderId);
-    console.log('[Order Webhook] Checkout ID:', args.checkoutId);
+    logger.info('[Order Webhook] Processing order.paid:', args.orderId);
+    logger.debug('[Order Webhook] Checkout ID:', args.checkoutId);
 
     const metadata = args.metadata as Record<string, string | number | boolean>;
     const cartId = metadata.cartId as string;
     const itemCount = metadata.itemCount as number;
 
     if (!cartId || !itemCount) {
-      console.error('[Order Webhook] Missing cart metadata');
+      logger.error('[Order Webhook] Missing cart metadata');
       return;
     }
 
-    console.log(
+    logger.info(
       `[Order Webhook] Decrementing inventory for ${itemCount} items`,
     );
 
@@ -54,12 +55,12 @@ export const handleOrderPaid = internalMutation({
               quantity,
             },
           );
-          console.log(
-            `  ✓ Scheduled inventory decrement for ${productName} by ${quantity}`,
+          logger.debug(
+            `Scheduled inventory decrement for ${productName} by ${quantity}`,
           );
         } catch (error) {
-          console.error(
-            `  ✗ Failed to schedule inventory decrement for ${productId}:`,
+          logger.error(
+            `Failed to schedule inventory decrement for ${productId}:`,
             error,
           );
         }
@@ -76,9 +77,9 @@ export const handleOrderPaid = internalMutation({
             cartId: cartId as Id<'carts'>,
           },
         );
-        console.log('  ✓ Scheduled cart clearing');
+        logger.debug('Scheduled cart clearing');
       } catch (error) {
-        console.error('  ✗ Failed to schedule cart clearing:', error);
+        logger.error('Failed to schedule cart clearing:', error);
       }
     }
 
@@ -89,12 +90,12 @@ export const handleOrderPaid = internalMutation({
         await ctx.scheduler.runAfter(0, internal.polar.archiveBundleProduct, {
           productId: bundleProductId,
         });
-        console.log('  ✓ Scheduled bundle product archival');
+        logger.debug('Scheduled bundle product archival');
       } catch (error) {
-        console.error('  ✗ Failed to schedule bundle archival:', error);
+        logger.error('Failed to schedule bundle archival:', error);
       }
     }
 
-    console.log('[Order Webhook] ✓ Order processing complete');
+    logger.info('[Order Webhook] Order processing complete');
   },
 });

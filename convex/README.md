@@ -75,8 +75,8 @@ catalog: {
 
 ```
 ┌─────────────────────────────┐
-│ products.json               │  Physical products (Nike shoes, etc.)
-│ subscriptions.json          │  Subscription plans (Starter, Premium)
+│ data/products.json          │  Physical products (Nike shoes, etc.)
+│ data/subscriptions.json     │  Subscription plans (Starter, Premium)
 └─────────┬───────────────────┘
           │
           ↓
@@ -342,8 +342,133 @@ const checkoutUrl = await polar.generateCheckoutLink(ctx, {
 - **Why not use components for store?** → Components are for reusable packages, not core app logic
 - **Can I add fields to catalog?** → Yes! It's your app table, fully customizable
 
+## Environment Variables
+
+### Required
+
+- `POLAR_ORGANIZATION_TOKEN` - Your Polar API organization token
+- `POLAR_WEBHOOK_SECRET` - Secret for webhook signature verification
+- `POLAR_SERVER` - Environment: `'sandbox'` or `'production'`
+- `SITE_URL` - Your application's URL (e.g., `https://yourdomain.com`)
+- `CONVEX_SITE_URL` - Your Convex deployment URL
+- `GITHUB_CLIENT_ID` - GitHub OAuth client ID (for social auth)
+- `GITHUB_CLIENT_SECRET` - GitHub OAuth client secret
+- `SLACK_CLIENT_ID` - Slack OAuth client ID (optional)
+- `SLACK_CLIENT_SECRET` - Slack OAuth client secret (optional)
+
+### Optional
+
+- `NODE_ENV` - `'production'` or `'development'` (affects logging)
+
+## Performance Considerations
+
+### Database Indexes
+- Cart queries use indexes on `userId` and `sessionId` - O(log n) performance
+- Product queries are cache-friendly via `isActive` index
+- Composite indexes on `cartId_catalogId` prevent duplicate items
+
+### Webhook Processing
+- All webhook processing is async and non-blocking
+- Customer/product/subscription sync happens in background
+- Failed webhooks can be replayed from Polar dashboard
+
+### Caching Strategy
+- Convex handles query caching automatically
+- Product catalog queries are highly cacheable
+- Use `isActive` and `inStock` filters for optimal cache hits
+
+## Troubleshooting
+
+### Cart Not Found
+
+**Symptoms:** User's cart appears empty or throws "Cart not found" error
+
+**Solutions:**
+1. Check userId/sessionId matches between frontend and backend
+2. Verify cart hasn't expired (30 day TTL for guest carts)
+3. Ensure proper auth context is passed to queries
+4. Check browser local storage for session ID persistence
+
+### Checkout Fails
+
+**Symptoms:** Checkout creation fails or returns error
+
+**Common Causes:**
+1. **Missing Polar Product ID** - Verify all products have `polarProductId` linked
+2. **Invalid API Key** - Check `POLAR_ORGANIZATION_TOKEN` is valid and not expired
+3. **Archived Products** - Ensure products are not archived in Polar dashboard
+4. **Inventory Issues** - Check product has `inStock: true` and `inventory_qty > 0`
+
+**Debug Steps:**
+```typescript
+// Check product has Polar linkage
+const product = await ctx.db.get(productId);
+console.log(product.polarProductId); // Should not be undefined
+
+// Verify Polar product exists
+const polarProduct = await ctx.runQuery(
+  components.polar.lib.getProduct,
+  { id: product.polarProductId }
+);
+console.log(polarProduct.isArchived); // Should be false
+```
+
+### Webhook Not Firing
+
+**Symptoms:** Changes in Polar not reflected in Convex
+
+**Solutions:**
+1. Verify webhook URL in Polar dashboard: `https://your-deployment.convex.site/polar/events`
+2. Check `POLAR_WEBHOOK_SECRET` matches between Polar and Convex
+3. Ensure webhook events are enabled in Polar:
+   - `customer.created`, `customer.updated`, `customer.deleted`
+   - `product.created`, `product.updated`
+   - `subscription.created`, `subscription.updated`
+4. Check Convex logs for webhook signature validation errors
+
+### User Not Synced to Polar
+
+**Symptoms:** User exists in Convex but not in Polar
+
+**Solutions:**
+1. Wait for webhook to fire (usually instant, can take up to 60s)
+2. Manually sync using: `await ctx.runAction(api.polarCustomer.ensurePolarCustomer, { userId, email })`
+3. Check user creation triggers in `convex/auth/auth.ts`
+4. Run orphaned customer sync: `await ctx.runAction(internal.auth.sync.syncOrphanedCustomers, {})`
+
+### Type Errors in Development
+
+**Symptoms:** TypeScript errors in Convex functions
+
+**Solutions:**
+1. Regenerate Convex types: `npx convex dev` (regenerates `_generated/`)
+2. Check `convex/tsconfig.json` is using correct compiler options
+3. Verify all `v.*` validators match actual data types
+4. Run `tsc -p convex` to check for type errors in isolation
+
+## Security Best Practices
+
+### API Key Management
+- ❌ Never commit `.env.local` to git
+- ✅ Use environment variables for all secrets
+- ✅ Rotate API keys periodically (every 90 days)
+- ✅ Use separate keys for sandbox vs production
+
+### CORS Configuration
+- ❌ Never use wildcard `*` for `Access-Control-Allow-Origin`
+- ✅ Explicitly whitelist your domains in `convex/utils/cors.ts`
+- ✅ Use `credentials: 'include'` for authenticated requests
+- ✅ Validate origin headers on all HTTP endpoints
+
+### Input Validation
+- ✅ Validate all user inputs with `convex/utils/validation.ts`
+- ✅ Use Convex validators (`v.*`) for runtime type checking
+- ✅ Sanitize email addresses before storage
+- ✅ Check inventory quantities are positive integers
+
 ## Resources
 
 - [Convex Docs](https://docs.convex.dev)
 - [Polar Convex Component](https://github.com/polarsh/polar-convex)
 - [Better Auth](https://www.better-auth.com)
+- [Next.js 16 Documentation](https://nextjs.org/docs)
