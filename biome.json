@@ -34,6 +34,9 @@
       "suspicious": {
         "noUnknownAtRules": "off",
         "noArrayIndexKey": "off"
+      },
+      "correctness": {
+        "noUnknownTypeSelector": "off"
       }
     },
     "domains": {
