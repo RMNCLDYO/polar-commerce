@@ -1,227 +1,217 @@
-import { exec } from 'node:child_process';
-import { promisify } from 'node:util';
-import * as dotenv from 'dotenv';
+/**
+ * Master Seeding Script for Next.js 16
+ * Orchestrates complete seeding of subscriptions, products, and verification
+ *
+ * @requires Node.js 20.9+
+ * @requires TypeScript 5+
+ */
 
-// Load environment variables
+import * as dotenv from 'dotenv';
+import { createLogger } from './logger';
+import { seedProducts } from './seedProducts';
+import { seedSubscriptions } from './seedSubscriptions';
+import { verifySeeding } from './verifySeeding';
+
 dotenv.config({ path: '.env.local' });
 
-const execAsync = promisify(exec);
+const logger = createLogger({ prefix: '🚀' });
 
-const colors = {
-  reset: '\x1b[0m',
-  bright: '\x1b[1m',
-  green: '\x1b[32m',
-  yellow: '\x1b[33m',
-  cyan: '\x1b[36m',
-  red: '\x1b[31m',
-  magenta: '\x1b[35m',
-  blue: '\x1b[34m',
-};
-
-async function runCommand(
-  command: string,
-  description: string,
-): Promise<boolean> {
-  console.log(`\n${colors.cyan}🔄 ${description}...${colors.reset}`);
-  console.log(`   Running: ${colors.yellow}${command}${colors.reset}`);
-
-  try {
-    const { stdout, stderr } = await execAsync(command);
-
-    // Print the output
-    if (stdout) {
-      console.log(stdout);
-    }
-
-    if (stderr && !stderr.includes('WARN')) {
-      console.error(`${colors.yellow}⚠️  Warning:${colors.reset}`, stderr);
-    }
-
-    console.log(`${colors.green}✅ ${description} completed${colors.reset}`);
-    return true;
-  } catch (error: unknown) {
-    console.error(`${colors.red}❌ ${description} failed${colors.reset}`);
-    const errorMessage =
-      error instanceof Error ? error.message : 'Unknown error';
-    console.error(`   Error: ${errorMessage}`);
-
-    // Print the full error output for debugging
-    if (
-      error &&
-      typeof error === 'object' &&
-      'stdout' in error &&
-      typeof error.stdout === 'string'
-    ) {
-      console.log(error.stdout);
-    }
-    if (
-      error &&
-      typeof error === 'object' &&
-      'stderr' in error &&
-      typeof error.stderr === 'string'
-    ) {
-      console.error(error.stderr);
-    }
-
-    return false;
-  }
+interface SeedingResults {
+  subscriptions: boolean;
+  products: boolean;
+  verification: boolean;
 }
 
-async function seedAll() {
-  console.log(
-    `${colors.bright}${colors.magenta}🚀 COMPLETE SEEDING PROCESS${colors.reset}`,
-  );
-  console.log('='.repeat(70));
-  console.log('This will seed both subscriptions and products to:');
-  console.log('  • Polar API (payment processing)');
-  console.log('  • Convex Database (application data)');
-  console.log('='.repeat(70));
-
+/**
+ * Validates environment configuration before seeding
+ * @throws {Error} If required environment variables are missing
+ */
+function validateEnvironment(): void {
   const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
   const polarToken = process.env.POLAR_ORGANIZATION_TOKEN;
   const polarServer = process.env.POLAR_SERVER || 'sandbox';
 
-  // Validate environment
-  console.log(`\n${colors.yellow}📋 Environment Check:${colors.reset}`);
-  console.log(
-    `  Convex URL: ${convexUrl ? `${colors.green}✓` : `${colors.red}✗`} ${convexUrl || 'Not set'}`,
-  );
-  console.log(
-    `  Polar Token: ${polarToken ? `${colors.green}✓` : `${colors.red}✗`} ${polarToken ? 'Set' : 'Not set'}`,
-  );
-  console.log(`  Polar Server: ${colors.green}${polarServer}${colors.reset}`);
+  logger.subsection('📋 Environment Check:');
+
+  if (convexUrl) {
+    logger.success(`Convex URL: ${convexUrl}`);
+  } else {
+    logger.error('Convex URL: Not set');
+  }
+
+  if (polarToken) {
+    logger.success('Polar Token: Set');
+  } else {
+    logger.error('Polar Token: Not set');
+  }
+
+  logger.item('Polar Server', polarServer);
+  logger.blank();
 
   if (!convexUrl || !polarToken) {
-    console.error(
-      `\n${colors.red}❌ Missing required environment variables!${colors.reset}`,
-    );
-    console.error('Please ensure .env.local contains:');
-    console.error('  - NEXT_PUBLIC_CONVEX_URL');
-    console.error('  - POLAR_ORGANIZATION_TOKEN');
-    process.exit(1);
+    logger.error('Missing required environment variables!');
+    logger.subsection('Please ensure .env.local contains:');
+    logger.list(['NEXT_PUBLIC_CONVEX_URL', 'POLAR_ORGANIZATION_TOKEN']);
+    throw new Error('Missing required environment variables');
   }
+}
 
-  const results = {
-    subscriptions: false,
-    products: false,
-    verification: false,
-  };
-
-  // Step 1: Seed Subscriptions
-  console.log(
-    `\n${colors.bright}${colors.blue}═══ STEP 1: SUBSCRIPTIONS ═══${colors.reset}`,
-  );
-  results.subscriptions = await runCommand(
-    'npx tsx scripts/seedSubscriptions.ts',
-    'Seeding subscription tiers',
-  );
-
-  if (!results.subscriptions) {
-    console.log(
-      `${colors.yellow}⚠️  Continuing despite subscription seeding issues...${colors.reset}`,
-    );
+/**
+ * Executes a seeding step with error handling
+ */
+async function executeStep(
+  name: string,
+  fn: () => Promise<void>,
+): Promise<boolean> {
+  try {
+    logger.info(`Starting ${name}...`);
+    await fn();
+    logger.success(`${name} completed`);
+    return true;
+  } catch (error) {
+    logger.error(`${name} failed`, error);
+    logger.warning(`Continuing despite ${name} issues...`);
+    return false;
   }
+}
 
-  // Add a small delay to ensure Polar API has processed the subscriptions
-  console.log(
-    `\n${colors.cyan}⏳ Waiting for Polar API to process...${colors.reset}`,
-  );
-  await new Promise((resolve) => setTimeout(resolve, 2000));
-
-  // Step 2: Seed Products
-  console.log(
-    `\n${colors.bright}${colors.blue}═══ STEP 2: PRODUCTS ═══${colors.reset}`,
-  );
-  results.products = await runCommand(
-    'npx tsx scripts/seedProducts.ts',
-    'Seeding products catalog',
-  );
-
-  if (!results.products) {
-    console.log(
-      `${colors.yellow}⚠️  Product seeding encountered issues${colors.reset}`,
-    );
-  }
-
-  // Step 3: Verify Everything
-  console.log(
-    `\n${colors.bright}${colors.blue}═══ STEP 3: VERIFICATION ═══${colors.reset}`,
-  );
-  results.verification = await runCommand(
-    'npx tsx scripts/verifySeeding.ts',
-    'Verifying seeded data',
-  );
-
-  // Summary
-  console.log(`\n${'='.repeat(70)}`);
-  console.log(`${colors.bright}📊 SEEDING SUMMARY${colors.reset}`);
-  console.log('='.repeat(70));
+/**
+ * Displays seeding summary
+ */
+function displaySummary(results: SeedingResults): void {
+  logger.separator();
+  logger.section('📊 SEEDING SUMMARY');
+  logger.separator();
+  logger.blank();
 
   const getStatus = (success: boolean) =>
-    success
-      ? `${colors.green}✅ Success${colors.reset}`
-      : `${colors.red}❌ Failed${colors.reset}`;
+    success ? '✅ Success' : '❌ Failed';
 
-  console.log(`\nSubscriptions: ${getStatus(results.subscriptions)}`);
-  console.log(`Products:      ${getStatus(results.products)}`);
-  console.log(`Verification:  ${getStatus(results.verification)}`);
+  logger.item('Subscriptions', getStatus(results.subscriptions));
+  logger.item('Products', getStatus(results.products));
+  logger.item('Verification', getStatus(results.verification));
+  logger.blank();
 
   const allSuccess =
     results.subscriptions && results.products && results.verification;
 
   if (allSuccess) {
-    console.log(
-      `\n${colors.bright}${colors.green}🎉 ALL SEEDING COMPLETED SUCCESSFULLY!${colors.reset}`,
-    );
-    console.log(`\n${'─'.repeat(70)}`);
-    console.log('✨ Your application is now fully seeded with:');
-    console.log(
-      '  • Subscription tiers (Starter, Premium) synced to Polar & Convex',
-    );
-    console.log('  • Product catalog with images synced to Polar & Convex');
-    console.log('─'.repeat(70));
+    logger.section('🎉 ALL SEEDING COMPLETED SUCCESSFULLY!');
+    logger.blank();
+    logger.divider();
+    logger.subsection('✨ Your application is now fully seeded with:');
+    logger.list([
+      'Subscription tiers (Starter, Premium) synced to Polar & Convex',
+      'Product catalog with images synced to Polar & Convex',
+    ]);
+    logger.divider();
 
-    console.log(`\n${colors.cyan}📝 Next Steps:${colors.reset}`);
-    console.log("  1. Run 'npm run dev' to start the application");
-    console.log('  2. Visit /pricing to see subscription tiers');
-    console.log('  3. Visit /shop to see products');
-    console.log('  4. Test the checkout flow');
-    console.log(`\n${'='.repeat(70)}`);
+    logger.blank();
+    logger.subsection('📝 Next Steps:');
+    logger.list([
+      "Run 'npm run dev' to start the application",
+      'Visit /pricing to see subscription tiers',
+      'Visit /shop to see products',
+      'Test the checkout flow',
+    ]);
+    logger.separator();
   } else {
-    console.log(
-      `\n${colors.yellow}⚠️  SEEDING COMPLETED WITH WARNINGS${colors.reset}`,
-    );
-    console.log('\nSome steps encountered issues. You may need to:');
-    console.log('  1. Check the error messages above');
-    console.log('  2. Verify your Polar API token and permissions');
-    console.log('  3. Run individual commands manually:');
-    console.log(
-      `     ${colors.yellow}npm run polar:seed-subscriptions${colors.reset} - Seed subscriptions only`,
-    );
-    console.log(
-      `     ${colors.yellow}npm run polar:seed-products${colors.reset}      - Seed products only`,
-    );
-    console.log(
-      `     ${colors.yellow}npm run sync${colors.reset}               - Sync Polar to Convex`,
-    );
-    console.log(
-      `     ${colors.yellow}npm run verify${colors.reset}             - Run verification only`,
-    );
+    logger.section('⚠️  SEEDING COMPLETED WITH WARNINGS');
+    logger.blank();
+    logger.subsection('Some steps encountered issues. You may need to:');
+    logger.list([
+      'Check the error messages above',
+      'Verify your Polar API token and permissions',
+    ]);
+    logger.blank();
+    logger.subsection('Run individual commands manually:');
+    logger.list([
+      'npm run polar:seed-subscriptions - Seed subscriptions only',
+      'npm run polar:seed-products      - Seed products only',
+      'npm run sync                     - Sync Polar to Convex',
+      'npm run verify                   - Run verification only',
+    ]);
   }
 }
 
-// Run the complete seeding process
-seedAll()
-  .then(() => {
-    console.log(
-      `\n${colors.green}✨ Seeding process completed!${colors.reset}\n`,
-    );
-    process.exit(0);
-  })
-  .catch((error) => {
-    console.error(
-      `\n${colors.red}❌ Fatal error during seeding:${colors.reset}`,
-      error,
-    );
-    process.exit(1);
-  });
+/**
+ * Pauses execution for specified milliseconds
+ */
+async function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/**
+ * Main seeding orchestration function
+ */
+async function seedAll(): Promise<void> {
+  logger.section('🚀 COMPLETE SEEDING PROCESS');
+  logger.separator();
+  logger.subsection('This will seed both subscriptions and products to:');
+  logger.list([
+    'Polar API (payment processing)',
+    'Convex Database (application data)',
+  ]);
+  logger.separator();
+  logger.blank();
+
+  validateEnvironment();
+
+  const results: SeedingResults = {
+    subscriptions: false,
+    products: false,
+    verification: false,
+  };
+
+  logger.section('═══ STEP 1: SUBSCRIPTIONS ═══');
+  results.subscriptions = await executeStep(
+    'Seeding subscription tiers',
+    seedSubscriptions,
+  );
+  logger.blank();
+
+  if (!results.subscriptions) {
+    logger.warning('Subscription seeding encountered issues');
+  }
+
+  logger.info('⏳ Waiting for Polar API to process...');
+  await delay(2000);
+  logger.blank();
+
+  logger.section('═══ STEP 2: PRODUCTS ═══');
+  results.products = await executeStep(
+    'Seeding products catalog',
+    seedProducts,
+  );
+  logger.blank();
+
+  if (!results.products) {
+    logger.warning('Product seeding encountered issues');
+  }
+
+  logger.section('═══ STEP 3: VERIFICATION ═══');
+  results.verification = await executeStep(
+    'Verifying seeded data',
+    async () => {
+      const passed = await verifySeeding();
+      if (!passed) {
+        throw new Error('Verification checks failed');
+      }
+    },
+  );
+
+  displaySummary(results);
+}
+
+if (import.meta.url === `file://${process.argv[1]}`) {
+  seedAll()
+    .then(() => {
+      logger.success('✨ Seeding process completed!');
+      logger.blank();
+      process.exit(0);
+    })
+    .catch((error) => {
+      logger.error('Fatal error during seeding', error);
+      process.exit(1);
+    });
+}

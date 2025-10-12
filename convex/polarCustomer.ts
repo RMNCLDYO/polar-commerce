@@ -3,6 +3,7 @@ import { v } from 'convex/values';
 import { components } from './_generated/api';
 import { action, internalAction } from './_generated/server';
 import { validateMetadata } from './polar/types';
+import { logger } from './utils/logger';
 
 // Local type definitions for Polar SDK
 interface PolarCustomer {
@@ -191,10 +192,8 @@ export const ensurePolarCustomer = action({
         source: 'created',
       };
     } catch (error: unknown) {
-      console.error('Failed to ensure Polar customer:', error);
+      logger.error('Failed to ensure Polar customer:', error);
 
-      // If customer already exists in Polar but not in Convex
-      // (can happen if webhook hasn't fired yet or failed)
       const isExistingCustomerError =
         (error as { statusCode?: number }).statusCode === 422 ||
         (error as { message?: string }).message?.includes('already exists');
@@ -230,7 +229,7 @@ export const ensurePolarCustomer = action({
                   },
                 });
               } catch (updateError) {
-                console.error(
+                logger.error(
                   'Failed to update existing customer:',
                   updateError,
                 );
@@ -254,7 +253,7 @@ export const ensurePolarCustomer = action({
             }
           }
         } catch (recoveryError) {
-          console.error('Failed to recover existing customer:', recoveryError);
+          logger.error('Failed to recover existing customer:', recoveryError);
         }
       }
 
@@ -362,7 +361,7 @@ export const updateCustomer = action({
         customerId: updatedCustomer.id,
       };
     } catch (error: unknown) {
-      console.error('Failed to update Polar customer:', error);
+      logger.error('Failed to update Polar customer:', error);
       throw error;
     }
   },
@@ -392,7 +391,7 @@ export const deleteCustomer = internalAction({
     );
 
     if (!existingCustomer) {
-      console.log(`No Polar customer found for user: ${userId}`);
+      logger.info(`No Polar customer found for user: ${userId}`);
       return { success: true, message: 'No customer to delete' };
     }
 
@@ -410,12 +409,11 @@ export const deleteCustomer = internalAction({
     try {
       await polarClient.customers.delete({ id: existingCustomer.id });
 
-      console.log(`✅ Deleted Polar customer: ${existingCustomer.id}`);
+      logger.info(`Deleted Polar customer: ${existingCustomer.id}`);
 
-      // Webhook will handle Convex cleanup via customer.deleted event
       return { success: true, customerId: existingCustomer.id };
     } catch (error: unknown) {
-      console.error('Failed to delete Polar customer:', error);
+      logger.error('Failed to delete Polar customer:', error);
       throw error;
     }
   },

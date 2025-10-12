@@ -24,6 +24,7 @@ import {
   sendResetPassword,
 } from '../emails/email';
 import { polar } from '../polar';
+import { logger } from '../utils/logger';
 
 const siteUrl = process.env.SITE_URL;
 
@@ -34,8 +35,7 @@ export const authComponent = createClient<DataModel>(components.betterAuth, {
   triggers: {
     user: {
       onCreate: async (ctx, authUser) => {
-        // Automatically create Polar customer when user signs up
-        console.log(`🔔 [TRIGGER] User created: ${authUser.email}`);
+        logger.info(`[TRIGGER] User created: ${authUser.email}`);
 
         try {
           await ctx.scheduler.runAfter(0, internal.auth.sync.onUserCreated, {
@@ -43,20 +43,18 @@ export const authComponent = createClient<DataModel>(components.betterAuth, {
             email: authUser.email,
             name: authUser.name,
           });
-          console.log(
-            `✅ [TRIGGER] Scheduled Polar customer creation for ${authUser.email}`,
+          logger.info(
+            `[TRIGGER] Scheduled Polar customer creation for ${authUser.email}`,
           );
         } catch (error) {
-          console.error(
-            `❌ [TRIGGER] Failed to schedule Polar customer creation:`,
+          logger.error(
+            `[TRIGGER] Failed to schedule Polar customer creation:`,
             error,
           );
-          // Don't throw - we don't want to block user creation
         }
       },
       onDelete: async (ctx, authUser) => {
-        // Automatically delete Polar customer when user deletes their account
-        console.log(`🔔 [TRIGGER] User deleted: ${authUser.email}`);
+        logger.info(`[TRIGGER] User deleted: ${authUser.email}`);
 
         try {
           await ctx.scheduler.runAfter(
@@ -66,15 +64,14 @@ export const authComponent = createClient<DataModel>(components.betterAuth, {
               userId: authUser._id,
             },
           );
-          console.log(
-            `✅ [TRIGGER] Scheduled Polar customer deletion for ${authUser.email}`,
+          logger.info(
+            `[TRIGGER] Scheduled Polar customer deletion for ${authUser.email}`,
           );
         } catch (error) {
-          console.error(
-            `❌ [TRIGGER] Failed to schedule Polar customer deletion:`,
+          logger.error(
+            `[TRIGGER] Failed to schedule Polar customer deletion:`,
             error,
           );
-          // Don't throw - user account already deleted
         }
       },
     },

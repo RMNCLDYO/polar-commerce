@@ -3,6 +3,7 @@ import { Polar as PolarSDK } from '@polar-sh/sdk';
 import { v } from 'convex/values';
 import { api, components } from './_generated/api';
 import { action, internalAction, query } from './_generated/server';
+import { logger } from './utils/logger';
 
 export const polar = new Polar(components.polar, {
   // Required: provide a function the component can use to get the current user's ID and email
@@ -93,11 +94,11 @@ export const archiveBundleProduct = internalAction({
     productId: v.string(),
   },
   handler: async (_ctx, args) => {
-    console.log('[Polar] Archiving bundle product:', args.productId);
+    logger.info('[Polar] Archiving bundle product:', args.productId);
 
     const token = process.env.POLAR_ORGANIZATION_TOKEN;
     if (!token) {
-      console.error('[Polar] POLAR_ORGANIZATION_TOKEN not set');
+      logger.error('[Polar] POLAR_ORGANIZATION_TOKEN not set');
       return;
     }
 
@@ -115,12 +116,11 @@ export const archiveBundleProduct = internalAction({
         },
       });
 
-      console.log('[Polar] ✓ Bundle product archived');
+      logger.info('[Polar] Bundle product archived');
     } catch (error: unknown) {
       const errorMessage =
         error instanceof Error ? error.message : 'Unknown error';
-      console.error('[Polar] Failed to archive bundle product:', errorMessage);
-      // Don't throw - this is cleanup and shouldn't block order processing
+      logger.error('[Polar] Failed to archive bundle product:', errorMessage);
     }
   },
 });

@@ -9,13 +9,14 @@
 
 import { internal } from './_generated/api';
 import { httpAction } from './_generated/server';
+import { logger } from './utils/logger';
 
 export const polarWebhookHandler = httpAction(async (ctx, request) => {
   try {
     const body = await request.json();
     const eventType = body.type;
 
-    console.log('[Polar Webhook] Received:', eventType);
+    logger.info('[Polar Webhook] Received:', eventType);
 
     // Handle order.paid for inventory management
     if (eventType === 'order.paid') {
@@ -24,7 +25,7 @@ export const polarWebhookHandler = httpAction(async (ctx, request) => {
       const orderId = order.id;
       const metadata = order.metadata || {};
 
-      console.log('[Polar Webhook] Processing order.paid:', orderId);
+      logger.info('[Polar Webhook] Processing order.paid:', orderId);
 
       if (checkoutId && metadata.itemCount) {
         try {
@@ -33,12 +34,12 @@ export const polarWebhookHandler = httpAction(async (ctx, request) => {
             orderId,
             metadata,
           });
-          console.log('[Polar Webhook] ✓ Order processing initiated');
+          logger.info('[Polar Webhook] Order processing initiated');
         } catch (error: unknown) {
           const errorMessage =
             error instanceof Error ? error.message : 'Unknown error';
-          console.error(
-            '[Polar Webhook] ✗ Failed to process order:',
+          logger.error(
+            '[Polar Webhook] Failed to process order:',
             errorMessage,
           );
         }
@@ -47,7 +48,7 @@ export const polarWebhookHandler = httpAction(async (ctx, request) => {
 
     // Forward to Polar component for automatic syncing
     // The component handles customers, products, subscriptions
-    console.log('[Polar Webhook] Forwarding to component...');
+    logger.debug('[Polar Webhook] Forwarding to component...');
     const componentUrl = `${process.env.CONVEX_SITE_URL}/polar/events`;
 
     // Get all headers from original request
@@ -75,7 +76,7 @@ export const polarWebhookHandler = httpAction(async (ctx, request) => {
       body: JSON.stringify(body),
     });
 
-    console.log(
+    logger.debug(
       `[Polar Webhook] Component response: ${forwardResponse.status}`,
     );
 
@@ -86,7 +87,7 @@ export const polarWebhookHandler = httpAction(async (ctx, request) => {
   } catch (error: unknown) {
     const errorMessage =
       error instanceof Error ? error.message : 'Unknown error';
-    console.error('[Polar Webhook] Error:', error);
+    logger.error('[Polar Webhook] Error:', error);
     return new Response(JSON.stringify({ error: errorMessage }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },

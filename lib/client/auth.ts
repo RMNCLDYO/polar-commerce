@@ -1,3 +1,5 @@
+'use client';
+
 import { convexClient } from '@convex-dev/better-auth/client/plugins';
 import {
   anonymousClient,

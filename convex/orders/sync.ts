@@ -4,6 +4,7 @@ import {
   internalQuery,
   mutation,
 } from '../_generated/server';
+import { logger } from '../utils/logger';
 
 /**
  * Link guest orders to a newly created user account
@@ -22,14 +23,14 @@ export const linkOrdersToUser = internalMutation({
       .filter((q) => q.eq(q.field('userId'), undefined))
       .collect();
 
-    console.log(`Found ${guestOrders.length} guest orders for email: ${email}`);
+    logger.info(`Found ${guestOrders.length} guest orders for email: ${email}`);
 
     // Link each order to the user
     for (const order of guestOrders) {
       await ctx.db.patch(order._id, {
         userId,
       });
-      console.log(`Linked order ${order.checkoutId} to user ${userId}`);
+      logger.debug(`Linked order ${order.checkoutId} to user ${userId}`);
     }
 
     return {

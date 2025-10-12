@@ -2,6 +2,7 @@ import { httpRouter } from 'convex/server';
 import { authComponent, createAuth } from './auth/auth';
 import { checkoutOptions, createCheckout } from './checkout/http';
 import { polar } from './polar';
+import { logger } from './utils/logger';
 import './utils/polyfills';
 
 const http = httpRouter();
@@ -36,25 +37,25 @@ polar.registerRoutes(http, {
   // These callbacks are for custom business logic only
 
   onSubscriptionUpdated: async (_ctx, event) => {
-    console.log('[Polar Component] Subscription updated:', event.data.id);
+    logger.info('[Polar Component] Subscription updated:', event.data.id);
 
     if (event.data.customerCancellationReason) {
-      console.log(
+      logger.info(
         `[Polar Component] Customer cancelled: ${event.data.customerCancellationReason}`,
       );
     }
   },
 
   onSubscriptionCreated: async (_ctx, event) => {
-    console.log('[Polar Component] New subscription:', event.data.id);
+    logger.info('[Polar Component] New subscription:', event.data.id);
   },
 
   onProductCreated: async (_ctx, event) => {
-    console.log('[Polar Component] New product:', event.data.name);
+    logger.info('[Polar Component] New product:', event.data.name);
   },
 
   onProductUpdated: async (_ctx, event) => {
-    console.log('[Polar Component] Product updated:', event.data.name);
+    logger.info('[Polar Component] Product updated:', event.data.name);
   },
 });
 

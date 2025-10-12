@@ -75,7 +75,10 @@ export default function CheckoutSuccessPage() {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center px-8 py-12">
+    <main
+      className="min-h-screen flex items-center justify-center px-8 py-12"
+      style={{ viewTransitionName: 'checkout-success' }}
+    >
       <div className="text-center max-w-2xl">
         <div className="flex justify-center mb-6">
           <div className="bg-green-100 dark:bg-green-900 rounded-full p-4">

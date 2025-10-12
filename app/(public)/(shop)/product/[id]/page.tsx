@@ -42,7 +42,10 @@ async function CachedProductContent({ id }: { id: string }) {
   const filteredRelated = relatedProducts.filter((p: Product) => p.id !== id);
 
   return (
-    <main className="px-8 py-12">
+    <main
+      className="px-8 py-12"
+      style={{ viewTransitionName: 'product-detail' }}
+    >
       <div className="mx-auto max-w-7xl">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           <div

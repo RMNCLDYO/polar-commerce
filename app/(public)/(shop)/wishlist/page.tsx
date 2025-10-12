@@ -69,12 +69,20 @@ export default function WishlistPage() {
   const isEmpty = !wishlist || wishlist.items.length === 0;
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div
+      className="container mx-auto px-4 py-8"
+      style={{ viewTransitionName: 'wishlist-content' }}
+    >
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
             <Heart className="size-8" />
-            <h1 className="text-3xl font-bold">Wishlist</h1>
+            <h1
+              className="text-3xl font-bold"
+              style={{ viewTransitionName: 'page-title' }}
+            >
+              Wishlist
+            </h1>
           </div>
           {!isEmpty && (
             <Button

@@ -7,6 +7,7 @@ import {
   mutation,
   query,
 } from '../_generated/server';
+import { validateQuantity } from '../utils/validation';
 
 // Helper to get or create cart for a user/session
 async function getOrCreateCart(
@@ -89,10 +90,7 @@ export const addToCart = mutation({
       ? existingItem.quantity + args.quantity
       : args.quantity;
 
-    // Check if requested quantity exceeds available inventory
-    if (newQuantity > product.inventory_qty) {
-      throw new Error(`Only ${product.inventory_qty} items available in stock`);
-    }
+    validateQuantity(newQuantity, product.inventory_qty, product.name);
 
     if (existingItem) {
       // Update quantity

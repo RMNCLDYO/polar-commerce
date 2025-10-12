@@ -3,6 +3,7 @@ import { v } from 'convex/values';
 import { components, internal } from '../_generated/api';
 import type { Doc, Id } from '../_generated/dataModel';
 import { action, query } from '../_generated/server';
+import { logger } from '../utils/logger';
 import type {
   Address,
   CartItemForCheckout,
@@ -48,14 +49,14 @@ async function createBundleProduct(
       },
     });
 
-    console.log(
-      `[Bundle] Created ${bundleProduct.id} for ${polarProducts.length} items (${totalAmount / 100} USD)`,
+    logger.info(
+      `[Bundle] Created ${bundleProduct.id} for ${polarProducts.length} items ($${totalAmount / 100})`,
     );
     return bundleProduct.id;
   } catch (error: unknown) {
     const errorMessage =
       error instanceof Error ? error.message : 'Unknown error';
-    console.error('[Bundle] Failed to create:', error);
+    logger.error('[Bundle] Failed to create:', error);
     throw new Error(`Failed to create checkout bundle: ${errorMessage}`);
   }
 }
@@ -107,22 +108,21 @@ export const createCheckoutSession = action({
     const identity = await ctx.auth.getUserIdentity();
     const userId = identity?.subject;
 
-    console.log('[Checkout] userId:', userId);
-    console.log('[Checkout] sessionId:', args.sessionId);
+    logger.debug('[Checkout] userId:', userId);
+    logger.debug('[Checkout] sessionId:', args.sessionId);
 
     if (!userId && !args.sessionId) {
       throw new Error('User must be authenticated or provide a session ID');
     }
 
-    // Get the cart with items
     let cart: Doc<'carts'> | null = null;
     if (userId) {
-      console.log('[Checkout] Looking up cart by userId');
+      logger.debug('[Checkout] Looking up cart by userId');
       cart = await ctx.runQuery(internal.cart.cart.internal_getCartByUserId, {
         userId,
       });
     } else if (args.sessionId) {
-      console.log('[Checkout] Looking up cart by sessionId:', args.sessionId);
+      logger.debug('[Checkout] Looking up cart by sessionId:', args.sessionId);
       cart = await ctx.runQuery(
         internal.cart.cart.internal_getCartBySessionId,
         {
@@ -131,9 +131,9 @@ export const createCheckoutSession = action({
       );
     }
 
-    console.log('[Checkout] Cart found:', cart !== null);
+    logger.debug('[Checkout] Cart found:', cart !== null);
     if (cart) {
-      console.log('[Checkout] Cart ID:', cart._id);
+      logger.debug('[Checkout] Cart ID:', cart._id);
     }
 
     if (!cart) {
@@ -404,17 +404,17 @@ export const createCheckoutSession = action({
         checkoutData.amount = totalAmount;
       }
 
-      console.log('[Checkout] Creating Polar checkout with data:');
-      console.log('  - Customer IP:', args.customerIpAddress || 'not provided');
-      console.log('  - Customer Email:', customerEmail || 'not provided');
-      console.log(
-        '  - Billing Address:',
+      logger.debug('[Checkout] Creating Polar checkout with data:');
+      logger.debug('Customer IP:', args.customerIpAddress || 'not provided');
+      logger.debug('Customer Email:', customerEmail || 'not provided');
+      logger.debug(
+        'Billing Address:',
         customerBillingAddress ? 'provided' : 'not provided',
       );
-      console.log('  - Product ID:', checkoutProductId);
-      console.log('  - Is Bundle:', isBundleCheckout);
-      console.log('  - Amount:', totalAmount / 100, 'USD');
-      console.log('  - Environment:', process.env.POLAR_SERVER);
+      logger.debug('Product ID:', checkoutProductId);
+      logger.debug('Is Bundle:', isBundleCheckout);
+      logger.debug('Amount: $', totalAmount / 100);
+      logger.debug('Environment:', process.env.POLAR_SERVER);
 
       const checkout = await polarClient.checkouts.create(checkoutData);
 
@@ -422,18 +422,13 @@ export const createCheckoutSession = action({
         throw new Error('Failed to create checkout session');
       }
 
-      console.log('[Checkout] Polar checkout created:');
-      console.log('  - Checkout ID:', checkout.id);
-      console.log('  - Subtotal (amount):', checkout.amount / 100, 'USD');
-      console.log(
-        '  - Tax (tax_amount):',
-        checkout.taxAmount ? checkout.taxAmount / 100 : 'null',
+      logger.info('[Checkout] Polar checkout created:', checkout.id);
+      logger.debug('Subtotal (amount): $', checkout.amount / 100);
+      logger.debug(
+        'Tax (tax_amount): $',
+        checkout.taxAmount ? checkout.taxAmount / 100 : 0,
       );
-      console.log(
-        '  - Total (total_amount):',
-        checkout.totalAmount / 100,
-        'USD',
-      );
+      logger.debug('Total (total_amount): $', checkout.totalAmount / 100);
 
       // Store checkout session ID and discount info in the cart
       await ctx.runMutation(internal.cart.cart.internal_updateCartCheckout, {
@@ -462,7 +457,7 @@ export const createCheckoutSession = action({
         error instanceof Error
           ? error.message
           : 'Failed to create checkout session';
-      console.error('Failed to create checkout session:', error);
+      logger.error('Failed to create checkout session:', error);
       throw new Error(errorMessage);
     }
   },
@@ -791,17 +786,17 @@ export const createCheckoutSessionWithIP = action({
         checkoutData.amount = totalAmount;
       }
 
-      console.log('[Checkout] Creating Polar checkout with data:');
-      console.log('  - Customer IP:', args.customerIpAddress || 'not provided');
-      console.log('  - Customer Email:', customerEmail || 'not provided');
-      console.log(
-        '  - Billing Address:',
+      logger.debug('[Checkout] Creating Polar checkout with data:');
+      logger.debug('Customer IP:', args.customerIpAddress || 'not provided');
+      logger.debug('Customer Email:', customerEmail || 'not provided');
+      logger.debug(
+        'Billing Address:',
         customerBillingAddress ? 'provided' : 'not provided',
       );
-      console.log('  - Product ID:', checkoutProductId);
-      console.log('  - Is Bundle:', isBundleCheckout);
-      console.log('  - Amount:', totalAmount / 100, 'USD');
-      console.log('  - Environment:', process.env.POLAR_SERVER);
+      logger.debug('Product ID:', checkoutProductId);
+      logger.debug('Is Bundle:', isBundleCheckout);
+      logger.debug('Amount: $', totalAmount / 100);
+      logger.debug('Environment:', process.env.POLAR_SERVER);
 
       const checkout = await polarClient.checkouts.create(checkoutData);
 
@@ -809,18 +804,13 @@ export const createCheckoutSessionWithIP = action({
         throw new Error('Failed to create checkout session');
       }
 
-      console.log('[Checkout] Polar checkout created:');
-      console.log('  - Checkout ID:', checkout.id);
-      console.log('  - Subtotal (amount):', checkout.amount / 100, 'USD');
-      console.log(
-        '  - Tax (tax_amount):',
-        checkout.taxAmount ? checkout.taxAmount / 100 : 'null',
+      logger.info('[Checkout] Polar checkout created:', checkout.id);
+      logger.debug('Subtotal (amount): $', checkout.amount / 100);
+      logger.debug(
+        'Tax (tax_amount): $',
+        checkout.taxAmount ? checkout.taxAmount / 100 : 0,
       );
-      console.log(
-        '  - Total (total_amount):',
-        checkout.totalAmount / 100,
-        'USD',
-      );
+      logger.debug('Total (total_amount): $', checkout.totalAmount / 100);
 
       // Store checkout session ID and discount info in the cart
       await ctx.runMutation(internal.cart.cart.internal_updateCartCheckout, {
@@ -849,7 +839,7 @@ export const createCheckoutSessionWithIP = action({
         error instanceof Error
           ? error.message
           : 'Failed to create checkout session';
-      console.error('Failed to create checkout session:', error);
+      logger.error('Failed to create checkout session:', error);
       throw new Error(errorMessage);
     }
   },
@@ -919,7 +909,7 @@ export const handleCheckoutSuccess = action({
         try {
           cartItems = JSON.parse(metadata.cartItems as string);
         } catch (e) {
-          console.error('Failed to parse cart items from metadata:', e);
+          logger.error('Failed to parse cart items from metadata:', e);
         }
       }
 
@@ -985,11 +975,9 @@ export const handleCheckoutSuccess = action({
           : undefined,
       });
 
-      // Clear the cart only if checkout succeeded
       if (checkout.status === 'succeeded' && cartId) {
-        // Decrement inventory for each purchased item
         const itemCount = metadata.itemCount as number;
-        console.log(`[Checkout] Decrementing inventory for ${itemCount} items`);
+        logger.info(`[Checkout] Decrementing inventory for ${itemCount} items`);
 
         for (let i = 0; i < itemCount; i++) {
           const productId = metadata[`item_${i}_id`] as string;
@@ -1004,12 +992,12 @@ export const handleCheckoutSuccess = action({
                   quantity,
                 },
               );
-              console.log(
-                `  ✓ Decremented inventory for ${metadata[`item_${i}_name`]} by ${quantity}`,
+              logger.debug(
+                `Decremented inventory for ${metadata[`item_${i}_name`]} by ${quantity}`,
               );
             } catch (error) {
-              console.error(
-                `  ✗ Failed to decrement inventory for ${productId}:`,
+              logger.error(
+                `Failed to decrement inventory for ${productId}:`,
                 error,
               );
             }
@@ -1020,7 +1008,6 @@ export const handleCheckoutSuccess = action({
           cartId,
         });
 
-        // Clean up bundle product if one was created
         const bundleProductId = metadata.bundleProductId as string | undefined;
         if (bundleProductId) {
           try {
@@ -1030,12 +1017,11 @@ export const handleCheckoutSuccess = action({
                 isArchived: true,
               },
             });
-            console.log(
+            logger.info(
               `[Bundle] Archived ${bundleProductId} after successful checkout`,
             );
           } catch (error) {
-            // Don't fail the checkout if cleanup fails
-            console.error(
+            logger.error(
               `[Bundle] Failed to archive ${bundleProductId}:`,
               error,
             );
@@ -1051,7 +1037,7 @@ export const handleCheckoutSuccess = action({
     } catch (error: unknown) {
       const errorMessage =
         error instanceof Error ? error.message : 'Failed to process checkout';
-      console.error('Failed to handle checkout success:', error);
+      logger.error('Failed to handle checkout success:', error);
       throw new Error(errorMessage);
     }
   },
@@ -1099,7 +1085,7 @@ export const getCheckout = action({
       const checkout = await polarClient.checkouts.get({ id: checkoutId });
       return checkout;
     } catch (error: unknown) {
-      console.error('Failed to get checkout:', error);
+      logger.error('Failed to get checkout:', error);
       return null;
     }
   },

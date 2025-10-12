@@ -6,8 +6,6 @@ import { Uploader } from '@/app/(public)/(shop)/components/uploader';
 import { ProductGrid } from '@/components/products/product-grid';
 import { getProducts, type ProductFilters } from '@/lib/server/data/products';
 
-export const experimental_ppr = true;
-
 async function CachedProductContent() {
   'use cache';
   cacheLife('hours');
@@ -26,7 +24,10 @@ async function CachedProductContent() {
 
 export default async function Page() {
   return (
-    <div className="animate-page-in">
+    <div
+      className="animate-page-in"
+      style={{ viewTransitionName: 'home-content' }}
+    >
       <CachedProductContent />
       <Uploader />
     </div>
