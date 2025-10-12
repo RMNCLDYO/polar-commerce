@@ -8,7 +8,6 @@ import { logger } from './utils/logger';
 export const polar = new Polar(components.polar, {
   // Required: provide a function the component can use to get the current user's ID and email
   getUserInfo: async (ctx): Promise<{ userId: string; email: string }> => {
-    // biome-ignore lint/suspicious/noTsIgnore: @ts-ignore needed for dual tsconfig compatibility
     // @ts-ignore - Type instantiation depth issue (Next.js build only, not tsc -p convex)
     const user = await ctx.runQuery(api.auth.auth.getCurrentUser);
     if (!user) {

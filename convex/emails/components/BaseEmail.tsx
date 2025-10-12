@@ -8,7 +8,7 @@ import {
   Preview,
   Text,
 } from '@react-email/components';
-// biome-ignore lint/style/useImportType: React is needed for JSX runtime
+// React is needed for JSX runtime
 import React, { Fragment } from 'react';
 
 export interface BaseEmailProps {

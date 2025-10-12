@@ -1,9 +1,8 @@
 import '../utils/polyfills';
 import { Resend } from '@convex-dev/resend';
 import { render } from '@react-email/components';
-// biome-ignore lint/suspicious/noTsIgnore: dual tsconfig compatibility
 // @ts-ignore - React needed for tsc but not Next.js
-// biome-ignore lint/correctness/noUnusedImports: React needed for tsc JSX
+// React needed for tsc JSX
 import React from 'react';
 import { components } from '../_generated/api';
 import type { ActionCtx } from '../_generated/server';

@@ -62,7 +62,6 @@ export const onUserCreated = internalAction({
 
     try {
       const result = await ctx.runAction(
-        // biome-ignore lint/suspicious/noTsIgnore: Type instantiation depth requires @ts-ignore for dual tsconfig
         // @ts-ignore - Type instantiation depth issue with Convex generated types (tsc -p convex only)
         api.polarCustomer.ensurePolarCustomer,
         {
