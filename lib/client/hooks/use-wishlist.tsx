@@ -2,7 +2,7 @@
 
 import { useConvexAuth, useMutation, useQuery } from 'convex/react';
 import Image from 'next/image';
-import { useEffect, useState } from 'react';
+import { useEffect, useEffectEvent, useState } from 'react';
 import { toast } from 'sonner';
 import { api } from '@/convex/_generated/api';
 import type { Id } from '@/convex/_generated/dataModel';
@@ -20,21 +20,24 @@ function getSessionId(): string {
 
 export function useWishlist() {
   const { isAuthenticated } = useConvexAuth();
-  const [sessionId, setSessionId] = useState<string>(() => {
-    if (typeof window !== 'undefined' && !isAuthenticated) {
-      return getSessionId();
-    }
-    return '';
-  });
+  const [sessionId, setSessionId] = useState<string>('');
   const [isProcessing, setIsProcessing] = useState(false);
 
-  useEffect(() => {
+  // React 19.2: Use Effect Event for session management
+  // Prevents unnecessary effect re-runs while keeping auth state reactive
+  const onAuthChange = useEffectEvent(() => {
     if (!isAuthenticated) {
       setSessionId(getSessionId());
     } else {
+      // For authenticated users, clear any existing sessionId
       setSessionId('');
       localStorage.removeItem('wishlist-session-id');
     }
+  });
+
+  // Initialize session ID on client side (only for guests)
+  useEffect(() => {
+    onAuthChange();
   }, [isAuthenticated]);
 
   const wishlist = useQuery(
@@ -263,7 +266,8 @@ export function useWishlistMerge() {
   const user = useQuery(api.auth.auth.getCurrentUser);
   const [hasRunMerge, setHasRunMerge] = useState(false);
 
-  useEffect(() => {
+  // React 19.2: Use Effect Event for wishlist merge logic
+  const onUserLogin = useEffectEvent(() => {
     const sessionId =
       typeof window !== 'undefined'
         ? localStorage.getItem('wishlist-session-id')
@@ -278,10 +282,15 @@ export function useWishlistMerge() {
         .catch((err) => console.error('Wishlist merge failed:', err));
     }
 
+    // Reset flag when user signs out
     if (!user) {
       setHasRunMerge(false);
     }
-  }, [user, hasRunMerge, mergeWishlistMutation]);
+  });
+
+  useEffect(() => {
+    onUserLogin();
+  }, [user, hasRunMerge]);
 }
 
 export function useIsInWishlist(catalogId: Id<'catalog'>, sessionId?: string) {
