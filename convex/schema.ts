@@ -22,7 +22,7 @@ import { v } from 'convex/values';
  * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  *
  * Seeding:
- *   products.json + subscriptions.json
+ *   data/products.json + data/subscriptions.json
  *            ↓
  *      scripts/seedAll.ts
  *            ↓
