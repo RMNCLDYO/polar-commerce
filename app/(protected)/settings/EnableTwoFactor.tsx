@@ -2,7 +2,7 @@
 
 import { useQuery } from 'convex/react';
 import { ArrowLeft, Check, Copy, Loader2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useEffectEvent, useState } from 'react';
 import QRCode from 'react-qr-code';
 import { Button } from '@/components/ui/button';
 import {
@@ -39,17 +39,20 @@ export default function EnableTwoFactor() {
   const [backupCodes, setBackupCodes] = useState<string[]>();
   const [copied, setCopied] = useState(false);
 
+  // React 19.2: Use Effect Event for one-time account check
+  // This prevents unnecessary re-renders and keeps the effect dependencies clean
+  const onMount = useEffectEvent(async () => {
+    const accounts = await authClient.listAccounts();
+    if ('data' in accounts && accounts.data) {
+      const hasCredential = accounts.data.some(
+        (account: AccountInfo) => account.providerId === 'credential',
+      );
+      setStep(hasCredential ? 'password' : 'need-password');
+    }
+  });
+
   useEffect(() => {
-    const checkAccounts = async () => {
-      const accounts = await authClient.listAccounts();
-      if ('data' in accounts && accounts.data) {
-        const hasCredential = accounts.data.some(
-          (account: AccountInfo) => account.providerId === 'credential',
-        );
-        setStep(hasCredential ? 'password' : 'need-password');
-      }
-    };
-    checkAccounts();
+    onMount();
   }, []);
 
   const handlePasswordSubmit = async () => {

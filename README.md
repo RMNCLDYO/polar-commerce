@@ -84,23 +84,82 @@ Shows the **complete picture**: auth flows, real-time updates, payment processin
 
 ### View Transitions
 
-Browser-native page transition animations:
+Browser-native page transition animations with forward-compatible component wrapper:
 
 ```typescript
-// Custom hook with fallback
-export function useViewTransition() {
-  const startViewTransition = useCallback((callback: () => void) => {
-    if (document.startViewTransition) {
-      document.startViewTransition(() => callback());
-    } else {
-      callback(); // Graceful degradation
-    }
-  }, []);
-  return { startViewTransition };
-}
+// Forward-compatible wrapper (components/view-transition.tsx)
+<ViewTransition name="product-detail" className="px-8 py-12">
+  <ProductContent />
+</ViewTransition>
+
+// Renders with viewTransitionName for browser API
+// Easy migration when React's <ViewTransition> becomes stable
 ```
 
-**CSS animations defined for 13 routes** with fade-in, slide-up, and scale effects.
+**Benefits:**
+- Clean, declarative API with type-safe props
+- Shared element transitions between routes
+- Automatic animations for matching view transition names
+- Easy future migration to React's native `<ViewTransition>` component
+
+**Used on 4+ pages** including product details, checkout, pricing, and home page.
+
+### useEffectEvent
+
+Separates "event" logic from Effects to prevent unnecessary re-runs:
+
+```typescript
+// Before: theme changes cause chat room to reconnect
+useEffect(() => {
+  const connection = createConnection(roomId);
+  connection.on('connected', () => {
+    showNotification('Connected!', theme); // theme triggers re-run
+  });
+  connection.connect();
+}, [roomId, theme]); // ❌ theme causes reconnection
+
+// After: only roomId changes cause reconnection
+const onConnected = useEffectEvent(() => {
+  showNotification('Connected!', theme); // always sees latest theme
+});
+
+useEffect(() => {
+  const connection = createConnection(roomId);
+  connection.on('connected', onConnected);
+  connection.connect();
+}, [roomId]); // ✅ Effect Events aren't dependencies
+```
+
+**Used in 4 files:** `use-cart.tsx`, `use-wishlist.tsx`, `EnableTwoFactor.tsx` (consistent session management patterns)
+
+### Activity Component
+
+Pre-renders hidden parts of the app for instant navigation:
+
+```tsx
+<Activity mode={preloadCheckout ? 'visible' : 'hidden'}>
+  <CheckoutPreloader />
+</Activity>
+```
+
+**Benefits:**
+- Loads checkout data/CSS/images in background
+- Zero impact on visible page performance
+- Makes navigation feel instant
+
+**Implementation:** Shop layout pre-renders checkout when cart has items
+
+### Performance Tracks
+
+Chrome DevTools now shows React-specific performance tracks:
+
+1. **Open Chrome DevTools** → Performance tab
+2. **Record profile** while using the app
+3. **Look for custom tracks:**
+   - **Scheduler ⚛** - What React is working on by priority (blocking vs transition)
+   - **Components ⚛** - Which components are rendering/running effects
+
+**See:** [React Performance Tracks docs](https://react.dev/reference/dev-tools/react-performance-tracks)
 
 ### Server Components
 
@@ -145,6 +204,7 @@ components/
 │   └── footer/               # Footer with links
 ├── link.tsx                  # Custom Link with 4 prefetch strategies
 │   # 'hover' | 'visible' | 'always' | 'never'
+├── view-transition.tsx       # React 19.2 View Transitions wrapper
 └── products/                 # Product UI components
 
 lib/
@@ -157,9 +217,8 @@ lib/
 ├── client/                   # Client-side code
 │   ├── auth.ts               # Client auth utilities
 │   └── hooks/
-│       ├── use-cart.tsx      # Real-time cart with auto-merge
-│       ├── use-wishlist.tsx  # Wishlist with localStorage
-│       └── use-view-transition.tsx  # React 19.2 View Transitions
+│       ├── use-cart.tsx      # Real-time cart with useEffectEvent
+│       └── use-wishlist.tsx  # Wishlist with useEffectEvent
 └── shared/                   # Isomorphic utilities
     ├── utils.ts              # Shared utilities
     └── logger.ts             # Environment-aware logging
@@ -497,8 +556,8 @@ npm run polar:verify-seed     # Verify seeding integrity
 npm run db:reset              # Clear database (⚠️  destructive)
 
 # Code Quality
-npm run lint                  # Biome check + Convex TypeScript
-npm run format                # Biome format --write
+npm run lint                  # ESLint + Convex TypeScript
+npm run format                # ESLint auto-fix
 npm run clean                 # Clean build artifacts + reinstall
 ```
 
@@ -513,7 +572,7 @@ npm run clean                 # Clean build artifacts + reinstall
 | **Payments** | Polar SDK | 0.35.4 | Payment processing + subscriptions |
 | **UI Components** | shadcn/ui | Latest | Radix UI + Tailwind components |
 | **Styling** | Tailwind CSS | 4.0 | Utility-first CSS framework |
-| **Linter** | Biome | 2.2.5 | Fast linter/formatter (replaces ESLint) |
+| **Linter** | ESLint | 9.37.0 | With eslint-plugin-react-hooks@7.0.0 (React Compiler rules) |
 | **AI SDK** | Vercel AI SDK | 5.0.64 | AI integration framework |
 | **AI Model** | Google Gemini | 2.0 Flash | Generative AI for virtual try-on |
 | **TypeScript** | TypeScript | 5.0+ | Type safety |
@@ -561,6 +620,7 @@ npm run clean                 # Clean build artifacts + reinstall
 ### Developer Experience
 - ✅ 100% TypeScript with strict mode
 - ✅ Auto-generated types from Convex schema
+- ✅ React Compiler-powered lint rules (refs, purity, immutability, set-state-in-render)
 - ✅ Hot module replacement (Turbopack)
 - ✅ File system caching for faster restarts
 - ✅ Comprehensive seeding scripts
@@ -610,7 +670,7 @@ If migrating from Next.js 15:
 4. **Image defaults changed:** `minimumCacheTTL` now 4 hours (was 60s)
 5. **`revalidateTag()` signature:** Now requires second argument (cacheLife profile)
 6. **Removed `experimental.ppr`:** Integrated into `experimental.cacheComponents`
-7. **Removed `next lint`:** Use Biome or ESLint directly
+7. **Removed `next lint`:** Use ESLint directly (`npm run lint`)
 
 All changes implemented in this codebase.
 

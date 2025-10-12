@@ -11,6 +11,7 @@ import { Card } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { ViewTransition } from '@/components/view-transition';
 import { api } from '@/convex/_generated/api';
 import type { CheckoutSessionResponse } from '@/convex/checkout/types';
 import { useCart } from '@/lib/client/hooks/use-cart';
@@ -227,17 +228,12 @@ export default function CheckoutPage() {
   const total = subtotal - discountAmount + shipping;
 
   return (
-    <main
-      className="min-h-screen px-8 py-12"
-      style={{ viewTransitionName: 'checkout-content' }}
-    >
-      <div className="mx-auto max-w-6xl">
-        <h1
-          className="text-3xl font-bold mb-8"
-          style={{ viewTransitionName: 'page-title' }}
-        >
-          Checkout
-        </h1>
+    <ViewTransition name="checkout-content" className="min-h-screen px-8 py-12">
+      <main>
+        <div className="mx-auto max-w-6xl">
+          <ViewTransition name="page-title">
+            <h1 className="text-3xl font-bold mb-8">Checkout</h1>
+          </ViewTransition>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column: Order Details & Options */}
@@ -492,7 +488,8 @@ export default function CheckoutPage() {
             </Card>
           </div>
         </div>
-      </div>
-    </main>
+        </div>
+      </main>
+    </ViewTransition>
   );
 }

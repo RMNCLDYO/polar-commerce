@@ -2,7 +2,7 @@
 
 import { Loader2 } from 'lucide-react';
 import Image from 'next/image';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from '@/components/link';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { Badge } from '@/components/ui/badge';
@@ -31,8 +31,15 @@ export function ProductCard({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(false);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
-  const loadStartTime = useRef<number>(Date.now());
+  // React Compiler: Initialize timestamp in useEffect to avoid impure Date.now() in render
+  const loadStartTime = useRef<number>(0);
   const { addToCart } = useCart();
+
+  useEffect(() => {
+    if (loadStartTime.current === 0) {
+      loadStartTime.current = Date.now();
+    }
+  }, []);
 
   const handleImageLoad = (): void => {
     const loadTime = Date.now() - loadStartTime.current;

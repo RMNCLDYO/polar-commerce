@@ -2,7 +2,7 @@
 
 import { useConvexAuth, useMutation, useQuery } from 'convex/react';
 import Image from 'next/image';
-import { useEffect, useState } from 'react';
+import { useEffect, useEffectEvent, useState } from 'react';
 import { toast } from 'sonner';
 import { api } from '@/convex/_generated/api';
 import type { Id } from '@/convex/_generated/dataModel';
@@ -24,8 +24,9 @@ export function useCart() {
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const { isAuthenticated } = useConvexAuth();
 
-  // Initialize session ID on client side (only for guests)
-  useEffect(() => {
+  // React 19.2: Use Effect Event for session management
+  // Prevents unnecessary effect re-runs while keeping auth state reactive
+  const onAuthChange = useEffectEvent(() => {
     if (!isAuthenticated) {
       setSessionId(getSessionId());
     } else {
@@ -33,6 +34,11 @@ export function useCart() {
       setSessionId('');
       localStorage.removeItem('cart-session-id');
     }
+  });
+
+  // Initialize session ID on client side (only for guests)
+  useEffect(() => {
+    onAuthChange();
   }, [isAuthenticated]);
 
   // Queries
@@ -71,6 +77,13 @@ export function useCart() {
         quantity,
         sessionId: sessionId || undefined,
       });
+
+      // Dispatch event for Activity preloading
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('cart:changed', { detail: { hasItems: true } }),
+        );
+      }
 
       if (productInfo) {
         toast.custom(
@@ -221,7 +234,9 @@ export function useCartMerge() {
   const user = useQuery(api.auth.auth.getCurrentUser);
   const [hasRunMerge, setHasRunMerge] = useState(false);
 
-  useEffect(() => {
+  // React 19.2: Use Effect Event for cart merge logic
+  // Prevents mergeCartMutation from being a dependency (which could cause loops)
+  const onUserLogin = useEffectEvent(() => {
     const sessionId =
       typeof window !== 'undefined'
         ? localStorage.getItem('cart-session-id')
@@ -241,5 +256,9 @@ export function useCartMerge() {
     if (!user) {
       setHasRunMerge(false);
     }
-  }, [user, hasRunMerge, mergeCartMutation]);
+  });
+
+  useEffect(() => {
+    onUserLogin();
+  }, [user, hasRunMerge]);
 }
