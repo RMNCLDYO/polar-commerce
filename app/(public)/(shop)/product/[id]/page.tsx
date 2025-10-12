@@ -9,6 +9,7 @@ import { notFound } from 'next/navigation';
 import { QuickAddButton } from '@/components/cart/quick-add-button';
 import { Link } from '@/components/link';
 import { ProductActions } from '@/components/products/product-actions';
+import { ViewTransition } from '@/components/view-transition';
 import { AddToWishlistButton } from '@/components/wishlist/add-to-wishlist-button';
 import type { Id } from '@/convex/_generated/dataModel';
 import {
@@ -42,11 +43,9 @@ async function CachedProductContent({ id }: { id: string }) {
   const filteredRelated = relatedProducts.filter((p: Product) => p.id !== id);
 
   return (
-    <main
-      className="px-8 py-12"
-      style={{ viewTransitionName: 'product-detail' }}
-    >
-      <div className="mx-auto max-w-7xl">
+    <ViewTransition name="product-detail" className="px-8 py-12">
+      <main>
+        <div className="mx-auto max-w-7xl">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           <div
             className="relative overflow-hidden"
@@ -234,8 +233,9 @@ async function CachedProductContent({ id }: { id: string }) {
             </div>
           </section>
         )}
-      </div>
-    </main>
+        </div>
+      </main>
+    </ViewTransition>
   );
 }
 

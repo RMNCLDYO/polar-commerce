@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { ViewTransition } from '@/components/view-transition';
 import { api } from '@/convex/_generated/api';
 import subscriptionsData from '@/data/subscriptions.json';
 
@@ -62,6 +63,8 @@ export default function PricingPage() {
           origin: window.location.origin,
           successUrl: `${window.location.origin}/pricing?success=true`,
         });
+        // React Compiler: window.location.href modification is allowed in async handlers
+        // eslint-disable-next-line react-hooks/immutability
         window.location.href = checkout.url;
       } catch (error) {
         console.error('Failed to generate checkout link:', error);
@@ -71,17 +74,11 @@ export default function PricingPage() {
   };
 
   return (
-    <div
-      className="container mx-auto px-4 py-16"
-      style={{ viewTransitionName: 'pricing-content' }}
-    >
+    <ViewTransition name="pricing-content" className="container mx-auto px-4 py-16">
       <div className="text-center mb-12">
-        <h1
-          className="text-4xl font-bold mb-4"
-          style={{ viewTransitionName: 'page-title' }}
-        >
-          Choose Your Plan
-        </h1>
+        <ViewTransition name="page-title">
+          <h1 className="text-4xl font-bold mb-4">Choose Your Plan</h1>
+        </ViewTransition>
         <p className="text-xl text-muted-foreground mb-8">
           Unlock premium features and exclusive benefits
         </p>
@@ -251,6 +248,6 @@ export default function PricingPage() {
         </p>
         <p>Prices shown in USD. Taxes may apply based on your location.</p>
       </div>
-    </div>
+    </ViewTransition>
   );
 }

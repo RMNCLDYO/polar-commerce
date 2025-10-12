@@ -4,6 +4,7 @@ import {
 } from 'next/cache';
 import { Uploader } from '@/app/(public)/(shop)/components/uploader';
 import { ProductGrid } from '@/components/products/product-grid';
+import { ViewTransition } from '@/components/view-transition';
 import { getProducts, type ProductFilters } from '@/lib/server/data/products';
 
 async function CachedProductContent() {
@@ -24,12 +25,9 @@ async function CachedProductContent() {
 
 export default async function Page() {
   return (
-    <div
-      className="animate-page-in"
-      style={{ viewTransitionName: 'home-content' }}
-    >
+    <ViewTransition name="home-content" className="animate-page-in">
       <CachedProductContent />
       <Uploader />
-    </div>
+    </ViewTransition>
   );
 }
