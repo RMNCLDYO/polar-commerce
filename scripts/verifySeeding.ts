@@ -1,100 +1,80 @@
+/**
+ * Seeding Verification Script for Next.js 16
+ * Verifies that all seeded data is correctly synced between Polar and Convex
+ *
+ * @requires Node.js 20.9+
+ * @requires TypeScript 5+
+ */
+
 import { Polar } from '@polar-sh/sdk';
 import { ConvexHttpClient } from 'convex/browser';
 import * as dotenv from 'dotenv';
 import { api } from '../convex/_generated/api';
+import { createLogger } from './logger';
+import type {
+  CatalogProduct,
+  PageIteratorResponse,
+  PolarProduct,
+  VerificationResult,
+} from './types';
 
-// Load environment variables
 dotenv.config({ path: '.env.local' });
 
-// Local type definitions for Polar SDK (to avoid build issues with deep imports)
-interface PolarProduct {
-  id: string;
-  name: string;
-  isRecurring?: boolean;
-  isArchived?: boolean;
-  is_archived?: boolean;
-  [key: string]: unknown;
+const logger = createLogger({ prefix: '🔍' });
+
+/**
+ * Helper function to query Polar products with explicit typing
+ * Bypasses deep type inference issues in Convex queries
+ */
+async function queryPolarProducts(
+  client: ConvexHttpClient,
+): Promise<PolarProduct[]> {
+  // @ts-expect-error - Bypass deep type inference for Convex query
+  return await client.query(api.polar.listAllProducts, {});
 }
 
-interface ProductsListResponse {
-  result?: {
-    items?: PolarProduct[];
-  };
-}
-
-interface PageIteratorResponse {
-  ok: boolean;
-  value?: ProductsListResponse;
-}
-
-const colors = {
-  reset: '\x1b[0m',
-  bright: '\x1b[1m',
-  green: '\x1b[32m',
-  yellow: '\x1b[33m',
-  cyan: '\x1b[36m',
-  red: '\x1b[31m',
-  magenta: '\x1b[35m',
-};
-
-interface VerificationResult {
-  passed: boolean;
-  message: string;
-  details?: string[];
-}
-
-interface CatalogProduct {
-  category: string;
-  polarProductId?: string | null;
-  imageUrl?: string | null;
-  polarImageUrl?: string | null;
-  [key: string]: unknown;
-}
-
-async function verifySeeding() {
-  console.log(
-    `${colors.bright}${colors.magenta}🔍 VERIFYING SEEDING${colors.reset}`,
-  );
-  console.log('='.repeat(70));
-
+/**
+ * Validates required environment variables
+ * @throws {Error} If required environment variables are missing
+ */
+function validateEnvironment(): {
+  convexUrl: string;
+  polarToken: string;
+  server: 'sandbox' | 'production';
+} {
   const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
   const polarToken = process.env.POLAR_ORGANIZATION_TOKEN;
   const server =
     (process.env.POLAR_SERVER as 'sandbox' | 'production') || 'sandbox';
 
   if (!convexUrl || !polarToken) {
-    console.error(
-      `${colors.red}❌ Missing environment variables${colors.reset}`,
-    );
-    process.exit(1);
+    throw new Error('Missing required environment variables');
   }
 
-  const convexClient = new ConvexHttpClient(convexUrl);
-  const polarClient = new Polar({
-    accessToken: polarToken,
-    server: server,
-  });
+  return { convexUrl, polarToken, server };
+}
 
-  const results: VerificationResult[] = [];
-
-  console.log(`\n${colors.cyan}📊 Verification Environment:${colors.reset}`);
-  console.log(`  Convex URL: ${convexUrl}`);
-  console.log(`  Polar Server: ${server}\n`);
-
-  // ==========================================
-  // 1. Verify Polar Products
-  // ==========================================
-  console.log(`${colors.yellow}1️⃣  Verifying Polar products...${colors.reset}`);
-
+/**
+ * Fetches and verifies Polar products
+ */
+async function verifyPolarProducts(
+  polarClient: Polar,
+): Promise<VerificationResult> {
   try {
-    const polarProductsIter = await polarClient.products.list({ limit: 100 });
+    const productsIter = await polarClient.products.list({ limit: 100 });
     const polarProducts: PolarProduct[] = [];
 
-    for await (const response of polarProductsIter) {
-      const resp = response as unknown as PageIteratorResponse;
-      if (resp.ok && resp.value) {
-        const data = resp.value;
-        const items = data.result?.items || [];
+    for await (const response of productsIter) {
+      const typedResponse = response as unknown;
+      if (
+        typedResponse &&
+        typeof typedResponse === 'object' &&
+        'ok' in typedResponse &&
+        typedResponse.ok === true &&
+        'value' in typedResponse
+      ) {
+        const pageResponse = typedResponse as PageIteratorResponse;
+        const items = pageResponse.value?.result?.items ?? [];
         polarProducts.push(...items.filter((p) => !p.isArchived));
       }
     }
@@ -109,73 +89,66 @@ async function verifySeeding() {
     ];
 
     if (polarProducts.length === 0) {
-      results.push({
+      return {
         passed: false,
         message: 'No products found in Polar',
         details,
-      });
-    } else {
-      results.push({
-        passed: true,
-        message: `Found ${polarProducts.length} active products in Polar`,
-        details,
-      });
+      };
     }
-  } catch (error: unknown) {
-    const errorMessage =
-      error instanceof Error ? error.message : 'Unknown error';
-    results.push({
+
+    return {
+      passed: true,
+      message: `Found ${polarProducts.length} active products in Polar`,
+      details,
+    };
+  } catch (error) {
+    return {
       passed: false,
-      message: `Failed to fetch Polar products: ${errorMessage}`,
-    });
+      message: `Failed to fetch Polar products: ${error instanceof Error ? error.message : 'Unknown error'}`,
+    };
   }
+}
 
-  // ==========================================
-  // 2. Verify Convex polar.products table
-  // ==========================================
-  console.log(
-    `${colors.yellow}2️⃣  Verifying Convex polar.products table...${colors.reset}`,
-  );
-
+/**
+ * Verifies Convex polar.products table
+ */
+async function verifyConvexPolarProducts(
+  convexClient: ConvexHttpClient,
+): Promise<VerificationResult> {
   try {
-    const polarConvexProducts = await convexClient.query(
-      api.polar.listAllProducts,
-      {},
-    );
+    const polarConvexProducts = await queryPolarProducts(convexClient);
 
     const details = [
       `Total products in polar.products: ${polarConvexProducts.length}`,
     ];
 
     if (polarConvexProducts.length === 0) {
-      results.push({
+      return {
         passed: false,
         message: 'No products found in polar.products table',
         details,
-      });
-    } else {
-      results.push({
-        passed: true,
-        message: `Found ${polarConvexProducts.length} products in polar.products`,
-        details,
-      });
+      };
     }
-  } catch (error: unknown) {
-    const errorMessage =
-      error instanceof Error ? error.message : 'Unknown error';
-    results.push({
+
+    return {
+      passed: true,
+      message: `Found ${polarConvexProducts.length} products in polar.products`,
+      details,
+    };
+  } catch (error) {
+    return {
       passed: false,
-      message: `Failed to query polar.products: ${errorMessage}`,
-    });
+      message: `Failed to query polar.products: ${error instanceof Error ? error.message : 'Unknown error'}`,
+    };
   }
+}
 
-  // ==========================================
-  // 3. Verify Convex app.catalog table
-  // ==========================================
-  console.log(
-    `${colors.yellow}3️⃣  Verifying Convex app.catalog table...${colors.reset}`,
-  );
-
+/**
+ * Verifies Convex app.catalog table
+ */
+async function verifyConvexCatalog(
+  convexClient: ConvexHttpClient,
+): Promise<VerificationResult> {
   try {
     const appProducts = (await convexClient.query(
       api.catalog.sync.listProducts,
@@ -200,34 +173,32 @@ async function verifySeeding() {
     ];
 
     if (appProducts.length === 0) {
-      results.push({
+      return {
         passed: false,
         message: 'No products found in app.catalog table',
         details,
-      });
-    } else {
-      results.push({
-        passed: true,
-        message: `Found ${appProducts.length} products in app.catalog`,
-        details,
-      });
+      };
     }
-  } catch (error: unknown) {
-    const errorMessage =
-      error instanceof Error ? error.message : 'Unknown error';
-    results.push({
+
+    return {
+      passed: true,
+      message: `Found ${appProducts.length} products in app.catalog`,
+      details,
+    };
+  } catch (error) {
+    return {
       passed: false,
-      message: `Failed to query app.catalog: ${errorMessage}`,
-    });
+      message: `Failed to query app.catalog: ${error instanceof Error ? error.message : 'Unknown error'}`,
+    };
   }
+}
 
-  // ==========================================
-  // 4. Verify Subscription Products
-  // ==========================================
-  console.log(
-    `${colors.yellow}4️⃣  Verifying subscription tiers...${colors.reset}`,
-  );
-
+/**
+ * Verifies subscription tier configuration
+ */
+async function verifySubscriptionTiers(
+  convexClient: ConvexHttpClient,
+): Promise<VerificationResult> {
   try {
     const subscriptionProducts = await convexClient.query(
       api.polar.getSubscriptionProducts,
@@ -255,54 +226,53 @@ async function verifySeeding() {
     ];
 
     if (foundTiers.length === expectedTiers.length) {
-      results.push({
+      return {
         passed: true,
         message: 'All subscription tiers configured correctly',
         details,
-      });
-    } else {
-      results.push({
-        passed: false,
-        message: `Missing ${missingTiers.length} subscription tier(s)`,
-        details,
-      });
+      };
     }
-  } catch (error: unknown) {
-    const errorMessage =
-      error instanceof Error ? error.message : 'Unknown error';
-    results.push({
+
+    return {
       passed: false,
-      message: `Failed to verify subscription tiers: ${errorMessage}`,
-    });
+      message: `Missing ${missingTiers.length} subscription tier(s)`,
+      details,
+    };
+  } catch (error) {
+    return {
+      passed: false,
+      message: `Failed to verify subscription tiers: ${error instanceof Error ? error.message : 'Unknown error'}`,
+    };
   }
+}
 
-  // ==========================================
-  // 5. Verify Data Consistency
-  // ==========================================
-  console.log(
-    `${colors.yellow}5️⃣  Verifying data consistency...${colors.reset}`,
-  );
-
+/**
+ * Verifies data consistency between Polar and Convex
+ */
+async function verifyDataConsistency(
+  convexClient: ConvexHttpClient,
+): Promise<VerificationResult> {
   try {
     const appProducts = await convexClient.query(
       api.catalog.sync.listProducts,
       {},
     );
-    const polarConvexProducts = await convexClient.query(
-      api.polar.listAllProducts,
-      {},
-    );
+    const polarConvexProducts = await queryPolarProducts(convexClient);
 
     const appLinkedIds = new Set(
       appProducts
-        .filter((p) => p.polarProductId)
-        .map((p) => p.polarProductId as string),
+        .filter((p: CatalogProduct) => p.polarProductId)
+        .map((p: CatalogProduct) => p.polarProductId as string),
     );
-    const polarIds = new Set(polarConvexProducts.map((p) => p.id));
+    const polarIds = new Set(
+      polarConvexProducts.map((p: PolarProduct) => p.id),
+    );
 
-    const orphanedLinks = [...appLinkedIds].filter((id) => !polarIds.has(id));
+    const orphanedLinks = Array.from(appLinkedIds).filter(
+      (id) => !polarIds.has(id),
+    );
     const unlinkedPolarProducts = polarConvexProducts.filter(
-      (p) => !appLinkedIds.has(p.id),
+      (p: PolarProduct) => !appLinkedIds.has(p.id),
     );
 
     const details = [
@@ -313,98 +283,139 @@ async function verifySeeding() {
     ];
 
     if (orphanedLinks.length > 0) {
-      results.push({
+      return {
         passed: false,
         message: `Found ${orphanedLinks.length} orphaned product link(s)`,
         details,
-      });
-    } else {
-      results.push({
-        passed: true,
-        message: 'Data consistency check passed',
-        details,
-      });
+      };
     }
-  } catch (error: unknown) {
-    const errorMessage =
-      error instanceof Error ? error.message : 'Unknown error';
-    results.push({
-      passed: false,
-      message: `Failed to verify data consistency: ${errorMessage}`,
-    });
-  }
 
-  // ==========================================
-  // Display Results
-  // ==========================================
-  console.log(`\n${'='.repeat(70)}`);
-  console.log(`${colors.bright}📋 VERIFICATION RESULTS${colors.reset}`);
-  console.log(`${'='.repeat(70)}\n`);
+    return {
+      passed: true,
+      message: 'Data consistency check passed',
+      details,
+    };
+  } catch (error) {
+    return {
+      passed: false,
+      message: `Failed to verify data consistency: ${error instanceof Error ? error.message : 'Unknown error'}`,
+    };
+  }
+}
+
+/**
+ * Displays verification results
+ */
+function displayResults(results: VerificationResult[]): boolean {
+  logger.separator();
+  logger.section('📋 VERIFICATION RESULTS');
+  logger.separator();
+  logger.blank();
 
   let allPassed = true;
 
-  results.forEach((result) => {
-    const icon = result.passed ? '✅' : '❌';
-    const color = result.passed ? colors.green : colors.red;
-
-    console.log(`${icon} ${color}${result.message}${colors.reset}`);
-
-    if (result.details && result.details.length > 0) {
-      result.details.forEach((detail) => {
-        console.log(`   ${detail}`);
-      });
-    }
-
-    console.log();
-
-    if (!result.passed) {
+  for (const result of results) {
+    if (result.passed) {
+      logger.success(result.message);
+    } else {
+      logger.error(result.message);
       allPassed = false;
     }
-  });
 
-  // ==========================================
-  // Summary
-  // ==========================================
-  console.log('='.repeat(70));
+    if (result.details && result.details.length > 0) {
+      for (const detail of result.details) {
+        console.log(`   ${detail}`);
+      }
+    }
 
-  if (allPassed) {
-    console.log(
-      `${colors.bright}${colors.green}✅ ALL VERIFICATIONS PASSED!${colors.reset}`,
-    );
-    console.log(`\n${'─'.repeat(70)}`);
-    console.log('✨ Your application is correctly seeded and ready to use!');
-    console.log('─'.repeat(70));
-    console.log(`\n${colors.cyan}🚀 Next Steps:${colors.reset}`);
-    console.log("  1. Run 'npm run dev' to start the application");
-    console.log('  2. Visit /pricing to view subscription tiers');
-    console.log('  3. Visit /shop to browse products');
-    console.log('  4. Test the checkout flow');
-  } else {
-    console.log(
-      `${colors.bright}${colors.yellow}⚠️  VERIFICATION FAILED${colors.reset}`,
-    );
-    console.log('\nSome checks did not pass. Please review the issues above.');
-    console.log('\nCommon fixes:');
-    console.log("  • Run 'npm run db:reset' to clear all data");
-    console.log("  • Run 'npm run polar:seed' to reseed everything");
-    console.log('  • Check your .env.local configuration');
-    console.log('  • Verify Polar API token has correct permissions');
+    logger.blank();
   }
 
-  console.log(`\n${'='.repeat(70)}`);
+  logger.separator();
+
+  if (allPassed) {
+    logger.section('✅ ALL VERIFICATIONS PASSED!');
+    logger.blank();
+    logger.divider();
+    logger.subsection(
+      '✨ Your application is correctly seeded and ready to use!',
+    );
+    logger.divider();
+    logger.blank();
+    logger.subsection('🚀 Next Steps:');
+    logger.list([
+      "Run 'npm run dev' to start the application",
+      'Visit /pricing to view subscription tiers',
+      'Visit /shop to browse products',
+      'Test the checkout flow',
+    ]);
+  } else {
+    logger.section('⚠️  VERIFICATION FAILED');
+    logger.blank();
+    logger.subsection(
+      'Some checks did not pass. Please review the issues above.',
+    );
+    logger.blank();
+    logger.subsection('Common fixes:');
+    logger.list([
+      "Run 'npm run db:reset' to clear all data",
+      "Run 'npm run polar:seed' to reseed everything",
+      'Check your .env.local configuration',
+      'Verify Polar API token has correct permissions',
+    ]);
+  }
+
+  logger.separator();
 
   return allPassed;
 }
 
-// Run verification
-verifySeeding()
-  .then((passed) => {
-    process.exit(passed ? 0 : 1);
-  })
-  .catch((error) => {
-    console.error(
-      `\n${colors.red}❌ Fatal error during verification:${colors.reset}`,
-      error,
-    );
-    process.exit(1);
+/**
+ * Main verification function
+ */
+export async function verifySeeding(): Promise<boolean> {
+  logger.section('🔍 VERIFYING SEEDING');
+  logger.separator();
+
+  const env = validateEnvironment();
+  const convexClient = new ConvexHttpClient(env.convexUrl);
+  const polarClient = new Polar({
+    accessToken: env.polarToken,
+    server: env.server,
   });
+
+  logger.subsection('📊 Verification Environment:');
+  logger.item('Convex URL', env.convexUrl);
+  logger.item('Polar Server', env.server);
+  logger.blank();
+
+  const results: VerificationResult[] = [];
+
+  logger.step(1, 'Verifying Polar products...');
+  results.push(await verifyPolarProducts(polarClient));
+
+  logger.step(2, 'Verifying Convex polar.products table...');
+  results.push(await verifyConvexPolarProducts(convexClient));
+
+  logger.step(3, 'Verifying Convex app.catalog table...');
+  results.push(await verifyConvexCatalog(convexClient));
+
+  logger.step(4, 'Verifying subscription tiers...');
+  results.push(await verifySubscriptionTiers(convexClient));
+
+  logger.step(5, 'Verifying data consistency...');
+  results.push(await verifyDataConsistency(convexClient));
+
+  return displayResults(results);
+}
+
+if (import.meta.url === `file://${process.argv[1]}`) {
+  verifySeeding()
+    .then((passed) => {
+      process.exit(passed ? 0 : 1);
+    })
+    .catch((error) => {
+      logger.error('Fatal error during verification', error);
+      process.exit(1);
+    });
+}
