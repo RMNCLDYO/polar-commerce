@@ -18,10 +18,20 @@ const nextConfig = {
         revalidate: 3600,
         expire: 86400,
       },
+      max: {
+        stale: Infinity,
+        revalidate: 86400,
+        expire: Infinity,
+      },
       hours: {
         stale: 3600,
         revalidate: 3600,
         expire: 7200,
+      },
+      days: {
+        stale: 86400,
+        revalidate: 86400,
+        expire: 604800,
       },
     },
   },
