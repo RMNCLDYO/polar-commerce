@@ -1,5 +1,6 @@
 import 'server-only';
 
+import { cacheSignal } from 'react';
 import { fetchQuery } from 'convex/nextjs';
 import {
   unstable_cacheLife as cacheLife,
@@ -18,15 +19,19 @@ export async function getProducts(
   cacheLife('hours');
   cacheTag('products');
 
-  const products = await fetchQuery(api.catalog.catalog.getProducts, {
-    category: filters?.category,
-    search: filters?.search,
-    minPrice: filters?.minPrice,
-    maxPrice: filters?.maxPrice,
-    sort: filters?.sort,
-    limit: filters?.limit,
-    excludeSubscriptions: filters?.excludeSubscriptions,
-  });
+  const products = await fetchQuery(
+    api.catalog.catalog.getProducts,
+    {
+      category: filters?.category,
+      search: filters?.search,
+      minPrice: filters?.minPrice,
+      maxPrice: filters?.maxPrice,
+      sort: filters?.sort,
+      limit: filters?.limit,
+      excludeSubscriptions: filters?.excludeSubscriptions,
+    },
+    { signal: cacheSignal() },
+  );
 
   return products;
 }
@@ -37,9 +42,13 @@ export async function getProduct(id: string): Promise<Product | null> {
   cacheTag('products', `product-${id}`);
 
   try {
-    const product = await fetchQuery(api.catalog.catalog.getProduct, {
-      id: id as Id<'catalog'>,
-    });
+    const product = await fetchQuery(
+      api.catalog.catalog.getProduct,
+      {
+        id: id as Id<'catalog'>,
+      },
+      { signal: cacheSignal() },
+    );
     return product;
   } catch (error) {
     console.error('Error fetching product:', error);
