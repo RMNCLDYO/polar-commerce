@@ -21,7 +21,7 @@ import type { CheckoutSessionResponse } from '@/types/convex';
 export default function CheckoutPage() {
   const router = useRouter();
   const { cart, cartValidation, sessionId } = useCart();
-  const { isAuthenticated } = useConvexAuth();
+  const { isAuthenticated, isLoading: isAuthLoading } = useConvexAuth();
   const createCheckoutAction = useAction(
     api.checkout.checkout.createCheckoutSession,
   );
@@ -43,11 +43,19 @@ export default function CheckoutPage() {
   const [orderNotes, setOrderNotes] = useState('');
 
   // Redirect to products page if cart is empty or doesn't exist
+  // Wait for both auth and cart to load before redirecting
   useEffect(() => {
+    // Don't redirect while auth or cart is still loading
+    if (isAuthLoading) {return;}
+
+    // For guest users, wait for sessionId to be initialized
+    if (!isAuthenticated && !sessionId) {return;}
+
+    // Only redirect if cart is confirmed empty after loading
     if (cart !== undefined && (!cart || cart.items.length === 0)) {
       router.push('/products');
     }
-  }, [cart, router]);
+  }, [cart, router, isAuthenticated, isAuthLoading, sessionId]);
 
   const handleApplyDiscount = () => {
     if (!discountCode.trim()) {
@@ -188,8 +196,9 @@ export default function CheckoutPage() {
     }
   };
 
-  // Loading state while cart is loading
-  if (!cart) {
+  // Loading state while auth or cart is loading
+  // For guest users, also wait for sessionId to be initialized
+  if (isAuthLoading || !cart || (!isAuthenticated && !sessionId)) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />
