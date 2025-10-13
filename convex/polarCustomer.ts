@@ -3,6 +3,8 @@ import { v } from 'convex/values';
 import { components } from './_generated/api';
 import { action, internalAction } from './_generated/server';
 import { validateMetadata } from './polar/types';
+import { toCountryCode } from './types/metadata';
+import type { CustomerMetadata } from './types/metadata';
 import { logger } from './utils/logger';
 
 // Local type definitions for Polar SDK
@@ -25,7 +27,7 @@ interface PolarCustomer {
   createdAt: string | Date;
   modifiedAt?: string | Date | null;
   deletedAt?: string | Date | null;
-  metadata?: Record<string, unknown>;
+  metadata?: CustomerMetadata & { userId?: string };
   [key: string]: unknown;
 }
 
@@ -35,32 +37,40 @@ interface CustomersListResponse {
   };
 }
 
-interface PageIteratorResponse {
+// Type-safe wrapper for Polar SDK iterator response
+type PageIteratorResponse = {
   ok: boolean;
   value?: CustomersListResponse;
 }
 
-interface PolarCustomerUpdate {
-  email?: string;
-  name?: string | null;
-  billingAddress?: {
-    line1?: string | null;
-    line2?: string | null;
-    postalCode?: string | null;
-    city?: string | null;
-    state?: string | null;
-    country: string;
-  } | null;
-  taxId?: string[] | null;
-  metadata?: Record<string, string | number | boolean>;
-}
 
 /**
  * Helper to map Polar API customer to our schema
  * Converts dates to ISO strings for Convex Polar component
  */
 function mapPolarCustomerToSchema(
-  polarCustomer: PolarCustomer,
+  polarCustomer: PolarCustomer | {
+    id: string;
+    email: string;
+    emailVerified?: boolean;
+    name?: string | null;
+    externalId?: string | null;
+    avatarUrl?: string | null;
+    billingAddress?: {
+      line1?: string | null;
+      line2?: string | null;
+      postalCode?: string | null;
+      city?: string | null;
+      state?: string | null;
+      country: string;
+    } | null;
+    taxId?: (string | null)[] | null;
+    createdAt: string | Date;
+    modifiedAt?: string | Date | null;
+    deletedAt?: string | Date | null;
+    metadata?: CustomerMetadata & { userId?: string };
+    [key: string]: unknown;
+  },
   userId: string,
 ) {
   return {
@@ -83,7 +93,7 @@ function mapPolarCustomerToSchema(
       : null,
     tax_id: polarCustomer.taxId
       ? Array.isArray(polarCustomer.taxId)
-        ? polarCustomer.taxId
+        ? polarCustomer.taxId.filter((id): id is string => id !== null)
         : null
       : null,
     // Convert Date objects to ISO strings (Polar component expects strings)
@@ -103,7 +113,7 @@ function mapPolarCustomerToSchema(
         ? polarCustomer.deletedAt.toISOString()
         : polarCustomer.deletedAt
       : null,
-    metadata: polarCustomer.metadata || {},
+    metadata: polarCustomer.metadata || { userId },
   };
 }
 
@@ -180,10 +190,24 @@ export const ensurePolarCustomer = action({
 
       // Webhook will sync this customer to Convex automatically
       // But we can also sync it immediately for better UX
+      const mappedCustomer = mapPolarCustomerToSchema(result, userId);
       await ctx.runMutation(
         components.polar.lib.insertCustomer,
-        // @ts-expect-error - Polar SDK country type vs component country code type mismatch
-        mapPolarCustomerToSchema(result, userId),
+        {
+          ...mappedCustomer,
+          billing_address: mappedCustomer.billing_address
+            ? {
+                ...mappedCustomer.billing_address,
+                country: toCountryCode(mappedCustomer.billing_address.country),
+              }
+            : null,
+          // Convert metadata to plain Record<string, string | number | boolean>
+          metadata: mappedCustomer.metadata as Record<string, string | number | boolean>,
+          // Ensure tax_id is proper type (filter out nulls)
+          tax_id: mappedCustomer.tax_id
+            ? mappedCustomer.tax_id.filter((id): id is string => id !== null)
+            : null,
+        },
       );
 
       return {
@@ -202,17 +226,18 @@ export const ensurePolarCustomer = action({
         // Try to find the existing customer in Polar
         try {
           const customersIter = await polarClient.customers.list({
-            email: email,
+            email,
             limit: 1,
           });
 
           for await (const response of customersIter) {
+            // Polar SDK returns IteratorResult with nested response structure
             const resp = response as unknown as PageIteratorResponse;
             const items =
               resp.ok && resp.value ? resp.value.result?.items || [] : [];
             if (items.length > 0) {
               const customer = items[0];
-              if (!customer) continue;
+              if (!customer) {continue;}
 
               // Update metadata to include userId
               const updatedMetadata = {
@@ -236,13 +261,27 @@ export const ensurePolarCustomer = action({
               }
 
               // Sync to Convex immediately
+              const mappedCustomer = mapPolarCustomerToSchema(
+                { ...customer, metadata: updatedMetadata },
+                userId,
+              );
               await ctx.runMutation(
                 components.polar.lib.insertCustomer,
-                // @ts-expect-error - Polar SDK country type vs component country code type mismatch
-                mapPolarCustomerToSchema(
-                  { ...customer, metadata: updatedMetadata },
-                  userId,
-                ),
+                {
+                  ...mappedCustomer,
+                  billing_address: mappedCustomer.billing_address
+                    ? {
+                        ...mappedCustomer.billing_address,
+                        country: toCountryCode(mappedCustomer.billing_address.country),
+                      }
+                    : null,
+                  // Convert metadata to plain Record<string, string | number | boolean>
+                  metadata: mappedCustomer.metadata as Record<string, string | number | boolean>,
+                  // Ensure tax_id is proper type (filter out nulls)
+                  tax_id: mappedCustomer.tax_id
+                    ? mappedCustomer.tax_id.filter((id): id is string => id !== null)
+                    : null,
+                },
               );
 
               return {
@@ -286,7 +325,7 @@ export const updateCustomer = action({
         ),
       ),
       tax_id: v.optional(v.union(v.array(v.string()), v.null())),
-      metadata: v.optional(v.record(v.string(), v.any())),
+      metadata: v.optional(v.record(v.string(), v.union(v.string(), v.number(), v.boolean()))),
     }),
   },
   handler: async (ctx, { userId, updates }) => {
@@ -328,19 +367,19 @@ export const updateCustomer = action({
     });
 
     try {
-      const polarUpdates: PolarCustomerUpdate = {};
+      // Build update object for Polar SDK, allowing the SDK to handle type validation
+      const polarUpdates: Parameters<typeof polarClient.customers.update>[0]['customerUpdate'] = {};
 
-      if (updates.email !== undefined) polarUpdates.email = updates.email;
-      if (updates.name !== undefined) polarUpdates.name = updates.name;
+      if (updates.email !== undefined) {polarUpdates.email = updates.email;}
+      if (updates.name !== undefined) {polarUpdates.name = updates.name;}
       if (updates.billing_address !== undefined)
-        polarUpdates.billingAddress = updates.billing_address;
-      if (updates.tax_id !== undefined) polarUpdates.taxId = updates.tax_id;
+        {polarUpdates.billingAddress = updates.billing_address as typeof polarUpdates.billingAddress;}
+      if (updates.tax_id !== undefined) {polarUpdates.taxId = updates.tax_id;}
       if (updates.metadata !== undefined)
-        polarUpdates.metadata = updates.metadata;
+        {polarUpdates.metadata = updates.metadata;}
 
       const updatedCustomer = await polarClient.customers.update({
         id: existingCustomer.id,
-        // @ts-expect-error - Polar SDK country type vs generic string type mismatch
         customerUpdate: polarUpdates,
       });
 
@@ -350,10 +389,24 @@ export const updateCustomer = action({
 
       // Sync the updated customer back to Convex
       // (webhook will also do this, but we do it immediately for better UX)
+      const mappedCustomer = mapPolarCustomerToSchema(updatedCustomer, userId);
       await ctx.runMutation(
         components.polar.lib.upsertCustomer,
-        // @ts-expect-error - Polar SDK country type vs component country code type mismatch
-        mapPolarCustomerToSchema(updatedCustomer, userId),
+        {
+          ...mappedCustomer,
+          billing_address: mappedCustomer.billing_address
+            ? {
+                ...mappedCustomer.billing_address,
+                country: toCountryCode(mappedCustomer.billing_address.country),
+              }
+            : null,
+          // Convert metadata to plain Record<string, string | number | boolean>
+          metadata: mappedCustomer.metadata as Record<string, string | number | boolean>,
+          // Ensure tax_id is proper type (filter out nulls)
+          tax_id: mappedCustomer.tax_id
+            ? mappedCustomer.tax_id.filter((id): id is string => id !== null)
+            : null,
+        },
       );
 
       return {

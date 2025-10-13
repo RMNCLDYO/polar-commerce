@@ -7,6 +7,7 @@ import { v } from 'convex/values';
 import { internal } from '../_generated/api';
 import type { Id } from '../_generated/dataModel';
 import { internalMutation } from '../_generated/server';
+import type { CheckoutMetadata } from '../types/metadata';
 import { logger } from '../utils/logger';
 
 /**
@@ -26,9 +27,9 @@ export const handleOrderPaid = internalMutation({
     logger.info('[Order Webhook] Processing order.paid:', args.orderId);
     logger.debug('[Order Webhook] Checkout ID:', args.checkoutId);
 
-    const metadata = args.metadata as Record<string, string | number | boolean>;
-    const cartId = metadata.cartId as string;
-    const itemCount = metadata.itemCount as number;
+    const metadata = args.metadata as CheckoutMetadata;
+    const cartId = metadata.cartId;
+    const itemCount = metadata.itemCount;
 
     if (!cartId || !itemCount) {
       logger.error('[Order Webhook] Missing cart metadata');

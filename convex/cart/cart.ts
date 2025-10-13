@@ -327,22 +327,33 @@ export const getCart = query({
     const itemsWithProducts = await Promise.all(
       cartItems.map(async (item) => {
         const product = await ctx.db.get(item.catalogId);
-        if (!product) return null;
+        if (!product) {return null;}
 
         return {
-          id: item._id,
+          _id: item._id,
+          _creationTime: item._creationTime,
+          cartId: item.cartId,
           catalogId: item.catalogId,
           quantity: item.quantity,
-          price: item.price, // Price when added to cart
-          currentPrice: product.price, // Current product price
+          price: item.price,
+          addedAt: item.addedAt,
+          updatedAt: item.updatedAt,
           product: {
-            id: product._id,
+            _id: product._id,
+            _creationTime: product._creationTime,
             name: product.name,
-            description: product.description,
+            price: product.price,
             category: product.category,
-            image: product.polarImageUrl || product.imageUrl,
+            imageUrl: product.polarImageUrl || product.imageUrl || '',
+            polarImageUrl: product.polarImageUrl,
+            polarImageId: product.polarImageId,
+            description: product.description,
             polarProductId: product.polarProductId,
             isActive: product.isActive,
+            inStock: product.inStock,
+            inventory_qty: product.inventory_qty,
+            createdAt: product.createdAt,
+            updatedAt: product.updatedAt,
           },
         };
       }),
@@ -633,7 +644,7 @@ export const internal_getCartItems = internalQuery({
     const itemsWithProducts = await Promise.all(
       items.map(async (item) => {
         const product = await ctx.db.get(item.catalogId);
-        if (!product) return null;
+        if (!product) {return null;}
 
         return {
           ...item,
@@ -651,10 +662,9 @@ export const internal_getAuthUser = internalQuery({
     userId: v.string(),
   },
   handler: async (ctx, { userId }) => {
+    // Query the Better Auth user table directly
     const user = await ctx.db
-      // @ts-expect-error - Better Auth table name and fields not in generated schema
       .query('betterAuth_user')
-      // @ts-expect-error - Better Auth table fields not in generated schema
       .filter((q) => q.eq(q.field('id'), userId))
       .first();
     return user;
@@ -684,9 +694,9 @@ export const internal_updateCartCheckout = internalMutation({
       updatedAt: Date.now(),
     };
 
-    if (args.discountId) updateData.discountId = args.discountId;
-    if (args.discountCode) updateData.discountCode = args.discountCode;
-    if (args.customFieldData) updateData.customFieldData = args.customFieldData;
+    if (args.discountId) {updateData.discountId = args.discountId;}
+    if (args.discountCode) {updateData.discountCode = args.discountCode;}
+    if (args.customFieldData) {updateData.customFieldData = args.customFieldData;}
 
     await ctx.db.patch(args.cartId, updateData);
   },

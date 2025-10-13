@@ -1,6 +1,5 @@
 import 'server-only';
 
-import { cacheSignal } from 'react';
 import { fetchQuery } from 'convex/nextjs';
 import {
   unstable_cacheLife as cacheLife,
@@ -30,7 +29,6 @@ export async function getProducts(
       limit: filters?.limit,
       excludeSubscriptions: filters?.excludeSubscriptions,
     },
-    { signal: cacheSignal() },
   );
 
   return products;
@@ -47,7 +45,6 @@ export async function getProduct(id: string): Promise<Product | null> {
       {
         id: id as Id<'catalog'>,
       },
-      { signal: cacheSignal() },
     );
     return product;
   } catch (error) {

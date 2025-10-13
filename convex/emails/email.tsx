@@ -1,9 +1,8 @@
 import '../utils/polyfills';
 import { Resend } from '@convex-dev/resend';
 import { render } from '@react-email/components';
-// @ts-ignore - React needed for tsc but not Next.js
-// React needed for tsc JSX
-import React from 'react';
+// @ts-ignore - React is used implicitly in JSX
+import * as React from 'react';
 import { components } from '../_generated/api';
 import type { ActionCtx } from '../_generated/server';
 import MagicLinkEmail from './magicLink';

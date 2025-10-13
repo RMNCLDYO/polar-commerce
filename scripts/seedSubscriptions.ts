@@ -6,12 +6,12 @@
  * @requires TypeScript 5+
  */
 
-import { createHash } from 'node:crypto';
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
 import { Polar } from '@polar-sh/sdk';
 import { ConvexHttpClient } from 'convex/browser';
 import * as dotenv from 'dotenv';
+import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { api } from '../convex/_generated/api';
 import type { Id } from '../convex/_generated/dataModel';
 import { createLogger } from './logger';
@@ -453,7 +453,7 @@ export async function seedSubscriptions(): Promise<void> {
     logger.subsection('Created/Updated Subscription Products:');
     logger.divider();
     createdProducts.forEach((p, i) => {
-      console.log(`${i + 1}. ${p.name}`);
+      logger.debug(`${i + 1}. ${p.name}`);
       logger.item('ID', p.id);
       logger.item('Price', p.price);
       logger.item('Tier', p.tier);
@@ -466,7 +466,7 @@ export async function seedSubscriptions(): Promise<void> {
     logger.divider();
     createdProducts.forEach((p) => {
       const envKey = `POLAR_PRODUCT_${p.tier.toUpperCase()}_${p.name.includes('Monthly') ? 'MONTHLY' : 'YEARLY'}`;
-      console.log(`${envKey}=${p.id}`);
+      logger.debug(`${envKey}=${p.id}`);
     });
 
     logger.separator();

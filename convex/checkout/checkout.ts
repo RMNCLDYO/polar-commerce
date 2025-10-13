@@ -249,7 +249,7 @@ export const createCheckoutSession = action({
           {
             userId,
           },
-        );
+        ) as { email: string; name?: string } | null;
         if (user) {
           customerEmail = user.email;
           customerName = user.name || undefined;
@@ -631,7 +631,7 @@ export const createCheckoutSessionWithIP = action({
           {
             userId,
           },
-        );
+        ) as { email: string; name?: string } | null;
         if (user) {
           customerEmail = user.email;
           customerName = user.name || undefined;
@@ -898,8 +898,9 @@ export const handleCheckoutSuccess = action({
 
       // Parse cart items from metadata
       let cartItems: Array<{
-        productId: string;
-        priceId: string | null;
+        catalogId?: Id<'catalog'>;
+        productId?: string;
+        priceId?: string | null;
         quantity: number;
         name: string;
         price: number;
@@ -907,7 +908,12 @@ export const handleCheckoutSuccess = action({
 
       if (metadata.cartItems) {
         try {
-          cartItems = JSON.parse(metadata.cartItems as string);
+          cartItems = JSON.parse(metadata.cartItems as string) as Array<{
+            catalogId: Id<'catalog'>;
+            quantity: number;
+            name: string;
+            price: number;
+          }>;
         } catch (e) {
           logger.error('Failed to parse cart items from metadata:', e);
         }
@@ -940,7 +946,7 @@ export const handleCheckoutSuccess = action({
 
         // Products
         products: cartItems.map((item) => ({
-          id: item.productId,
+          id: item.productId || item.catalogId || '',
           name: item.name,
           quantity: item.quantity,
           price: item.price,
@@ -1108,11 +1114,10 @@ export const getUserOrders = query({
 
     // Get user's email from Better Auth
     const user = await ctx.db
-      // @ts-expect-error - Better Auth table name not in generated schema
       .query('betterAuth_user')
-      // @ts-expect-error - Better Auth table fields not in generated schema
       .filter((q) => q.eq(q.field('id'), userId))
       .first();
+    const userEmail = user?.email;
 
     const orders = [];
 
@@ -1125,12 +1130,10 @@ export const getUserOrders = query({
     orders.push(...userOrders);
 
     // Also get any guest orders with the same email that haven't been linked yet
-    // @ts-expect-error - Better Auth user fields not in generated schema
-    if (user?.email) {
+    if (userEmail) {
       const guestOrders = await ctx.db
         .query('orders')
-        // @ts-expect-error - Better Auth user fields not in generated schema
-        .withIndex('email', (q) => q.eq('email', user.email))
+        .withIndex('email', (q) => q.eq('email', userEmail))
         .filter((q) => q.eq(q.field('userId'), undefined))
         .order('desc')
         .collect();

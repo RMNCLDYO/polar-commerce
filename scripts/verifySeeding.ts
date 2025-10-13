@@ -324,7 +324,7 @@ function displayResults(results: VerificationResult[]): boolean {
 
     if (result.details && result.details.length > 0) {
       for (const detail of result.details) {
-        console.log(`   ${detail}`);
+        logger.debug(`   ${detail}`);
       }
     }
 

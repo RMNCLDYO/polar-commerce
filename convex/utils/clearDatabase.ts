@@ -25,6 +25,7 @@
 import { Polar } from '@polar-sh/sdk';
 import { components, internal } from '../_generated/api';
 import { action, internalAction, internalMutation } from '../_generated/server';
+import type { BetterAuthDeleteManyResponse } from '../types/convex_internals';
 import { logger } from './logger';
 
 // Local type definitions for Polar SDK
@@ -195,10 +196,10 @@ export const clearBetterAuthData = internalMutation({
           input: { model: 'session' },
           paginationOpts: { cursor: null, numItems: 1000 },
         },
-      );
+      ) as BetterAuthDeleteManyResponse | null;
       results.sessions = sessionsResult?.deletedCount || 0;
       logger.info(`  ✅ Deleted ${results.sessions} sessions`);
-    } catch (_e) {
+    } catch {
       logger.info('  ⚠️  Could not delete sessions');
     }
 
@@ -210,10 +211,10 @@ export const clearBetterAuthData = internalMutation({
           input: { model: 'account' },
           paginationOpts: { cursor: null, numItems: 1000 },
         },
-      );
+      ) as BetterAuthDeleteManyResponse | null;
       results.accounts = accountsResult?.deletedCount || 0;
       logger.info(`  ✅ Deleted ${results.accounts} accounts`);
-    } catch (_e) {
+    } catch {
       logger.info('  ⚠️  Could not delete accounts');
     }
 
@@ -225,10 +226,10 @@ export const clearBetterAuthData = internalMutation({
           input: { model: 'verification' },
           paginationOpts: { cursor: null, numItems: 1000 },
         },
-      );
+      ) as BetterAuthDeleteManyResponse | null;
       results.verifications = verificationsResult?.deletedCount || 0;
       logger.info(`  ✅ Deleted ${results.verifications} verifications`);
-    } catch (_e) {
+    } catch {
       logger.info('  ⚠️  Could not delete verifications');
     }
 
@@ -240,10 +241,10 @@ export const clearBetterAuthData = internalMutation({
           input: { model: 'twoFactor' },
           paginationOpts: { cursor: null, numItems: 1000 },
         },
-      );
+      ) as BetterAuthDeleteManyResponse | null;
       results.twoFactor = twoFactorResult?.deletedCount || 0;
       logger.info(`  ✅ Deleted ${results.twoFactor} two-factor records`);
-    } catch (_e) {
+    } catch {
       logger.info('  ⚠️  Could not delete two-factor');
     }
 
@@ -255,10 +256,10 @@ export const clearBetterAuthData = internalMutation({
           input: { model: 'jwks' },
           paginationOpts: { cursor: null, numItems: 1000 },
         },
-      );
+      ) as BetterAuthDeleteManyResponse | null;
       results.jwks = jwksResult?.deletedCount || 0;
       logger.info(`  ✅ Deleted ${results.jwks} jwks`);
-    } catch (_e) {
+    } catch {
       logger.info('  ⚠️  Could not delete jwks');
     }
 
@@ -270,10 +271,10 @@ export const clearBetterAuthData = internalMutation({
           input: { model: 'user' },
           paginationOpts: { cursor: null, numItems: 1000 },
         },
-      );
+      ) as BetterAuthDeleteManyResponse | null;
       results.users = usersResult?.deletedCount || 0;
       logger.info(`  ✅ Deleted ${results.users} users`);
-    } catch (_e) {
+    } catch {
       logger.info('  ⚠️  Could not delete users');
     }
 
@@ -360,7 +361,7 @@ export const clearPolarDataInternal = internalAction({
       (process.env.POLAR_SERVER as 'sandbox' | 'production') || 'sandbox';
     const polarClient = new Polar({
       accessToken: token,
-      server: server,
+      server,
     });
 
     logger.info(`  Using Polar ${server} environment`);

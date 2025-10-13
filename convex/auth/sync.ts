@@ -2,6 +2,8 @@ import { Polar as PolarSDK } from '@polar-sh/sdk';
 import { v } from 'convex/values';
 import { api, components, internal } from '../_generated/api';
 import { action, internalAction } from '../_generated/server';
+import { toCountryCode } from '../types/metadata';
+import type { CustomerMetadata } from '../types/metadata';
 import { logger } from '../utils/logger';
 
 // Local type definitions for Polar SDK
@@ -24,7 +26,7 @@ interface PolarCustomer {
   createdAt: string;
   modifiedAt?: string | null;
   deletedAt?: string | null;
-  metadata?: Record<string, unknown>;
+  metadata?: CustomerMetadata & { userId?: string };
   [key: string]: unknown;
 }
 
@@ -34,7 +36,8 @@ interface CustomersListResponse {
   };
 }
 
-interface PageIteratorResponse {
+// Type-safe wrapper for Polar SDK iterator response
+type PageIteratorResponse = {
   ok: boolean;
   value?: CustomersListResponse;
 }
@@ -62,7 +65,7 @@ export const onUserCreated = internalAction({
 
     try {
       const result = await ctx.runAction(
-        // @ts-ignore - Type instantiation depth issue with Convex generated types (tsc -p convex only)
+        // @ts-ignore - Type instantiation depth issue with Convex generated types
         api.polarCustomer.ensurePolarCustomer,
         {
           userId,
@@ -74,6 +77,7 @@ export const onUserCreated = internalAction({
       logger.info(`Polar customer ready for ${email} (${result.source})`);
 
       const orderLinkResult = await ctx.runMutation(
+        // @ts-ignore - Type instantiation depth issue with Convex generated types
         internal.orders.sync.linkOrdersToUser,
         {
           userId,
@@ -182,6 +186,7 @@ export const syncOrphanedCustomers = internalAction({
       const allCustomers: PolarCustomer[] = [];
 
       for await (const response of customersIter) {
+        // Polar SDK returns IteratorResult with nested response structure
         const resp = response as unknown as PageIteratorResponse;
         if (resp.ok && resp.value) {
           const data = resp.value;
@@ -224,7 +229,6 @@ export const syncOrphanedCustomers = internalAction({
             name: customer.name ?? null,
             external_id: customer.externalId ?? null,
             avatar_url: customer.avatarUrl ?? null,
-            // @ts-expect-error - Polar API country string doesn't match Convex strict country code union
             billing_address: customer.billingAddress
               ? {
                   line1: customer.billingAddress.line1 ?? null,
@@ -232,7 +236,7 @@ export const syncOrphanedCustomers = internalAction({
                   postal_code: customer.billingAddress.postalCode ?? null,
                   city: customer.billingAddress.city ?? null,
                   state: customer.billingAddress.state ?? null,
-                  country: customer.billingAddress.country,
+                  country: toCountryCode(customer.billingAddress.country),
                 }
               : null,
             tax_id: customer.taxId
@@ -243,10 +247,8 @@ export const syncOrphanedCustomers = internalAction({
             created_at: customer.createdAt,
             modified_at: customer.modifiedAt ?? null,
             deleted_at: customer.deletedAt ?? null,
-            metadata: (customer.metadata || {}) as Record<
-              string,
-              string | number | boolean
-            >,
+            // Convert metadata to plain Record<string, string | number | boolean>
+            metadata: (customer.metadata || { userId }) as Record<string, string | number | boolean>,
           });
 
           logger.info(`Synced orphaned customer: ${customer.email}`);

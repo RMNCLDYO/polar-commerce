@@ -63,7 +63,7 @@ export const inspectPolarData = action({
       (process.env.POLAR_SERVER as 'sandbox' | 'production') || 'sandbox';
     const polarClient = new Polar({
       accessToken: token,
-      server: server,
+      server,
     });
 
     const results: Record<string, number> = {};
@@ -81,7 +81,7 @@ export const inspectPolarData = action({
         }
       }
       results.customers = customers.length;
-    } catch (_error) {
+    } catch {
       results.customers = -1;
     }
 
@@ -100,7 +100,7 @@ export const inspectPolarData = action({
       results.products = products.length;
       results.productsActive = products.filter((p) => !p.isArchived).length;
       results.productsArchived = products.filter((p) => p.isArchived).length;
-    } catch (_error) {
+    } catch {
       results.products = -1;
     }
 

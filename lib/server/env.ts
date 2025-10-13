@@ -16,11 +16,19 @@ export function getGoogleApiKey(): string | undefined {
 
 /**
  * Gets the application base URL for metadata generation.
- * Falls back to production URL if NEXT_PUBLIC_BASE_URL is not set.
  * @returns The base URL string
+ * @throws Error if NEXT_PUBLIC_BASE_URL is not set in production
  */
 export function getBaseUrl(): string {
-  return (
-    process.env.NEXT_PUBLIC_BASE_URL || 'https://aisdk-storefront.vercel.app'
-  );
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+
+  // In production, require explicit configuration
+  if (process.env.NODE_ENV === 'production' && !baseUrl) {
+    throw new Error(
+      'NEXT_PUBLIC_BASE_URL must be configured in production environment'
+    );
+  }
+
+  // In development, fall back to localhost
+  return baseUrl || 'http://localhost:3000';
 }

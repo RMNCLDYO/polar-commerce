@@ -9,21 +9,22 @@
 
 import { internal } from './_generated/api';
 import { httpAction } from './_generated/server';
+import type { PolarWebhookBody } from './types/convex_internals';
 import { logger } from './utils/logger';
 
 export const polarWebhookHandler = httpAction(async (ctx, request) => {
   try {
-    const body = await request.json();
+    const body = await request.json() as PolarWebhookBody;
     const eventType = body.type;
 
     logger.info('[Polar Webhook] Received:', eventType);
 
     // Handle order.paid for inventory management
     if (eventType === 'order.paid') {
-      const order = body.data;
+      const order = body.data as { checkout_id: string; id: string; metadata?: Record<string, string | number | boolean> };
       const checkoutId = order.checkout_id;
       const orderId = order.id;
-      const metadata = order.metadata || {};
+      const metadata = order.metadata || {} as Record<string, string | number | boolean>;
 
       logger.info('[Polar Webhook] Processing order.paid:', orderId);
 
@@ -54,7 +55,12 @@ export const polarWebhookHandler = httpAction(async (ctx, request) => {
     // Get all headers from original request
     const headers: Record<string, string> = {};
     request.headers.forEach((value, key) => {
-      headers[key] = value;
+      Object.defineProperty(headers, key, {
+        value,
+        writable: true,
+        enumerable: true,
+        configurable: true
+      });
     });
 
     // Forward webhook to component

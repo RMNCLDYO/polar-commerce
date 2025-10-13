@@ -1,6 +1,6 @@
 import {
-  createClient,
   type GenericCtx,
+  createClient,
   getStaticAuth,
 } from '@convex-dev/better-auth';
 import { convex } from '@convex-dev/better-auth/plugins';
@@ -24,13 +24,13 @@ import {
   sendResetPassword,
 } from '../emails/email';
 import { polar } from '../polar';
+import type { CurrentUser } from '../types/convex';
 import { logger } from '../utils/logger';
 
 const siteUrl = process.env.SITE_URL;
 
-// @ts-expect-error - Circular type reference with internal.auth
+
 export const authComponent = createClient<DataModel>(components.betterAuth, {
-  authFunctions: internal.auth.auth,
   verbose: false,
   triggers: {
     user: {
@@ -38,6 +38,7 @@ export const authComponent = createClient<DataModel>(components.betterAuth, {
         logger.info(`[TRIGGER] User created: ${authUser.email}`);
 
         try {
+          // @ts-ignore - TypeScript deep instantiation issue with Convex
           await ctx.scheduler.runAfter(0, internal.auth.sync.onUserCreated, {
             userId: authUser._id,
             email: authUser.email,
@@ -59,7 +60,7 @@ export const authComponent = createClient<DataModel>(components.betterAuth, {
         try {
           await ctx.scheduler.runAfter(
             0,
-            internal.polar.customer.deleteCustomer,
+            components.polar.lib.deleteCustomer,
             {
               userId: authUser._id,
             },
@@ -78,7 +79,7 @@ export const authComponent = createClient<DataModel>(components.betterAuth, {
   },
 });
 
-// @ts-expect-error - Circular type reference in return type
+// Create auth instance with proper types
 export const createAuth = (
   ctx: GenericCtx<DataModel>,
   { optionsOnly } = { optionsOnly: false },
@@ -166,7 +167,6 @@ export const createAuth = (
   } satisfies BetterAuthOptions);
 
 // Export a static instance for Better Auth schema generation and type inference
-// @ts-expect-error - Circular type reference in auth initialization
 export const auth = getStaticAuth(createAuth);
 
 // Below are example helpers and functions for getting the current user
@@ -190,9 +190,9 @@ export const getCurrentUserBasic = query({
 // Full query with subscription data - use this on pages that need tier info
 export const getCurrentUser = query({
   args: {},
-  handler: async (ctx) => {
+  handler: async (ctx): Promise<CurrentUser | null> => {
     const user = await safeGetUser(ctx);
-    if (!user) return null;
+    if (!user) { return null; }
 
     // Get subscription data from Polar
     try {
@@ -223,7 +223,7 @@ export const getCurrentUser = query({
         isStarter: tier === 'starter',
         isPremium: tier === 'premium',
       };
-    } catch (_error) {
+    } catch {
       // If subscription check fails, return user without subscription data
       return {
         ...user,
