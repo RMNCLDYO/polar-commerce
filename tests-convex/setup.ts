@@ -3,19 +3,19 @@
  */
 
 import { convexTest } from 'convex-test';
-import type { Id } from '../_generated/dataModel';
-import schema from '../schema';
+import type { Id } from '../convex/_generated/dataModel';
+import schema from '../convex/schema';
 
 // Manually specify modules for convex-test
 // This avoids using import.meta.glob which doesn't work in all test environments
 const modules = {
-  '../_generated/server': () => import('../_generated/server'),
-  '../_generated/api': () => import('../_generated/api'),
-  '../_generated/dataModel': () => import('../_generated/dataModel'),
-  '../model/cart': () => import('../model/cart'),
-  '../model/catalog': () => import('../model/catalog'),
-  '../model/checkout': () => import('../model/checkout'),
-  '../model/wishlist': () => import('../model/wishlist'),
+  '../convex/_generated/server': () => import('../convex/_generated/server'),
+  '../convex/_generated/api': () => import('../convex/_generated/api'),
+  '../convex/_generated/dataModel': () => import('../convex/_generated/dataModel'),
+  '../convex/model/cart': () => import('../convex/model/cart'),
+  '../convex/model/catalog': () => import('../convex/model/catalog'),
+  '../convex/model/checkout': () => import('../convex/model/checkout'),
+  '../convex/model/wishlist': () => import('../convex/model/wishlist'),
 };
 
 /**
