@@ -14,7 +14,6 @@
 
 import { v } from 'convex/values';
 import { z } from 'zod';
-import { internal } from '../_generated/api';
 import { query, mutation, action } from '../_generated/server';
 
 // Import utilities
