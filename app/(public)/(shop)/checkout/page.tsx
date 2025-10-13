@@ -13,8 +13,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ViewTransition } from '@/components/view-transition';
 import { api } from '@/convex/_generated/api';
-import type { CheckoutSessionResponse } from '@/convex/checkout/types';
+import type { CheckoutCustomFieldData } from '@/convex/types/metadata';
 import { useCart } from '@/lib/client/hooks/use-cart';
+import { logger } from '@/lib/shared/logger';
+import type { CheckoutSessionResponse } from '@/types/convex';
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -71,30 +73,20 @@ export default function CheckoutPage() {
       router.push('/products');
       return;
     }
-    if (!cartValidation?.valid) return;
+    if (!cartValidation?.valid) {return;}
 
     setIsLoading(true);
     setError(null);
 
     try {
       // Build custom field data
-      const customFieldData: Record<string, unknown> = {};
+      const customFieldData: CheckoutCustomFieldData = {};
       if (orderNotes.trim()) {
         customFieldData.orderNotes = orderNotes;
       }
 
       // Build checkout options
-      const checkoutOptions: {
-        sessionId?: string;
-        successUrl: string;
-        allowDiscountCodes?: boolean;
-        isBusinessCustomer?: boolean;
-        discountCode?: string;
-        customerBillingName?: string;
-        customerTaxId?: string;
-        requireBillingAddress?: boolean;
-        customFieldData?: Record<string, unknown>;
-      } = {
+      const checkoutOptions: Record<string, unknown> = {
         // Include sessionId for both guest and logged-in users for better tracking
         sessionId: sessionId || undefined,
         successUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/checkout/success?checkout_id={CHECKOUT_ID}`,
@@ -132,15 +124,15 @@ export default function CheckoutPage() {
 
       if (isAuthenticated) {
         // For authenticated users, call action directly (preserves auth context)
-        console.log('[Checkout] Authenticated user - calling action directly');
-        result = await createCheckoutAction(checkoutOptions);
+        logger.debug('[Checkout] Authenticated user - calling action directly');
+        result = await createCheckoutAction(checkoutOptions as Parameters<typeof createCheckoutAction>[0]);
       } else {
         // For guest users, use HTTP endpoint to capture IP address
         const convexSiteUrl = process.env.NEXT_PUBLIC_CONVEX_SITE_URL;
         if (!convexSiteUrl) {
           throw new Error('NEXT_PUBLIC_CONVEX_SITE_URL is not configured');
         }
-        console.log(
+        logger.debug(
           '[Checkout] Guest user - using HTTP endpoint for IP tracking',
         );
 
@@ -159,16 +151,17 @@ export default function CheckoutPage() {
           );
         }
 
-        const data = await response.json();
+        const data = await response.json() as CheckoutSessionResponse | { error?: string };
 
         if (!response.ok) {
           throw new Error(
-            (data as { error?: string }).error ||
-              'Failed to create checkout session',
+            'error' in data && data.error
+              ? data.error
+              : 'Failed to create checkout session',
           );
         }
 
-        result = data;
+        result = data as CheckoutSessionResponse;
       }
 
       if (!result.success || !result.checkoutUrl) {
@@ -264,12 +257,12 @@ export default function CheckoutPage() {
                 {cart.items.map((item: (typeof cart.items)[number]) =>
                   item ? (
                     <div
-                      key={item.id}
+                      key={item._id}
                       className="flex gap-4 pb-4 border-b last:border-0"
                     >
                       <div className="relative w-20 h-20 bg-muted rounded-lg overflow-hidden flex-shrink-0">
                         <Image
-                          src={item.product.image}
+                          src={item.product.imageUrl}
                           alt={item.product.name}
                           fill
                           className="object-cover"
@@ -312,7 +305,7 @@ export default function CheckoutPage() {
                       value={discountCode}
                       onChange={(e) => setDiscountCode(e.target.value)}
                       onKeyDown={(e) => {
-                        if (e.key === 'Enter') handleApplyDiscount();
+                        if (e.key === 'Enter') {handleApplyDiscount();}
                       }}
                     />
                     <Button
@@ -452,11 +445,11 @@ export default function CheckoutPage() {
 
               {/* Checkout Button */}
               <Button
-                onClick={handleCheckout}
+                onClick={() => void handleCheckout()}
                 className="w-full"
                 size="lg"
                 disabled={
-                  isLoading || (cartValidation && !cartValidation.valid)
+                  isLoading || (cartValidation ? !cartValidation.valid : false)
                 }
               >
                 {isLoading ? (

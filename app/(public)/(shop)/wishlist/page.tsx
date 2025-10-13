@@ -13,25 +13,6 @@ import { useCart } from '@/lib/client/hooks/use-cart';
 import { useWishlist } from '@/lib/client/hooks/use-wishlist';
 import { cn } from '@/lib/shared/utils';
 
-interface WishlistItem {
-  id: Id<'wishlistItems'>;
-  catalogId: Id<'catalog'>;
-  addedAt: number;
-  notes: string | undefined;
-  product: {
-    id: Id<'catalog'>;
-    name: string;
-    description: string;
-    category: string;
-    price: number;
-    image: string | null;
-    polarProductId: string | undefined;
-    isActive: boolean;
-    inStock: boolean;
-    inventory_qty: number;
-  };
-}
-
 export default function WishlistPage() {
   const { wishlist, removeFromWishlist, clearWishlist } = useWishlist();
   const { addToCart } = useCart();
@@ -87,7 +68,7 @@ export default function WishlistPage() {
           {!isEmpty && (
             <Button
               variant="ghost"
-              onClick={clearWishlist}
+              onClick={() => void clearWishlist()}
               className="text-muted-foreground hover:text-foreground"
             >
               Clear All
@@ -131,16 +112,14 @@ export default function WishlistPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {wishlist.items.map((item: WishlistItem | null) => {
-              if (!item) return null;
-
+            {wishlist.items.map((item) => {
               const isRemoving = removingItems.has(item.catalogId);
               const isMoving = movingToCart.has(item.catalogId);
               const isProcessing = isRemoving || isMoving;
 
               return (
                 <div
-                  key={item.id}
+                  key={item._id}
                   className={cn(
                     'group relative border border-border rounded-lg overflow-hidden transition-all',
                     isProcessing && 'opacity-50',
@@ -150,13 +129,19 @@ export default function WishlistPage() {
                     href={`/product/${item.catalogId}`}
                     className="block relative aspect-[3/4] bg-muted"
                   >
-                    <Image
-                      src={item.product.image || '/placeholder.png'}
-                      alt={item.product.name}
-                      fill
-                      className="object-cover transition-transform group-hover:scale-105"
-                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                    />
+                    {item.product.imageUrl ? (
+                      <Image
+                        src={item.product.imageUrl}
+                        alt={item.product.name}
+                        fill
+                        className="object-cover transition-transform group-hover:scale-105"
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <Heart className="w-16 h-16 text-muted-foreground" />
+                      </div>
+                    )}
                     {!item.product.inStock && (
                       <Badge
                         variant="destructive"
@@ -197,9 +182,9 @@ export default function WishlistPage() {
                         size="sm"
                         className="flex-1"
                         onClick={() =>
-                          handleMoveToCart(item.catalogId, {
+                          void handleMoveToCart(item.catalogId, {
                             name: item.product.name,
-                            image: item.product.image || '/placeholder.png',
+                            image: item.product.imageUrl || '',
                             price: `$${(item.product.price / 100).toFixed(2)}`,
                           })
                         }
@@ -216,9 +201,9 @@ export default function WishlistPage() {
                         variant="ghost"
                         size="icon"
                         onClick={() =>
-                          handleRemove(item.catalogId, {
+                          void handleRemove(item.catalogId, {
                             name: item.product.name,
-                            image: item.product.image || '/placeholder.png',
+                            image: item.product.imageUrl || '',
                             price: `$${(item.product.price / 100).toFixed(2)}`,
                           })
                         }

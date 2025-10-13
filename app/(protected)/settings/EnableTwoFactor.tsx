@@ -4,6 +4,7 @@ import { useQuery } from 'convex/react';
 import { ArrowLeft, Check, Copy, Loader2 } from 'lucide-react';
 import { useEffect, useEffectEvent, useState } from 'react';
 import QRCode from 'react-qr-code';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -29,8 +30,20 @@ interface AccountInfo {
   [key: string]: unknown;
 }
 
+interface User {
+  _id: string;
+  email: string;
+  name?: string;
+  image?: string;
+  subscription?: unknown;
+  tier?: 'free' | 'starter' | 'premium';
+  isFree?: boolean;
+  isStarter?: boolean;
+  isPremium?: boolean;
+}
+
 export default function EnableTwoFactor() {
-  const user = useQuery(api.auth.auth.getCurrentUser);
+  const user = useQuery(api.auth.auth.getCurrentUser) as User | null | undefined;
   const [step, setStep] = useState<SetupStep>('loading');
   const [password, setPassword] = useState('');
   const [code, setCode] = useState('');
@@ -52,7 +65,7 @@ export default function EnableTwoFactor() {
   });
 
   useEffect(() => {
-    onMount();
+    void onMount();
   }, []);
 
   const handlePasswordSubmit = async () => {
@@ -69,7 +82,7 @@ export default function EnableTwoFactor() {
         setStep('qr-verify');
       }
     } catch {
-      alert('Failed to enable 2FA. Please check your password and try again.');
+      toast.error('Failed to enable 2FA. Please check your password and try again.');
     } finally {
       setLoading(false);
     }
@@ -83,14 +96,14 @@ export default function EnableTwoFactor() {
       });
       setStep('backup');
     } catch {
-      alert('Failed to verify code. Please try again.');
+      toast.error('Failed to verify code. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
   const copyBackupCodes = async () => {
-    if (!backupCodes) return;
+    if (!backupCodes) {return;}
     await navigator.clipboard.writeText(backupCodes.join('\n'));
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -98,7 +111,7 @@ export default function EnableTwoFactor() {
 
   const handleResetPassword = async () => {
     if (!user?.email) {
-      alert('User email not found');
+      toast.error('User email not found');
       return;
     }
     try {
@@ -107,9 +120,9 @@ export default function EnableTwoFactor() {
         email: user.email,
         redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/reset-password`,
       });
-      alert('Check your email for password reset instructions');
+      toast.success('Check your email for password reset instructions');
     } catch {
-      alert('Failed to send password reset email. Please try again.');
+      toast.error('Failed to send password reset email. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -163,7 +176,7 @@ export default function EnableTwoFactor() {
                   security. Since you signed up with a social account,
                   you&apos;ll need to set up a password first.
                 </p>
-                <Button onClick={handleResetPassword} disabled={loading}>
+                <Button onClick={() => void handleResetPassword()} disabled={loading}>
                   {loading ? (
                     <Loader2 size={16} className="animate-spin" />
                   ) : (
@@ -177,7 +190,7 @@ export default function EnableTwoFactor() {
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
-                  handlePasswordSubmit();
+                  void handlePasswordSubmit();
                 }}
                 className="grid gap-4"
               >
@@ -210,7 +223,7 @@ export default function EnableTwoFactor() {
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
-                    handleVerifyCode();
+                    void handleVerifyCode();
                   }}
                   className="grid gap-4"
                 >
@@ -250,7 +263,7 @@ export default function EnableTwoFactor() {
                     variant="ghost"
                     size="icon"
                     className="absolute top-2 right-2"
-                    onClick={copyBackupCodes}
+                    onClick={() => void copyBackupCodes()}
                   >
                     {copied ? <Check size={16} /> : <Copy size={16} />}
                   </Button>
