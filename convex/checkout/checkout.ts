@@ -1252,9 +1252,27 @@ export const getOrder = query({
     checkoutId: v.string(),
   },
   handler: async (ctx, { checkoutId }) => {
-    return await ctx.db
+    const order = await ctx.db
       .query('orders')
       .withIndex('checkoutId', (q) => q.eq('checkoutId', checkoutId))
       .first();
+
+    if (!order) {
+      return null;
+    }
+
+    // Check ownership: user must own the order or match the guest email
+    const identity = await ctx.auth.getUserIdentity();
+    const userId = identity?.subject;
+    const userEmail = identity?.email;
+
+    const isOwner = userId && order.userId === userId;
+    const isGuestMatch = !userId && userEmail && order.email === userEmail;
+
+    if (!isOwner && !isGuestMatch) {
+      throw new Error('Unauthorized: Cannot access this order');
+    }
+
+    return order;
   },
 });
