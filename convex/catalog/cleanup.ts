@@ -3,6 +3,7 @@
  * Scheduled jobs to maintain product hygiene
  */
 
+import { v } from 'convex/values';
 import { internalMutation } from '../_generated/server';
 import { logger } from '../utils/logger';
 
@@ -14,6 +15,9 @@ import { logger } from '../utils/logger';
  */
 export const archiveOldBundles = internalMutation({
   args: {},
+  returns: v.object({
+    archivedCount: v.number(),
+  }),
   handler: async (ctx) => {
     const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
 
