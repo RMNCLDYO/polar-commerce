@@ -39,7 +39,7 @@ export const cleanupExpiredCarts = internalMutation({
       // Delete all cart items first
       const items = await ctx.db
         .query('cartItems')
-        .withIndex('cartId', (q) => q.eq('cartId', cart._id))
+        .withIndex('cartId_catalogId', (q) => q.eq('cartId', cart._id))
         .collect();
 
       for (const item of items) {
@@ -86,7 +86,7 @@ export const cleanupAbandonedCarts = internalMutation({
       // Check if cart has any items
       const items = await ctx.db
         .query('cartItems')
-        .withIndex('cartId', (q) => q.eq('cartId', cart._id))
+        .withIndex('cartId_catalogId', (q) => q.eq('cartId', cart._id))
         .first();
 
       // Only delete if empty

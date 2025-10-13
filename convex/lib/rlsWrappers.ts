@@ -10,7 +10,7 @@ import {
   customMutation,
 } from 'convex-helpers/server/customFunctions';
 import { query, mutation } from '../_generated/server';
-import { canRead, canWrite, canModify, filterReadable } from './rls';
+import { canWrite, canModify, filterReadable } from './rls';
 
 /**
  * Query builder with automatic RLS filtering

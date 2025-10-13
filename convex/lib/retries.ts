@@ -5,7 +5,6 @@
  * Based on convex-helpers retry patterns.
  */
 
-import { ActionCtx } from '../_generated/server';
 import { logger } from '../utils/logger';
 
 /**

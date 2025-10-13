@@ -7,7 +7,7 @@
 
 import type { GenericQueryCtx, GenericDataModel } from 'convex/server';
 import type { GenericId } from 'convex/values';
-import { getAll, getManyVia } from 'convex-helpers/server/relationships';
+import { getAll } from 'convex-helpers/server/relationships';
 
 /**
  * Get multiple documents by IDs efficiently
@@ -39,7 +39,7 @@ export async function getCartWithItems(
   // Get all cart items
   const cartItems = await ctx.db
     .query('cartItems')
-    .withIndex('cartId', (q: any) => q.eq('cartId', cartId))
+    .withIndex('cartId_catalogId', (q: any) => q.eq('cartId', cartId))
     .collect();
 
   // Get all products in one efficient batch
@@ -73,7 +73,7 @@ export async function getWishlistWithItems(
 
   const wishlistItems = await ctx.db
     .query('wishlistItems')
-    .withIndex('wishlistId', (q: any) => q.eq('wishlistId', wishlistId))
+    .withIndex('wishlistId_catalogId', (q: any) => q.eq('wishlistId', wishlistId))
     .collect();
 
   const productIds = wishlistItems.map((item: any) => item.catalogId);

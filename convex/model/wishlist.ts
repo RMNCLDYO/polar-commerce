@@ -145,7 +145,7 @@ export async function getWishlistItems(
 ) {
   const items = await ctx.db
     .query('wishlistItems')
-    .withIndex('wishlistId', (q) => q.eq('wishlistId', wishlistId))
+    .withIndex('wishlistId_catalogId', (q) => q.eq('wishlistId', wishlistId))
     .collect();
 
   const itemsWithProducts = await Promise.all(
@@ -172,7 +172,7 @@ export async function clearWishlistItems(
 ): Promise<void> {
   const items = await ctx.db
     .query('wishlistItems')
-    .withIndex('wishlistId', (q) => q.eq('wishlistId', wishlistId))
+    .withIndex('wishlistId_catalogId', (q) => q.eq('wishlistId', wishlistId))
     .collect();
 
   for (const item of items) {
@@ -195,7 +195,7 @@ export async function mergeWishlists(
   // Get items from guest wishlist
   const guestItems = await ctx.db
     .query('wishlistItems')
-    .withIndex('wishlistId', (q) => q.eq('wishlistId', guestWishlistId))
+    .withIndex('wishlistId_catalogId', (q) => q.eq('wishlistId', guestWishlistId))
     .collect();
 
   // Merge items into user wishlist

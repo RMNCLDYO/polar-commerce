@@ -318,7 +318,7 @@ export const clearCart = mutation({
         // Delete all cart items
         const cartItems = await ctx.db
           .query('cartItems')
-          .withIndex('cartId', (q) => q.eq('cartId', cart._id))
+          .withIndex('cartId_catalogId', (q) => q.eq('cartId', cart._id))
           .collect();
 
         for (const item of cartItems) {
@@ -372,7 +372,7 @@ export const getCart = query({
     // Get cart items with product details
     const cartItems = await ctx.db
       .query('cartItems')
-      .withIndex('cartId', (q) => q.eq('cartId', cart._id))
+      .withIndex('cartId_catalogId', (q) => q.eq('cartId', cart._id))
       .collect();
 
     const itemsWithProducts = await Promise.all(
@@ -472,7 +472,7 @@ export const getCartCount = query({
     // Get cart items and sum quantities
     const cartItems = await ctx.db
       .query('cartItems')
-      .withIndex('cartId', (q) => q.eq('cartId', cart._id))
+      .withIndex('cartId_catalogId', (q) => q.eq('cartId', cart._id))
       .collect();
 
     return cartItems.reduce((sum, item) => sum + item.quantity, 0);
@@ -522,7 +522,7 @@ export const mergeCart = mutation({
     // Get items from guest cart
     const guestItems = await ctx.db
       .query('cartItems')
-      .withIndex('cartId', (q) => q.eq('cartId', guestCart._id))
+      .withIndex('cartId_catalogId', (q) => q.eq('cartId', guestCart._id))
       .collect();
 
     // Merge items into user cart
@@ -609,7 +609,7 @@ export const validateCart = query({
     // Get cart items with product details
     const cartItems = await ctx.db
       .query('cartItems')
-      .withIndex('cartId', (q) => q.eq('cartId', cart._id))
+      .withIndex('cartId_catalogId', (q) => q.eq('cartId', cart._id))
       .collect();
 
     if (cartItems.length === 0) {
@@ -692,7 +692,7 @@ export const internal_getCartItems = internalQuery({
   handler: async (ctx, { cartId }) => {
     const items = await ctx.db
       .query('cartItems')
-      .withIndex('cartId', (q) => q.eq('cartId', cartId))
+      .withIndex('cartId_catalogId', (q) => q.eq('cartId', cartId))
       .collect();
 
     const itemsWithProducts = await Promise.all(
@@ -763,7 +763,7 @@ export const internal_clearCartItems = internalMutation({
   handler: async (ctx, { cartId }) => {
     const items = await ctx.db
       .query('cartItems')
-      .withIndex('cartId', (q) => q.eq('cartId', cartId))
+      .withIndex('cartId_catalogId', (q) => q.eq('cartId', cartId))
       .collect();
 
     for (const item of items) {

@@ -105,7 +105,7 @@ export default defineSchema({
     addedAt: v.number(),
     updatedAt: v.number(),
   })
-    .index('cartId', ['cartId'])
+    // cartId_catalogId index covers queries filtering by cartId alone
     .index('cartId_catalogId', ['cartId', 'catalogId']),
 
   // ==========================================
@@ -128,7 +128,7 @@ export default defineSchema({
     addedAt: v.number(),
     notes: v.optional(v.string()),
   })
-    .index('wishlistId', ['wishlistId'])
+    // wishlistId_catalogId index covers queries filtering by wishlistId alone
     .index('wishlistId_catalogId', ['wishlistId', 'catalogId']),
 
   // ==========================================
