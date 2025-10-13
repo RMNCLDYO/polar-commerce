@@ -117,7 +117,7 @@ export const createCheckoutWithRetry = action({
     sessionId: v.optional(v.string()),
     successUrl: v.string(),
   },
-  handler: async (ctx, args) => {
+  handler: async (_ctx, args) => {
     const { Polar } = await import('@polar-sh/sdk');
 
     const polarClient = new Polar({
