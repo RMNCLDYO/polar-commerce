@@ -18,8 +18,7 @@ describe('ErrorBoundary', () => {
   });
 
   it('should render error boundary with generic message in production', () => {
-    const originalEnv = process.env.NODE_ENV;
-    process.env.NODE_ENV = 'production';
+    vi.stubEnv('NODE_ENV', 'production');
 
     const error = new Error('Sensitive database connection error');
     render(<ErrorBoundary error={error} reset={mockReset} />);
@@ -31,7 +30,7 @@ describe('ErrorBoundary', () => {
     expect(screen.getByText('Something went wrong')).toBeInTheDocument();
     expect(screen.getByText(/An unexpected error occurred/)).toBeInTheDocument();
 
-    process.env.NODE_ENV = originalEnv;
+    vi.unstubAllEnvs();
   });
 
   it('should render error boundary with network error message', () => {
@@ -63,8 +62,7 @@ describe('ErrorBoundary', () => {
   });
 
   it('should show error digest in development mode', () => {
-    const originalEnv = process.env.NODE_ENV;
-    process.env.NODE_ENV = 'development';
+    vi.stubEnv('NODE_ENV', 'development');
 
     const error = Object.assign(new Error('Test error'), {
       digest: 'test-digest-123',
@@ -74,12 +72,11 @@ describe('ErrorBoundary', () => {
 
     expect(screen.getByText(/Error ID: test-digest-123/)).toBeInTheDocument();
 
-    process.env.NODE_ENV = originalEnv;
+    vi.unstubAllEnvs();
   });
 
   it('should not show error digest in production mode', () => {
-    const originalEnv = process.env.NODE_ENV;
-    process.env.NODE_ENV = 'production';
+    vi.stubEnv('NODE_ENV', 'production');
 
     const error = Object.assign(new Error('Test error'), {
       digest: 'test-digest-123',
@@ -89,7 +86,7 @@ describe('ErrorBoundary', () => {
 
     expect(screen.queryByText(/Error ID: test-digest-123/)).not.toBeInTheDocument();
 
-    process.env.NODE_ENV = originalEnv;
+    vi.unstubAllEnvs();
   });
 
   it('should call reset function when try again button is clicked', () => {

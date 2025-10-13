@@ -2,7 +2,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { logger } from './logger';
 
 describe('Logger', () => {
-  const originalEnv = process.env.NODE_ENV;
   const originalConsole = {
     log: console.log,
     warn: console.warn,
@@ -23,15 +22,15 @@ describe('Logger', () => {
     console.log = originalConsole.log;
     console.warn = originalConsole.warn;
     console.error = originalConsole.error;
-    // Restore original NODE_ENV
-    process.env.NODE_ENV = originalEnv;
+    // Restore env vars
+    vi.unstubAllEnvs();
     // Clear module cache
     vi.resetModules();
   });
 
   describe('error', () => {
     it('should log error with context in development', () => {
-      process.env.NODE_ENV = 'development';
+      vi.stubEnv('NODE_ENV', 'development');
 
       const context = { userId: '123', action: 'test' };
       logger.error('Test error', context);
@@ -44,7 +43,7 @@ describe('Logger', () => {
     });
 
     it('should log error without context in production', () => {
-      process.env.NODE_ENV = 'production';
+      vi.stubEnv('NODE_ENV', 'production');
 
       const context = { userId: '123', action: 'test' };
       logger.error('Test error', context);
@@ -56,7 +55,7 @@ describe('Logger', () => {
     });
 
     it('should include timestamp in production logs', () => {
-      process.env.NODE_ENV = 'production';
+      vi.stubEnv('NODE_ENV', 'production');
 
       logger.error('Test error');
 
@@ -68,7 +67,7 @@ describe('Logger', () => {
 
   describe('warn', () => {
     it('should log warning in development', () => {
-      process.env.NODE_ENV = 'development';
+      vi.stubEnv('NODE_ENV', 'development');
 
       logger.warn('Test warning', { detail: 'test' });
 
@@ -80,7 +79,7 @@ describe('Logger', () => {
     });
 
     it('should not log warning in production', () => {
-      process.env.NODE_ENV = 'production';
+      vi.stubEnv('NODE_ENV', 'production');
 
       logger.warn('Test warning');
 
@@ -90,7 +89,7 @@ describe('Logger', () => {
 
   describe('info', () => {
     it('should log info in development', () => {
-      process.env.NODE_ENV = 'development';
+      vi.stubEnv('NODE_ENV', 'development');
 
       logger.info('Test info', { data: 'value' });
 
@@ -102,7 +101,7 @@ describe('Logger', () => {
     });
 
     it('should not log info in production', () => {
-      process.env.NODE_ENV = 'production';
+      vi.stubEnv('NODE_ENV', 'production');
 
       logger.info('Test info');
 
@@ -112,7 +111,7 @@ describe('Logger', () => {
 
   describe('debug', () => {
     it('should log debug in development', () => {
-      process.env.NODE_ENV = 'development';
+      vi.stubEnv('NODE_ENV', 'development');
 
       logger.debug('Debug message', { debug: true });
 
@@ -124,7 +123,7 @@ describe('Logger', () => {
     });
 
     it('should not log debug in production', () => {
-      process.env.NODE_ENV = 'production';
+      vi.stubEnv('NODE_ENV', 'production');
 
       logger.debug('Debug message');
 
@@ -134,7 +133,7 @@ describe('Logger', () => {
 
   describe('productGeneration', () => {
     it('should log product generation error', () => {
-      process.env.NODE_ENV = 'development';
+      vi.stubEnv('NODE_ENV', 'development');
 
       logger.productGeneration('Product A', 'error', { error: 'Failed' });
 
@@ -145,7 +144,7 @@ describe('Logger', () => {
     });
 
     it('should log product generation success', () => {
-      process.env.NODE_ENV = 'development';
+      vi.stubEnv('NODE_ENV', 'development');
 
       logger.productGeneration('Product B', 'success', { time: '2s' });
 
@@ -156,7 +155,7 @@ describe('Logger', () => {
     });
 
     it('should log product generation start', () => {
-      process.env.NODE_ENV = 'development';
+      vi.stubEnv('NODE_ENV', 'development');
 
       logger.productGeneration('Product C', 'start');
 
@@ -169,7 +168,7 @@ describe('Logger', () => {
 
   describe('apiError', () => {
     it('should handle network errors', () => {
-      process.env.NODE_ENV = 'development';
+      vi.stubEnv('NODE_ENV', 'development');
 
       const error = new Error('fetch failed');
       const result = logger.apiError('/api/test', error, 0);
@@ -183,7 +182,7 @@ describe('Logger', () => {
     });
 
     it('should handle timeout errors', () => {
-      process.env.NODE_ENV = 'development';
+      vi.stubEnv('NODE_ENV', 'development');
 
       const error = new Error('Request timeout');
       const result = logger.apiError('/api/test', error);
@@ -196,7 +195,7 @@ describe('Logger', () => {
     });
 
     it('should handle generic errors', () => {
-      process.env.NODE_ENV = 'development';
+      vi.stubEnv('NODE_ENV', 'development');
 
       const error = new Error('Something went wrong');
       const result = logger.apiError('/api/test', error, 500);
@@ -209,7 +208,7 @@ describe('Logger', () => {
     });
 
     it('should not include error details in production', () => {
-      process.env.NODE_ENV = 'production';
+      vi.stubEnv('NODE_ENV', 'production');
 
       const error = new Error('Sensitive error message');
       const result = logger.apiError('/api/test', error);
@@ -219,7 +218,7 @@ describe('Logger', () => {
     });
 
     it('should handle non-Error objects', () => {
-      process.env.NODE_ENV = 'development';
+      vi.stubEnv('NODE_ENV', 'development');
 
       const result = logger.apiError('/api/test', 'String error');
 
@@ -233,7 +232,7 @@ describe('Logger', () => {
 
   describe('performance', () => {
     it('should warn for slow operations (>3s)', () => {
-      process.env.NODE_ENV = 'development';
+      vi.stubEnv('NODE_ENV', 'development');
 
       logger.performance('database query', 4000, { query: 'SELECT *' });
 
@@ -248,7 +247,7 @@ describe('Logger', () => {
     });
 
     it('should debug log for normal operations in development', () => {
-      process.env.NODE_ENV = 'development';
+      vi.stubEnv('NODE_ENV', 'development');
 
       logger.performance('api call', 500);
 
@@ -262,7 +261,7 @@ describe('Logger', () => {
     });
 
     it('should not log normal operations in production', () => {
-      process.env.NODE_ENV = 'production';
+      vi.stubEnv('NODE_ENV', 'production');
 
       logger.performance('api call', 500);
 
@@ -271,7 +270,7 @@ describe('Logger', () => {
     });
 
     it('should still warn for slow operations in production', () => {
-      process.env.NODE_ENV = 'production';
+      vi.stubEnv('NODE_ENV', 'production');
 
       logger.performance('slow operation', 5000);
 
