@@ -3,7 +3,8 @@
  */
 
 import type { Doc, Id } from '../_generated/dataModel';
-import type { MutationCtx } from '../_generated/server';
+import type { ActionCtx, MutationCtx } from '../_generated/server';
+import { components } from '../_generated/api';
 
 /**
  * Create an order from checkout data
