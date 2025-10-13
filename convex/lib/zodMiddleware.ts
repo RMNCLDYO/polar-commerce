@@ -12,15 +12,6 @@ import { z } from 'zod';
 import { query, mutation, action } from '../_generated/server';
 
 /**
- * Convert Zod schema to Convex validator for type inference
- */
-function zodToConvex(schema: z.ZodType): any {
-  // This is a simplified version - convex-helpers has more complete implementations
-  // For now, we use Zod for runtime validation and Convex validators for types
-  return schema as any;
-}
-
-/**
  * Zod Query Builder
  *
  * Usage:

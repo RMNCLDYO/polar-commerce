@@ -5,8 +5,6 @@
  * Based on convex-helpers CRUD patterns.
  */
 
-import type { GenericDataModel } from 'convex/server';
-import { v, Validator } from 'convex/values';
 import type { GenericId } from 'convex/values';
 import type { MutationCtx, QueryCtx } from '../_generated/server';
 import { canRead, canWrite, canModify } from './rls';

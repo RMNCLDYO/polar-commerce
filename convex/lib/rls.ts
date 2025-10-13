@@ -7,7 +7,7 @@
  * Based on: https://stack.convex.dev/row-level-security
  */
 
-import type { Doc, Id } from '../_generated/dataModel';
+import type { Doc } from '../_generated/dataModel';
 import type { QueryCtx, MutationCtx } from '../_generated/server';
 
 /**
