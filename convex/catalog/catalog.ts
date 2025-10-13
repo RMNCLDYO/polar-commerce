@@ -187,6 +187,11 @@ export const createProduct = mutation({
   },
   returns: v.id('catalog'),
   handler: async (ctx, args) => {
+    const { isAdmin } = await import('../auth/auth');
+    if (!(await isAdmin(ctx))) {
+      throw new Error('Unauthorized: Admin access required');
+    }
+
     const productId = await ctx.db.insert('catalog', {
       ...args,
       isActive: true,
@@ -206,6 +211,11 @@ export const linkPolarProduct = mutation({
     polarProductId: v.string(),
   },
   handler: async (ctx, args) => {
+    const { isAdmin } = await import('../auth/auth');
+    if (!(await isAdmin(ctx))) {
+      throw new Error('Unauthorized: Admin access required');
+    }
+
     await ctx.db.patch(args.productId, {
       polarProductId: args.polarProductId,
       updatedAt: Date.now(),
@@ -365,6 +375,11 @@ export const updateProduct = mutation({
   },
   returns: vSuccessResponse,
   handler: async (ctx, args) => {
+    const { isAdmin } = await import('../auth/auth');
+    if (!(await isAdmin(ctx))) {
+      throw new Error('Unauthorized: Admin access required');
+    }
+
     const { productId, updates } = args;
 
     await ctx.db.patch(productId, {
@@ -383,6 +398,11 @@ export const updatePolarProductId = mutation({
     polarProductId: v.union(v.string(), v.null()),
   },
   handler: async (ctx, args) => {
+    const { isAdmin } = await import('../auth/auth');
+    if (!(await isAdmin(ctx))) {
+      throw new Error('Unauthorized: Admin access required');
+    }
+
     const updateData: {
       updatedAt: number;
       polarProductId?: string;
@@ -407,6 +427,11 @@ export const deleteProduct = mutation({
   },
   returns: vSuccessResponse,
   handler: async (ctx, args) => {
+    const { isAdmin } = await import('../auth/auth');
+    if (!(await isAdmin(ctx))) {
+      throw new Error('Unauthorized: Admin access required');
+    }
+
     await ctx.db.delete(args.productId);
     return { success: true };
   },
@@ -421,45 +446,17 @@ export const updateProductImageUrl = mutation({
     polarImageId: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    const { isAdmin } = await import('../auth/auth');
+    if (!(await isAdmin(ctx))) {
+      throw new Error('Unauthorized: Admin access required');
+    }
+
     await ctx.db.patch(args.productId, {
       imageUrl: args.imageUrl,
       polarImageUrl: args.polarImageUrl || args.imageUrl,
       polarImageId: args.polarImageId,
       updatedAt: Date.now(),
     });
-  },
-});
-
-// Decrement product inventory (public mutation)
-export const decrementInventory = mutation({
-  args: {
-    productId: v.id('catalog'),
-    quantity: v.number(),
-  },
-  returns: v.object({
-    success: v.boolean(),
-    newInventory: v.number(),
-    inStock: v.boolean(),
-  }),
-  handler: async (ctx, args) => {
-    const product = await ctx.db.get(args.productId);
-    if (!product) {
-      throw new Error('Product not found');
-    }
-
-    const newInventory = product.inventory_qty - args.quantity;
-
-    await ctx.db.patch(args.productId, {
-      inventory_qty: Math.max(0, newInventory),
-      inStock: newInventory > 0,
-      updatedAt: Date.now(),
-    });
-
-    return {
-      success: true,
-      newInventory: Math.max(0, newInventory),
-      inStock: newInventory > 0,
-    };
   },
 });
 

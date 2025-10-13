@@ -34,6 +34,11 @@ export const createProduct = mutation({
     inventory_qty: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
+    const { isAdmin } = await import('../auth/auth');
+    if (!(await isAdmin(ctx))) {
+      throw new Error('Unauthorized: Admin access required');
+    }
+
     // 1. Insert into catalog
     const productId = await ctx.db.insert('catalog', {
       ...args,
@@ -69,6 +74,11 @@ export const updateProduct = mutation({
     inventory_qty: v.optional(v.number()),
   },
   handler: async (ctx, { productId, ...updates }) => {
+    const { isAdmin } = await import('../auth/auth');
+    if (!(await isAdmin(ctx))) {
+      throw new Error('Unauthorized: Admin access required');
+    }
+
     // 1. Update catalog
     await ctx.db.patch(productId, {
       ...updates,
@@ -92,6 +102,11 @@ export const deleteProduct = mutation({
     productId: v.id('catalog'),
   },
   handler: async (ctx, { productId }) => {
+    const { isAdmin } = await import('../auth/auth');
+    if (!(await isAdmin(ctx))) {
+      throw new Error('Unauthorized: Admin access required');
+    }
+
     const product = await ctx.db.get(productId);
     if (!product) {throw new Error('Product not found');}
 

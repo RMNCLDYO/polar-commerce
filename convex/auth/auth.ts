@@ -237,5 +237,16 @@ export const getCurrentUser = query({
   },
 });
 
+// Admin check helper
+export const isAdmin = async (ctx: QueryCtx): Promise<boolean> => {
+  const user = await safeGetUser(ctx);
+  if (!user?.email) {
+    return false;
+  }
+
+  const adminEmails = process.env.ADMIN_EMAILS?.split(',').map(e => e.trim()) || [];
+  return adminEmails.includes(user.email);
+};
+
 // Export trigger API functions
 export const { onCreate, onUpdate, onDelete } = authComponent.triggersApi();
