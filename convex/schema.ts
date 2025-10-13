@@ -214,4 +214,76 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
   }).index('userId', ['userId']),
+
+  // ==========================================
+  // BETTER AUTH TABLES
+  // ==========================================
+  /**
+   * Better Auth user table for authentication.
+   * These tables are managed by the Better Auth component but we define
+   * them here to enable type-safe queries without using 'any' types.
+   */
+  betterAuth_user: defineTable({
+    id: v.string(),
+    email: v.string(),
+    emailVerified: v.boolean(),
+    name: v.optional(v.string()),
+    image: v.optional(v.union(v.string(), v.null())),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+    username: v.optional(v.union(v.string(), v.null())),
+    twoFactorEnabled: v.optional(v.union(v.boolean(), v.null())),
+    isAnonymous: v.optional(v.union(v.boolean(), v.null())),
+    banned: v.optional(v.boolean()),
+    banReason: v.optional(v.string()),
+    banExpiresAt: v.optional(v.string()),
+  })
+    .index('id', ['id'])
+    .index('email', ['email'])
+    .index('username', ['username']),
+
+  betterAuth_session: defineTable({
+    id: v.string(),
+    userId: v.string(),
+    token: v.string(),
+    expiresAt: v.string(),
+    ipAddress: v.optional(v.string()),
+    userAgent: v.optional(v.string()),
+    activeOrganizationId: v.optional(v.string()),
+    impersonatedBy: v.optional(v.string()),
+  })
+    .index('userId', ['userId'])
+    .index('token', ['token']),
+
+  betterAuth_account: defineTable({
+    id: v.string(),
+    userId: v.string(),
+    providerId: v.string(),
+    accountId: v.string(),
+    accessToken: v.optional(v.string()),
+    refreshToken: v.optional(v.string()),
+    expiresAt: v.optional(v.string()),
+  })
+    .index('userId', ['userId'])
+    .index('provider', ['providerId', 'accountId']),
+
+  betterAuth_verification: defineTable({
+    id: v.string(),
+    identifier: v.string(),
+    value: v.string(),
+    expiresAt: v.string(),
+    createdAt: v.optional(v.string()),
+    updatedAt: v.optional(v.string()),
+  })
+    .index('identifier', ['identifier']),
+
+  betterAuth_twoFactor: defineTable({
+    id: v.string(),
+    userId: v.string(),
+    secret: v.string(),
+    backupCodes: v.string(),
+    createdAt: v.string(),
+    updatedAt: v.string(),
+  })
+    .index('userId', ['userId']),
 });
