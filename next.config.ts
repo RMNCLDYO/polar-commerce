@@ -1,11 +1,10 @@
 import type { NextConfig } from 'next';
 
 const nextConfig = {
-  // React Strict Mode disabled in development to prevent double token requests
-  // In production, this has no effect (Strict Mode only runs in development)
-  // TODO: Investigate root cause of double token requests with Convex auth
-  // Better Auth may have idempotency issues with strict mode's double-invocation
-  reactStrictMode: false,
+  // React Strict Mode enabled for better development debugging
+  // This helps catch side effects and improves compatibility with future React features
+  // NOTE: Convex auth tokens are now properly handled with useEffect cleanup
+  reactStrictMode: true,
 
   // React Compiler 1.0: Auto-memoization without manual useMemo/useCallback
   // Pinned to exact version to prevent breaking changes (see package.json)
