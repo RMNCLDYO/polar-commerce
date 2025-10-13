@@ -373,10 +373,22 @@ export const clearPolarDataInternal = internalAction({
       const customers: PolarCustomer[] = [];
 
       for await (const page of customersIter) {
-        const resp = page as unknown as PageIteratorResponse;
-        if (resp.ok && resp.value) {
-          const items =
-            (resp.value as CustomersListResponse).result?.items || [];
+        const typedResponse = page as unknown;
+        if (typedResponse && typeof typedResponse === 'object') {
+          let items: PolarCustomer[] = [];
+
+          // New format: { result: { items: [...] } }
+          if ('result' in typedResponse) {
+            const result = (typedResponse as { result?: { items?: PolarCustomer[] } }).result;
+            items = result?.items ?? [];
+          }
+          // Old format: { ok: true, value: { result: { items: [...] } } }
+          else if ('ok' in typedResponse && typedResponse.ok === true && 'value' in typedResponse) {
+            const pageResponse = typedResponse as PageIteratorResponse;
+            const customersResponse = pageResponse.value as CustomersListResponse;
+            items = customersResponse?.result?.items ?? [];
+          }
+
           customers.push(...items);
         }
       }
@@ -408,10 +420,22 @@ export const clearPolarDataInternal = internalAction({
       const products: PolarProduct[] = [];
 
       for await (const page of productsIter) {
-        const resp = page as unknown as PageIteratorResponse;
-        if (resp.ok && resp.value) {
-          const items =
-            (resp.value as ProductsListResponse).result?.items || [];
+        const typedResponse = page as unknown;
+        if (typedResponse && typeof typedResponse === 'object') {
+          let items: PolarProduct[] = [];
+
+          // New format: { result: { items: [...] } }
+          if ('result' in typedResponse) {
+            const result = (typedResponse as { result?: { items?: PolarProduct[] } }).result;
+            items = result?.items ?? [];
+          }
+          // Old format: { ok: true, value: { result: { items: [...] } } }
+          else if ('ok' in typedResponse && typedResponse.ok === true && 'value' in typedResponse) {
+            const pageResponse = typedResponse as PageIteratorResponse;
+            const productsResponse = pageResponse.value as ProductsListResponse;
+            items = productsResponse?.result?.items ?? [];
+          }
+
           products.push(...items);
         }
       }
