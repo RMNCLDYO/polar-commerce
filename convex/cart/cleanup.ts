@@ -3,6 +3,7 @@
  * Scheduled jobs to maintain cart hygiene
  */
 
+import { v } from 'convex/values';
 import { internalMutation } from '../_generated/server';
 import { logger } from '../utils/logger';
 
@@ -14,6 +15,10 @@ import { logger } from '../utils/logger';
  */
 export const cleanupExpiredCarts = internalMutation({
   args: {},
+  returns: v.object({
+    deletedCarts: v.number(),
+    deletedItems: v.number(),
+  }),
   handler: async (ctx) => {
     const now = Date.now();
 
@@ -69,6 +74,9 @@ export const cleanupExpiredCarts = internalMutation({
  */
 export const cleanupAbandonedCarts = internalMutation({
   args: {},
+  returns: v.object({
+    deletedCarts: v.number(),
+  }),
   handler: async (ctx) => {
     const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
 

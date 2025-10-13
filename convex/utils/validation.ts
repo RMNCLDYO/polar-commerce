@@ -283,3 +283,106 @@ export const vProductUpdate = partial(
     inventory_qty: v.number(),
   }),
 );
+
+// Full catalog product validator
+export const vCatalogProduct = v.object({
+  _id: v.id('catalog'),
+  _creationTime: v.number(),
+  name: v.string(),
+  price: v.number(),
+  category: v.string(),
+  imageUrl: v.string(),
+  polarImageUrl: v.optional(v.string()),
+  polarImageId: v.optional(v.string()),
+  description: v.string(),
+  polarProductId: v.optional(v.string()),
+  isActive: v.boolean(),
+  inStock: v.boolean(),
+  inventory_qty: v.number(),
+  createdAt: v.number(),
+  updatedAt: v.number(),
+});
+
+// Auth user validators
+export const vBetterAuthUser = v.object({
+  _id: v.string(),
+  _creationTime: v.number(),
+  email: v.string(),
+  emailVerified: v.boolean(),
+  name: v.optional(v.string()),
+  image: v.optional(v.string()),
+  createdAt: v.number(),
+  updatedAt: v.number(),
+});
+
+export const vCurrentUser = v.union(vBetterAuthUser, v.null());
+
+// Polar product validator (from Polar component)
+export const vPolarProduct = v.object({
+  id: v.string(),
+  name: v.string(),
+  description: v.optional(v.string()),
+  isArchived: v.optional(v.boolean()),
+  organizationId: v.optional(v.string()),
+  prices: v.array(v.any()),
+  benefits: v.optional(v.array(v.any())),
+  medias: v.optional(v.array(v.any())),
+});
+
+// Polar checkout validator
+export const vPolarCheckout = v.union(
+  v.object({
+    id: v.string(),
+    status: vCheckoutStatus,
+    url: v.string(),
+    clientSecret: v.string(),
+    amount: v.number(),
+    taxAmount: v.optional(v.number()),
+    totalAmount: v.number(),
+    currency: v.string(),
+    expiresAt: v.string(),
+    customerId: v.optional(v.string()),
+    customerEmail: v.optional(v.string()),
+    customerName: v.optional(v.string()),
+    metadata: v.optional(v.record(v.string(), v.any())),
+  }),
+  v.null(),
+);
+
+// Inspect data response validators
+export const vInspectDataResponse = v.record(v.string(), v.number());
+
+// Subscription products validator
+export const vSubscriptionProducts = v.record(
+  v.string(),
+  v.object({
+    id: v.string(),
+    name: v.string(),
+    description: v.optional(v.string()),
+  }),
+);
+
+// Sync result validator
+export const vSyncResult = v.object({
+  convexId: v.id('catalog'),
+  name: v.string(),
+  status: v.union(
+    v.literal('already_linked'),
+    v.literal('found_existing'),
+    v.literal('created_new'),
+  ),
+  polarProductId: v.string(),
+});
+
+// User sync result validator
+export const vUserSyncResult = v.object({
+  success: v.boolean(),
+  userId: v.string(),
+  customerId: v.string(),
+  source: v.string(),
+});
+
+// Simple message response validator
+export const vMessageResponse = v.object({
+  message: v.string(),
+});

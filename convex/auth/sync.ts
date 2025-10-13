@@ -114,6 +114,7 @@ export const onUserCreated = internalAction({
  */
 export const syncAllUsers = action({
   args: {},
+  returns: v.object({ message: v.string() }),
   handler: async (_ctx) => {
     logger.info('Syncing all users to Polar...');
 
@@ -132,6 +133,12 @@ export const ensureUserSynced = action({
     userId: v.string(),
     email: v.string(),
   },
+  returns: v.object({
+    success: v.boolean(),
+    userId: v.string(),
+    customerId: v.string(),
+    source: v.string(),
+  }),
   handler: async (
     ctx,
     { userId, email },
@@ -168,13 +175,14 @@ export const ensureUserSynced = action({
  */
 export const syncOrphanedCustomers = internalAction({
   args: {},
+  returns: v.null(),
   handler: async (ctx) => {
     logger.info('[CRON] Checking for orphaned Polar customers...');
 
     const token = process.env.POLAR_ORGANIZATION_TOKEN;
     if (!token) {
       logger.error('POLAR_ORGANIZATION_TOKEN not set');
-      return;
+      return null;
     }
 
     const polarClient = new PolarSDK({
@@ -265,5 +273,7 @@ export const syncOrphanedCustomers = internalAction({
     } catch (error: unknown) {
       logger.error('[CRON] Orphaned customer sync failed:', error);
     }
+
+    return null;
   },
 });

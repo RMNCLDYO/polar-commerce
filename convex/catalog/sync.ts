@@ -6,7 +6,6 @@ import {
   internalMutation,
   internalQuery,
   mutation,
-  query,
 } from '../_generated/server';
 import { logger } from '../utils/logger';
 
@@ -271,10 +270,29 @@ export const updatePolarId = internalMutation({
 });
 
 /**
- * Helper: List all active products
+ * Internal helper: List all active products
  */
-export const listProducts = query({
+export const listProducts = internalQuery({
   args: {},
+  returns: v.array(
+    v.object({
+      _id: v.id('catalog'),
+      _creationTime: v.number(),
+      name: v.string(),
+      price: v.number(),
+      category: v.string(),
+      imageUrl: v.string(),
+      polarImageUrl: v.optional(v.string()),
+      polarImageId: v.optional(v.string()),
+      description: v.string(),
+      polarProductId: v.optional(v.string()),
+      isActive: v.boolean(),
+      inStock: v.boolean(),
+      inventory_qty: v.number(),
+      createdAt: v.number(),
+      updatedAt: v.number(),
+    }),
+  ),
   handler: async (ctx) => {
     return await ctx.db
       .query('catalog')
@@ -284,10 +302,29 @@ export const listProducts = query({
 });
 
 /**
- * Helper: Get products by category
+ * Internal helper: Get products by category
  */
-export const listByCategory = query({
+export const listByCategory = internalQuery({
   args: { category: v.string() },
+  returns: v.array(
+    v.object({
+      _id: v.id('catalog'),
+      _creationTime: v.number(),
+      name: v.string(),
+      price: v.number(),
+      category: v.string(),
+      imageUrl: v.string(),
+      polarImageUrl: v.optional(v.string()),
+      polarImageId: v.optional(v.string()),
+      description: v.string(),
+      polarProductId: v.optional(v.string()),
+      isActive: v.boolean(),
+      inStock: v.boolean(),
+      inventory_qty: v.number(),
+      createdAt: v.number(),
+      updatedAt: v.number(),
+    }),
+  ),
   handler: async (ctx, { category }) => {
     // First get by category, then filter active in memory (small result set per category)
     const products = await ctx.db
