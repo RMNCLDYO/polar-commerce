@@ -417,6 +417,11 @@ export const deleteProduct = mutation({
   },
   returns: vSuccessResponse,
   handler: async (ctx, args) => {
+    const { isAdmin } = await import('../auth/auth');
+    if (!(await isAdmin(ctx))) {
+      throw new Error('Unauthorized: Admin access required');
+    }
+
     await ctx.db.delete(args.productId);
     return { success: true };
   },
