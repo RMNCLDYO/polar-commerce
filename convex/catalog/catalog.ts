@@ -430,39 +430,6 @@ export const updateProductImageUrl = mutation({
   },
 });
 
-// Decrement product inventory (public mutation)
-export const decrementInventory = mutation({
-  args: {
-    productId: v.id('catalog'),
-    quantity: v.number(),
-  },
-  returns: v.object({
-    success: v.boolean(),
-    newInventory: v.number(),
-    inStock: v.boolean(),
-  }),
-  handler: async (ctx, args) => {
-    const product = await ctx.db.get(args.productId);
-    if (!product) {
-      throw new Error('Product not found');
-    }
-
-    const newInventory = product.inventory_qty - args.quantity;
-
-    await ctx.db.patch(args.productId, {
-      inventory_qty: Math.max(0, newInventory),
-      inStock: newInventory > 0,
-      updatedAt: Date.now(),
-    });
-
-    return {
-      success: true,
-      newInventory: Math.max(0, newInventory),
-      inStock: newInventory > 0,
-    };
-  },
-});
-
 // Internal mutation for decrementing inventory (called from checkout)
 export const decrementInventoryInternal = internalMutation({
   args: {
