@@ -398,6 +398,11 @@ export const updatePolarProductId = mutation({
     polarProductId: v.union(v.string(), v.null()),
   },
   handler: async (ctx, args) => {
+    const { isAdmin } = await import('../auth/auth');
+    if (!(await isAdmin(ctx))) {
+      throw new Error('Unauthorized: Admin access required');
+    }
+
     const updateData: {
       updatedAt: number;
       polarProductId?: string;
