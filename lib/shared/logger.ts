@@ -1,3 +1,6 @@
+/* eslint-disable no-console */
+// Logger utilities intentionally use console methods
+
 interface LogContext {
   [key: string]: unknown;
 }
