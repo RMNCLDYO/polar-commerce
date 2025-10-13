@@ -785,6 +785,7 @@ export const getCheckout = action({
   args: {
     checkoutId: v.string(),
   },
+  returns: v.any(),
   handler: async (_ctx, { checkoutId }) => {
     const token = process.env.POLAR_ORGANIZATION_TOKEN;
     if (!token) {
