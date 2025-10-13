@@ -3,12 +3,17 @@ import { v } from 'convex/values';
 import { components, internal } from '../_generated/api';
 import type { Doc, Id } from '../_generated/dataModel';
 import { action, query } from '../_generated/server';
+import { trackExternalAPICall } from '../lib/metrics';
 import { logger } from '../utils/logger';
 import type {
   Address,
   CartItemForCheckout,
   CheckoutSessionResponse,
   Metadata,
+} from './types';
+import {
+  vCheckoutSessionResponse,
+  vCheckoutSuccessResponse,
 } from './types';
 
 /**
@@ -33,21 +38,32 @@ async function createBundleProduct(
       : `${polarProducts.length} items: ${itemSummary}`;
 
   try {
-    const bundleProduct = await polarClient.products.create({
-      name: bundleName,
-      description: bundleDescription,
-      prices: [
-        {
-          amountType: 'fixed',
-          priceAmount: totalAmount,
-          priceCurrency: 'usd',
-        },
-      ],
-      // Store bundle metadata for tracking
-      metadata: {
-        bundleType: 'checkout',
+    const bundleProduct = await trackExternalAPICall(
+      'Polar',
+      'products.create',
+      async () => {
+        return await polarClient.products.create({
+          name: bundleName,
+          description: bundleDescription,
+          prices: [
+            {
+              amountType: 'fixed',
+              priceAmount: totalAmount,
+              priceCurrency: 'usd',
+            },
+          ],
+          // Store bundle metadata for tracking
+          metadata: {
+            bundleType: 'checkout',
+          },
+        });
       },
-    });
+      {
+        bundleType: 'checkout',
+        itemCount: polarProducts.length,
+        totalAmount,
+      },
+    );
 
     logger.info(
       `[Bundle] Created ${bundleProduct.id} for ${polarProducts.length} items ($${totalAmount / 100})`,
@@ -82,28 +98,32 @@ export const createCheckoutSession = action({
     successUrl: v.string(),
     metadata: v.optional(v.record(v.string(), v.any())),
 
-    // IP address for fraud prevention and tax calculation
     customerIpAddress: v.optional(v.string()),
+    customerEmail: v.optional(v.string()),
 
-    // Advanced checkout options
     discountId: v.optional(v.string()),
     discountCode: v.optional(v.string()),
     allowDiscountCodes: v.optional(v.boolean()),
     requireBillingAddress: v.optional(v.boolean()),
     customFieldData: v.optional(v.record(v.string(), v.any())),
 
-    // Trial configuration
-    trialInterval: v.optional(v.string()),
+    trialInterval: v.optional(
+      v.union(
+        v.literal('day'),
+        v.literal('week'),
+        v.literal('month'),
+        v.literal('year'),
+      ),
+    ),
     trialIntervalCount: v.optional(v.number()),
 
-    // Subscription upgrade
     subscriptionId: v.optional(v.string()),
 
-    // Customer overrides (for business customers, etc.)
     isBusinessCustomer: v.optional(v.boolean()),
     customerBillingName: v.optional(v.string()),
     customerTaxId: v.optional(v.string()),
   },
+  returns: vCheckoutSessionResponse,
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     const userId = identity?.subject;
@@ -115,12 +135,19 @@ export const createCheckoutSession = action({
       throw new Error('User must be authenticated or provide a session ID');
     }
 
+    // Rate limiting - protect checkout endpoint
+    await ctx.runMutation(internal.lib.rateLimit.checkAndUpdate, {
+      limitType: 'checkout',
+      userId: userId || undefined,
+      sessionId: args.sessionId || undefined,
+    });
+
     let cart: Doc<'carts'> | null = null;
     if (userId) {
       logger.debug('[Checkout] Looking up cart by userId');
-      cart = await ctx.runQuery(internal.cart.cart.internal_getCartByUserId, {
+      cart = (await ctx.runQuery(internal.cart.cart.internal_getCartByUserId, {
         userId,
-      });
+      })) as Doc<'carts'> | null;
     } else if (args.sessionId) {
       logger.debug('[Checkout] Looking up cart by sessionId:', args.sessionId);
       cart = await ctx.runQuery(
@@ -416,7 +443,18 @@ export const createCheckoutSession = action({
       logger.debug('Amount: $', totalAmount / 100);
       logger.debug('Environment:', process.env.POLAR_SERVER);
 
-      const checkout = await polarClient.checkouts.create(checkoutData);
+      const checkout = await trackExternalAPICall(
+        'Polar',
+        'checkouts.create',
+        async () => {
+          return await polarClient.checkouts.create(checkoutData);
+        },
+        {
+          productCount: polarProducts.length,
+          totalAmount,
+          isBundleCheckout,
+        },
+      );
 
       if (!checkout || !checkout.url) {
         throw new Error('Failed to create checkout session');
@@ -474,27 +512,32 @@ export const createCheckoutSessionWithIP = action({
     successUrl: v.string(),
     embedOrigin: v.optional(v.string()),
     metadata: v.optional(v.record(v.string(), v.any())),
-    customerIpAddress: v.string(), // Required for fraud prevention
+    customerIpAddress: v.string(),
+    customerEmail: v.optional(v.string()),
 
-    // Advanced checkout options
     discountId: v.optional(v.string()),
     discountCode: v.optional(v.string()),
     allowDiscountCodes: v.optional(v.boolean()),
     requireBillingAddress: v.optional(v.boolean()),
     customFieldData: v.optional(v.record(v.string(), v.any())),
 
-    // Trial configuration
-    trialInterval: v.optional(v.string()),
+    trialInterval: v.optional(
+      v.union(
+        v.literal('day'),
+        v.literal('week'),
+        v.literal('month'),
+        v.literal('year'),
+      ),
+    ),
     trialIntervalCount: v.optional(v.number()),
 
-    // Subscription upgrade
     subscriptionId: v.optional(v.string()),
 
-    // Customer overrides
     isBusinessCustomer: v.optional(v.boolean()),
     customerBillingName: v.optional(v.string()),
     customerTaxId: v.optional(v.string()),
   },
+  returns: vCheckoutSessionResponse,
   handler: async (ctx, args): Promise<CheckoutSessionResponse> => {
     // This is just an alias for createCheckoutSession with explicit IP tracking
     // Both now support the same features
@@ -798,7 +841,18 @@ export const createCheckoutSessionWithIP = action({
       logger.debug('Amount: $', totalAmount / 100);
       logger.debug('Environment:', process.env.POLAR_SERVER);
 
-      const checkout = await polarClient.checkouts.create(checkoutData);
+      const checkout = await trackExternalAPICall(
+        'Polar',
+        'checkouts.create',
+        async () => {
+          return await polarClient.checkouts.create(checkoutData);
+        },
+        {
+          productCount: polarProducts.length,
+          totalAmount,
+          isBundleCheckout,
+        },
+      );
 
       if (!checkout || !checkout.url) {
         throw new Error('Failed to create checkout session');
@@ -853,6 +907,7 @@ export const handleCheckoutSuccess = action({
   args: {
     checkoutId: v.string(),
   },
+  returns: vCheckoutSuccessResponse,
   handler: async (ctx, { checkoutId }) => {
     const token = process.env.POLAR_ORGANIZATION_TOKEN;
     if (!token) {
@@ -866,7 +921,16 @@ export const handleCheckoutSuccess = action({
 
     try {
       // Get checkout details from Polar
-      const checkout = await polarClient.checkouts.get({ id: checkoutId });
+      const checkout = await trackExternalAPICall(
+        'Polar',
+        'checkouts.get',
+        async () => {
+          return await polarClient.checkouts.get({ id: checkoutId });
+        },
+        {
+          checkoutId,
+        },
+      );
 
       if (!checkout) {
         throw new Error('Checkout not found');
@@ -928,6 +992,22 @@ export const handleCheckoutSuccess = action({
       const trialEnd = checkout.trialEnd
         ? new Date(checkout.trialEnd).getTime()
         : undefined;
+
+      // Audit log: Checkout completed
+      await ctx.runMutation(internal.lib.audit.logEvent, {
+        eventType: 'checkout.completed',
+        userId,
+        ipAddress: customerIpAddress,
+        resourceType: 'checkout',
+        resourceId: checkoutId,
+        action: 'Checkout completed successfully',
+        details: {
+          amount: checkout.amount,
+          totalAmount: checkout.totalAmount,
+          productCount: cartItems.length,
+        },
+        success: true,
+      });
 
       // Create order record with ALL new fields
       await ctx.runMutation(internal.cart.cart.internal_createOrder, {
@@ -1017,12 +1097,22 @@ export const handleCheckoutSuccess = action({
         const bundleProductId = metadata.bundleProductId as string | undefined;
         if (bundleProductId) {
           try {
-            await polarClient.products.update({
-              id: bundleProductId,
-              productUpdate: {
-                isArchived: true,
+            await trackExternalAPICall(
+              'Polar',
+              'products.update',
+              async () => {
+                await polarClient.products.update({
+                  id: bundleProductId,
+                  productUpdate: {
+                    isArchived: true,
+                  },
+                });
               },
-            });
+              {
+                bundleProductId,
+                operation: 'archive',
+              },
+            );
             logger.info(
               `[Bundle] Archived ${bundleProductId} after successful checkout`,
             );
@@ -1088,7 +1178,16 @@ export const getCheckout = action({
     });
 
     try {
-      const checkout = await polarClient.checkouts.get({ id: checkoutId });
+      const checkout = await trackExternalAPICall(
+        'Polar',
+        'checkouts.get',
+        async () => {
+          return await polarClient.checkouts.get({ id: checkoutId });
+        },
+        {
+          checkoutId,
+        },
+      );
       return checkout;
     } catch (error: unknown) {
       logger.error('Failed to get checkout:', error);
@@ -1115,7 +1214,7 @@ export const getUserOrders = query({
     // Get user's email from Better Auth
     const user = await ctx.db
       .query('betterAuth_user')
-      .filter((q) => q.eq(q.field('id'), userId))
+      .withIndex('id', (q) => q.eq('id', userId))
       .first();
     const userEmail = user?.email;
 
