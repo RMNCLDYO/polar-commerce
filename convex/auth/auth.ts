@@ -14,6 +14,7 @@ import {
   twoFactor,
   username,
 } from 'better-auth/plugins';
+import { v } from 'convex/values';
 import { components, internal } from '../_generated/api';
 import type { DataModel } from '../_generated/dataModel';
 import { type QueryCtx, query } from '../_generated/server';
@@ -182,6 +183,7 @@ export const getUser = async (ctx: QueryCtx) => {
 // Fast query for header - just returns basic user info without subscription
 export const getCurrentUserBasic = query({
   args: {},
+  returns: v.any(),
   handler: async (ctx) => {
     return await safeGetUser(ctx);
   },
@@ -190,6 +192,7 @@ export const getCurrentUserBasic = query({
 // Full query with subscription data - use this on pages that need tier info
 export const getCurrentUser = query({
   args: {},
+  returns: v.any(),
   handler: async (ctx): Promise<CurrentUser | null> => {
     const user = await safeGetUser(ctx);
     if (!user) { return null; }
