@@ -66,16 +66,23 @@ async function verifyPolarProducts(
 
     for await (const response of productsIter) {
       const typedResponse = response as unknown;
-      if (
-        typedResponse &&
-        typeof typedResponse === 'object' &&
-        'ok' in typedResponse &&
-        typedResponse.ok === true &&
-        'value' in typedResponse
-      ) {
-        const pageResponse = typedResponse as PageIteratorResponse;
-        const items = pageResponse.value?.result?.items ?? [];
-        polarProducts.push(...items.filter((p) => !p.isArchived));
+      if (typedResponse && typeof typedResponse === 'object') {
+        let items: PolarProduct[] = [];
+
+        // New format: { result: { items: [...] } }
+        if ('result' in typedResponse) {
+          const result = (typedResponse as { result?: { items?: PolarProduct[] } }).result;
+          items = result?.items ?? [];
+        }
+        // Old format: { ok: true, value: { result: { items: [...] } } }
+        else if ('ok' in typedResponse && typedResponse.ok === true && 'value' in typedResponse) {
+          const pageResponse = typedResponse as PageIteratorResponse;
+          items = pageResponse.value?.result?.items ?? [];
+        }
+
+        if (items.length > 0) {
+          polarProducts.push(...items.filter((p) => !p.isArchived));
+        }
       }
     }
 
