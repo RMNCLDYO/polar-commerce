@@ -286,4 +286,21 @@ export default defineSchema({
     updatedAt: v.string(),
   })
     .index('userId', ['userId']),
+
+  // ==========================================
+  // RATE LIMITING
+  // ==========================================
+  /**
+   * Rate limit tracking for API protection
+   * Uses sliding window algorithm to prevent abuse
+   */
+  rateLimits: defineTable({
+    key: v.string(), // Format: "rateLimit:{type}:{userId|sessionId}"
+    requests: v.array(v.number()), // Array of request timestamps
+    createdAt: v.number(),
+    updatedAt: v.number(),
+    expiresAt: v.number(), // For automatic cleanup
+  })
+    .index('key', ['key'])
+    .index('expiresAt', ['expiresAt']),
 });
