@@ -52,7 +52,7 @@ export interface AuditLogEntry {
  * Log an audit event
  */
 export async function logAuditEvent(
-  ctx: MutationCtx,
+  _ctx: MutationCtx,
   entry: Omit<AuditLogEntry, 'timestamp'>,
 ): Promise<void> {
   // Log to console for immediate visibility

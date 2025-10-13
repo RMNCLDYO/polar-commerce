@@ -84,7 +84,7 @@ export async function trackPerformance<T>(
  * Log metric to database (for persistence) or console (for real-time monitoring)
  */
 async function logMetric(
-  ctx: MutationCtx | QueryCtx,
+  _ctx: MutationCtx | QueryCtx,
   metric: Metric
 ): Promise<void> {
   // For now, log to console
