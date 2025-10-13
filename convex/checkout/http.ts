@@ -4,11 +4,13 @@
  * for fraud prevention and tax calculations
  */
 
+import { ConvexError } from 'convex/values';
 import { api } from '../_generated/api';
 import { httpAction } from '../_generated/server';
 import type { CheckoutCustomFieldData } from '../types/metadata';
 import { getCorsHeaders, getPreflightHeaders } from '../utils/cors';
 import { logger } from '../utils/logger';
+import { ValidationError } from '../utils/validation';
 import type { CheckoutSessionResponse } from './types';
 
 interface CheckoutRequestBody {
@@ -17,11 +19,17 @@ interface CheckoutRequestBody {
   allowDiscountCodes?: boolean;
   isBusinessCustomer?: boolean;
   discountCode?: string;
+  discountId?: string;
   customerBillingName?: string;
   customerTaxId?: string;
+  customerEmail?: string;
   requireBillingAddress?: boolean;
   customFieldData?: CheckoutCustomFieldData;
   customerIpAddress?: string;
+  trialInterval?: 'day' | 'week' | 'month' | 'year';
+  trialIntervalCount?: number;
+  subscriptionId?: string;
+  metadata?: Record<string, string | number | boolean>;
 }
 
 /**
@@ -59,11 +67,26 @@ export const createCheckout = httpAction(async (ctx, request) => {
   const origin = request.headers.get('origin');
 
   try {
-    const body = await request.json() as CheckoutRequestBody;
+    const body = (await request.json()) as CheckoutRequestBody;
     logger.debug(
       '[Checkout HTTP] Request body:',
       JSON.stringify(body, null, 2),
     );
+
+    if (!body.successUrl || typeof body.successUrl !== 'string') {
+      throw new ValidationError('successUrl is required and must be a string');
+    }
+
+    if (body.trialIntervalCount !== undefined) {
+      if (
+        !Number.isInteger(body.trialIntervalCount) ||
+        body.trialIntervalCount <= 0
+      ) {
+        throw new ValidationError(
+          'trialIntervalCount must be a positive integer',
+        );
+      }
+    }
 
     const customerIpAddress = getClientIp(request.headers);
 
@@ -91,9 +114,13 @@ export const createCheckout = httpAction(async (ctx, request) => {
     });
   } catch (error: unknown) {
     const errorMessage =
-      error instanceof Error
+      error instanceof Error || error instanceof ValidationError
         ? error.message
         : 'Failed to create checkout session';
+    const statusCode =
+      error instanceof ValidationError || error instanceof ConvexError
+        ? 400
+        : 500;
     logger.error('Checkout creation error:', error);
     return new Response(
       JSON.stringify({
@@ -101,7 +128,7 @@ export const createCheckout = httpAction(async (ctx, request) => {
         error: errorMessage,
       }),
       {
-        status: 500,
+        status: statusCode,
         headers: getCorsHeaders(origin),
       },
     );

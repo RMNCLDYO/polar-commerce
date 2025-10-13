@@ -5,6 +5,7 @@ import {
   mutation,
 } from '../_generated/server';
 import { logger } from '../utils/logger';
+import { vLinkOrdersResponse } from '../utils/validation';
 
 /**
  * Link guest orders to a newly created user account
@@ -15,6 +16,7 @@ export const linkOrdersToUser = internalMutation({
     userId: v.string(),
     email: v.string(),
   },
+  returns: vLinkOrdersResponse,
   handler: async (ctx, { userId, email }) => {
     // Find all orders with this email that don't have a userId yet
     const guestOrders = await ctx.db
@@ -83,6 +85,7 @@ export const getUserOrdersWithEmail = internalQuery({
  */
 export const manuallyLinkMyOrders = mutation({
   args: {},
+  returns: vLinkOrdersResponse,
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {

@@ -13,15 +13,14 @@ import { httpAction } from '../_generated/server';
 import type { PolarWebhookBody } from '../types/convex_internals';
 import type { CheckoutMetadata } from '../types/metadata';
 import { logger } from '../utils/logger';
+import { ValidationError } from '../utils/validation';
 
 export const handleOrderWebhook = httpAction(async (ctx, request) => {
   try {
-    const body = await request.json() as PolarWebhookBody;
+    const body = (await request.json()) as PolarWebhookBody;
     const eventType = body.type;
-
     logger.info('[Order Webhook] Received:', eventType);
 
-    // Only process order.paid events
     if (eventType !== 'order.paid') {
       logger.debug('[Order Webhook] Ignoring non-order.paid event');
       return new Response(JSON.stringify({ received: true }), {
@@ -30,7 +29,21 @@ export const handleOrderWebhook = httpAction(async (ctx, request) => {
       });
     }
 
-    const order = body.data as { checkout_id: string; id: string; order_id?: string; metadata?: CheckoutMetadata };
+    const order = body.data as {
+      checkout_id: string;
+      id: string;
+      order_id?: string;
+      metadata?: CheckoutMetadata;
+    };
+
+    if (!order.checkout_id) {
+      throw new ValidationError('Missing checkout_id in order data');
+    }
+
+    if (!order.id) {
+      throw new ValidationError('Missing id in order data');
+    }
+
     const checkoutId = order.checkout_id;
     const orderId = order.order_id || order.id;
     const metadata = (order.metadata || {}) as CheckoutMetadata;
@@ -38,15 +51,11 @@ export const handleOrderWebhook = httpAction(async (ctx, request) => {
     logger.info('[Order Webhook] Processing order:', orderId);
     logger.debug('[Order Webhook] Checkout ID:', checkoutId);
 
-    if (!checkoutId || !metadata.itemCount) {
-      logger.error('[Order Webhook] Missing required metadata');
-      return new Response(JSON.stringify({ error: 'Missing metadata' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
-      });
+    if (!metadata.itemCount || typeof metadata.itemCount !== 'number') {
+      logger.error('[Order Webhook] Missing or invalid itemCount in metadata');
+      throw new ValidationError('Missing or invalid itemCount in metadata');
     }
 
-    // Process inventory asynchronously
     await ctx.runMutation(internal.orders.webhook.handleOrderPaid, {
       checkoutId,
       orderId,
@@ -64,10 +73,13 @@ export const handleOrderWebhook = httpAction(async (ctx, request) => {
     );
   } catch (error: unknown) {
     const errorMessage =
-      error instanceof Error ? error.message : 'Unknown error';
+      error instanceof Error || error instanceof ValidationError
+        ? error.message
+        : 'Unknown error';
+    const statusCode = error instanceof ValidationError ? 400 : 500;
     logger.error('[Order Webhook] Error:', error);
     return new Response(JSON.stringify({ error: errorMessage }), {
-      status: 500,
+      status: statusCode,
       headers: { 'Content-Type': 'application/json' },
     });
   }

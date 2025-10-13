@@ -1,39 +1,12 @@
 import { v } from 'convex/values';
 import type { Doc } from '../_generated/dataModel';
-import { type MutationCtx, mutation, query } from '../_generated/server';
-
-async function getOrCreateWishlist(
-  ctx: MutationCtx,
-  userId?: string | null,
-  sessionId?: string | null,
-) {
-  let wishlist: Doc<'wishlists'> | null = null;
-
-  if (userId) {
-    wishlist = await ctx.db
-      .query('wishlists')
-      .withIndex('userId', (q) => q.eq('userId', userId))
-      .first();
-  } else if (sessionId) {
-    wishlist = await ctx.db
-      .query('wishlists')
-      .withIndex('sessionId', (q) => q.eq('sessionId', sessionId))
-      .first();
-  }
-
-  if (!wishlist) {
-    const wishlistId = await ctx.db.insert('wishlists', {
-      userId: userId || undefined,
-      sessionId: sessionId || undefined,
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-      expiresAt: sessionId ? Date.now() + 30 * 24 * 60 * 60 * 1000 : undefined,
-    });
-    wishlist = await ctx.db.get(wishlistId);
-  }
-
-  return wishlist;
-}
+import { mutation, query } from '../_generated/server';
+import * as WishlistModel from '../model/wishlist';
+import {
+  vSuccessResponse,
+  vWishlistResponse,
+  vToggleWishlistResponse,
+} from '../utils/validation';
 
 export const addToWishlist = mutation({
   args: {
@@ -41,6 +14,7 @@ export const addToWishlist = mutation({
     sessionId: v.optional(v.string()),
     notes: v.optional(v.string()),
   },
+  returns: vSuccessResponse,
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     const userId = identity?.subject;
@@ -49,37 +23,12 @@ export const addToWishlist = mutation({
       throw new Error('User must be authenticated or provide a session ID');
     }
 
-    const wishlist = await getOrCreateWishlist(ctx, userId, args.sessionId);
+    const wishlist = await WishlistModel.getOrCreateWishlist(ctx, userId, args.sessionId);
     if (!wishlist) {
       throw new Error('Failed to create wishlist');
     }
 
-    const product = await ctx.db.get(args.catalogId);
-    if (!product || !product.isActive) {
-      throw new Error('Product not found or inactive');
-    }
-
-    const existingItem = await ctx.db
-      .query('wishlistItems')
-      .withIndex('wishlistId_catalogId', (q) =>
-        q.eq('wishlistId', wishlist._id).eq('catalogId', args.catalogId),
-      )
-      .first();
-
-    if (existingItem) {
-      throw new Error('Item already in wishlist');
-    }
-
-    await ctx.db.insert('wishlistItems', {
-      wishlistId: wishlist._id,
-      catalogId: args.catalogId,
-      addedAt: Date.now(),
-      notes: args.notes,
-    });
-
-    await ctx.db.patch(wishlist._id, {
-      updatedAt: Date.now(),
-    });
+    await WishlistModel.addItemToWishlist(ctx, wishlist._id, args.catalogId, args.notes);
 
     return { success: true };
   },
@@ -90,6 +39,7 @@ export const removeFromWishlist = mutation({
     catalogId: v.id('catalog'),
     sessionId: v.optional(v.string()),
   },
+  returns: vSuccessResponse,
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     const userId = identity?.subject;
@@ -98,37 +48,12 @@ export const removeFromWishlist = mutation({
       throw new Error('User must be authenticated or provide a session ID');
     }
 
-    let wishlist: Doc<'wishlists'> | null = null;
-    if (userId) {
-      wishlist = await ctx.db
-        .query('wishlists')
-        .withIndex('userId', (q) => q.eq('userId', userId))
-        .first();
-    } else if (args.sessionId) {
-      wishlist = await ctx.db
-        .query('wishlists')
-        .withIndex('sessionId', (q) => q.eq('sessionId', args.sessionId))
-        .first();
-    }
-
+    const wishlist = await WishlistModel.findWishlist(ctx, userId, args.sessionId);
     if (!wishlist) {
       throw new Error('Wishlist not found');
     }
 
-    const wishlistItem = await ctx.db
-      .query('wishlistItems')
-      .withIndex('wishlistId_catalogId', (q) =>
-        q.eq('wishlistId', wishlist._id).eq('catalogId', args.catalogId),
-      )
-      .first();
-
-    if (wishlistItem) {
-      await ctx.db.delete(wishlistItem._id);
-
-      await ctx.db.patch(wishlist._id, {
-        updatedAt: Date.now(),
-      });
-    }
+    await WishlistModel.removeItemFromWishlist(ctx, wishlist._id, args.catalogId);
 
     return { success: true };
   },
@@ -139,6 +64,7 @@ export const toggleWishlist = mutation({
     catalogId: v.id('catalog'),
     sessionId: v.optional(v.string()),
   },
+  returns: vToggleWishlistResponse,
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     const userId = identity?.subject;
@@ -147,7 +73,7 @@ export const toggleWishlist = mutation({
       throw new Error('User must be authenticated or provide a session ID');
     }
 
-    const wishlist = await getOrCreateWishlist(ctx, userId, args.sessionId);
+    const wishlist = await WishlistModel.getOrCreateWishlist(ctx, userId, args.sessionId);
     if (!wishlist) {
       throw new Error('Failed to create wishlist');
     }
@@ -160,28 +86,16 @@ export const toggleWishlist = mutation({
       .first();
 
     if (existingItem) {
-      await ctx.db.delete(existingItem._id);
-      await ctx.db.patch(wishlist._id, {
-        updatedAt: Date.now(),
-      });
-      return { success: true, action: 'removed' };
+      await WishlistModel.removeItemFromWishlist(ctx, wishlist._id, args.catalogId);
+      return { success: true, action: 'removed' as const };
     } else {
       const product = await ctx.db.get(args.catalogId);
       if (!product || !product.isActive) {
         throw new Error('Product not found or inactive');
       }
 
-      await ctx.db.insert('wishlistItems', {
-        wishlistId: wishlist._id,
-        catalogId: args.catalogId,
-        addedAt: Date.now(),
-      });
-
-      await ctx.db.patch(wishlist._id, {
-        updatedAt: Date.now(),
-      });
-
-      return { success: true, action: 'added' };
+      await WishlistModel.addItemToWishlist(ctx, wishlist._id, args.catalogId, undefined);
+      return { success: true, action: 'added' as const };
     }
   },
 });
@@ -190,6 +104,7 @@ export const clearWishlist = mutation({
   args: {
     sessionId: v.optional(v.string()),
   },
+  returns: vSuccessResponse,
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     const userId = identity?.subject;
@@ -198,35 +113,12 @@ export const clearWishlist = mutation({
       throw new Error('User must be authenticated or provide a session ID');
     }
 
-    let wishlist: Doc<'wishlists'> | null = null;
-    if (userId) {
-      wishlist = await ctx.db
-        .query('wishlists')
-        .withIndex('userId', (q) => q.eq('userId', userId))
-        .first();
-    } else if (args.sessionId) {
-      wishlist = await ctx.db
-        .query('wishlists')
-        .withIndex('sessionId', (q) => q.eq('sessionId', args.sessionId))
-        .first();
-    }
-
+    const wishlist = await WishlistModel.findWishlist(ctx, userId, args.sessionId);
     if (!wishlist) {
       return { success: true };
     }
 
-    const wishlistItems = await ctx.db
-      .query('wishlistItems')
-      .withIndex('wishlistId', (q) => q.eq('wishlistId', wishlist._id))
-      .collect();
-
-    for (const item of wishlistItems) {
-      await ctx.db.delete(item._id);
-    }
-
-    await ctx.db.patch(wishlist._id, {
-      updatedAt: Date.now(),
-    });
+    await WishlistModel.clearWishlistItems(ctx, wishlist._id);
 
     return { success: true };
   },
@@ -236,6 +128,7 @@ export const getWishlist = query({
   args: {
     sessionId: v.optional(v.string()),
   },
+  returns: v.union(vWishlistResponse, v.null()),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     const userId = identity?.subject;
@@ -297,7 +190,7 @@ export const getWishlist = query({
       }),
     );
 
-    const validItems = itemsWithProducts.filter(Boolean);
+    const validItems = itemsWithProducts.filter((item): item is NonNullable<typeof item> => item !== null);
 
     return {
       id: wishlist._id,
@@ -313,6 +206,7 @@ export const getWishlistCount = query({
   args: {
     sessionId: v.optional(v.string()),
   },
+  returns: v.number(),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     const userId = identity?.subject;
@@ -352,6 +246,7 @@ export const isInWishlist = query({
     catalogId: v.id('catalog'),
     sessionId: v.optional(v.string()),
   },
+  returns: v.boolean(),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     const userId = identity?.subject;
@@ -392,6 +287,7 @@ export const mergeWishlist = mutation({
   args: {
     sessionId: v.string(),
   },
+  returns: vSuccessResponse,
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     const userId = identity?.subject;
@@ -400,20 +296,19 @@ export const mergeWishlist = mutation({
       throw new Error('User must be authenticated');
     }
 
-    const guestWishlist = await ctx.db
-      .query('wishlists')
-      .withIndex('sessionId', (q) => q.eq('sessionId', args.sessionId))
-      .first();
-
+    // Find guest wishlist
+    const guestWishlist = await WishlistModel.findWishlist(ctx, null, args.sessionId);
     if (!guestWishlist) {
       return { success: true };
     }
 
-    const userWishlist = await getOrCreateWishlist(ctx, userId, null);
+    // Get or create user wishlist
+    const userWishlist = await WishlistModel.getOrCreateWishlist(ctx, userId, null);
     if (!userWishlist) {
       throw new Error('Failed to create user wishlist');
     }
 
+    // If they're the same, just update ownership
     if (guestWishlist._id === userWishlist._id) {
       await ctx.db.patch(guestWishlist._id, {
         userId,
@@ -423,38 +318,8 @@ export const mergeWishlist = mutation({
       return { success: true };
     }
 
-    const guestItems = await ctx.db
-      .query('wishlistItems')
-      .withIndex('wishlistId', (q) => q.eq('wishlistId', guestWishlist._id))
-      .collect();
-
-    for (const guestItem of guestItems) {
-      const existingItem = await ctx.db
-        .query('wishlistItems')
-        .withIndex('wishlistId_catalogId', (q) =>
-          q
-            .eq('wishlistId', userWishlist._id)
-            .eq('catalogId', guestItem.catalogId),
-        )
-        .first();
-
-      if (!existingItem) {
-        await ctx.db.insert('wishlistItems', {
-          wishlistId: userWishlist._id,
-          catalogId: guestItem.catalogId,
-          addedAt: guestItem.addedAt,
-          notes: guestItem.notes,
-        });
-      }
-
-      await ctx.db.delete(guestItem._id);
-    }
-
-    await ctx.db.delete(guestWishlist._id);
-
-    await ctx.db.patch(userWishlist._id, {
-      updatedAt: Date.now(),
-    });
+    // Merge the two wishlists
+    await WishlistModel.mergeWishlists(ctx, guestWishlist._id, userWishlist._id);
 
     return { success: true };
   },

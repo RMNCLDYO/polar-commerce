@@ -3,6 +3,8 @@
  * Based on Polar's official API specification
  */
 
+import { v } from 'convex/values';
+
 export type TrialInterval = 'day' | 'week' | 'month' | 'year';
 
 export type CountryAlpha2 =
@@ -348,3 +350,21 @@ export interface CheckoutSession {
   external_customer_id: string | null;
   customer_external_id: string | null;
 }
+
+// Convex validators for return values
+export const vCheckoutSessionResponse = v.object({
+  success: v.boolean(),
+  checkoutId: v.string(),
+  checkoutUrl: v.string(),
+  clientSecret: v.string(),
+  amount: v.number(),
+  currency: v.string(),
+  status: v.string(),
+  expiresAt: v.string(),
+});
+
+export const vCheckoutSuccessResponse = v.object({
+  success: v.boolean(),
+  status: v.string(),
+  orderId: v.string(),
+});

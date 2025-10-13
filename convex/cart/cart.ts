@@ -7,7 +7,14 @@ import {
   mutation,
   query,
 } from '../_generated/server';
-import { validateQuantity } from '../utils/validation';
+import { trackCartOperation } from '../lib/metrics';
+import { checkRateLimit } from '../lib/rateLimit';
+import {
+  validateQuantity,
+  vSuccessResponse,
+  vCartResponse,
+  vCartValidationResponse,
+} from '../utils/validation';
 
 // Helper to get or create cart for a user/session
 async function getOrCreateCart(
@@ -52,70 +59,84 @@ export const addToCart = mutation({
     quantity: v.number(),
     sessionId: v.optional(v.string()),
   },
+  returns: vSuccessResponse,
   handler: async (ctx, args) => {
-    // Get current user from auth
-    const identity = await ctx.auth.getUserIdentity();
-    const userId = identity?.subject;
+    return await trackCartOperation(
+      ctx,
+      'addToCart',
+      async () => {
+        // Get current user from auth
+        const identity = await ctx.auth.getUserIdentity();
+        const userId = identity?.subject;
 
-    if (!userId && !args.sessionId) {
-      throw new Error('User must be authenticated or provide a session ID');
-    }
+        if (!userId && !args.sessionId) {
+          throw new Error('User must be authenticated or provide a session ID');
+        }
 
-    // Get or create cart
-    const cart = await getOrCreateCart(ctx, userId, args.sessionId);
-    if (!cart) {
-      throw new Error('Failed to create cart');
-    }
+        // Rate limiting
+        await checkRateLimit(ctx, 'cart', userId, args.sessionId);
 
-    // Get product to verify it exists and get current price
-    const product = await ctx.db.get(args.catalogId);
-    if (!product || !product.isActive) {
-      throw new Error('Product not found or inactive');
-    }
+        // Get or create cart
+        const cart = await getOrCreateCart(ctx, userId, args.sessionId);
+        if (!cart) {
+          throw new Error('Failed to create cart');
+        }
 
-    // Check inventory
-    if (!product.inStock || product.inventory_qty <= 0) {
-      throw new Error('Product is out of stock');
-    }
+        // Get product to verify it exists and get current price
+        const product = await ctx.db.get(args.catalogId);
+        if (!product || !product.isActive) {
+          throw new Error('Product not found or inactive');
+        }
 
-    // Check if item already in cart
-    const existingItem = await ctx.db
-      .query('cartItems')
-      .withIndex('cartId_catalogId', (q) =>
-        q.eq('cartId', cart._id).eq('catalogId', args.catalogId),
-      )
-      .first();
+        // Check inventory
+        if (!product.inStock || product.inventory_qty <= 0) {
+          throw new Error('Product is out of stock');
+        }
 
-    const newQuantity = existingItem
-      ? existingItem.quantity + args.quantity
-      : args.quantity;
+        // Check if item already in cart
+        const existingItem = await ctx.db
+          .query('cartItems')
+          .withIndex('cartId_catalogId', (q) =>
+            q.eq('cartId', cart._id).eq('catalogId', args.catalogId),
+          )
+          .first();
 
-    validateQuantity(newQuantity, product.inventory_qty, product.name);
+        const newQuantity = existingItem
+          ? existingItem.quantity + args.quantity
+          : args.quantity;
 
-    if (existingItem) {
-      // Update quantity
-      await ctx.db.patch(existingItem._id, {
-        quantity: newQuantity,
-        updatedAt: Date.now(),
-      });
-    } else {
-      // Add new item
-      await ctx.db.insert('cartItems', {
-        cartId: cart._id,
+        validateQuantity(newQuantity, product.inventory_qty, product.name);
+
+        if (existingItem) {
+          // Update quantity
+          await ctx.db.patch(existingItem._id, {
+            quantity: newQuantity,
+            updatedAt: Date.now(),
+          });
+        } else {
+          // Add new item
+          await ctx.db.insert('cartItems', {
+            cartId: cart._id,
+            catalogId: args.catalogId,
+            quantity: args.quantity,
+            price: product.price,
+            addedAt: Date.now(),
+            updatedAt: Date.now(),
+          });
+        }
+
+        // Update cart timestamp
+        await ctx.db.patch(cart._id, {
+          updatedAt: Date.now(),
+        });
+
+        return { success: true };
+      },
+      {
         catalogId: args.catalogId,
         quantity: args.quantity,
-        price: product.price,
-        addedAt: Date.now(),
-        updatedAt: Date.now(),
-      });
-    }
-
-    // Update cart timestamp
-    await ctx.db.patch(cart._id, {
-      updatedAt: Date.now(),
-    });
-
-    return { success: true };
+      },
+    );
   },
 });
 
@@ -126,61 +147,72 @@ export const updateCartItem = mutation({
     quantity: v.number(),
     sessionId: v.optional(v.string()),
   },
+  returns: vSuccessResponse,
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    const userId = identity?.subject;
+    return await trackCartOperation(
+      ctx,
+      'updateCartItem',
+      async () => {
+        const identity = await ctx.auth.getUserIdentity();
+        const userId = identity?.subject;
 
-    if (!userId && !args.sessionId) {
-      throw new Error('User must be authenticated or provide a session ID');
-    }
+        if (!userId && !args.sessionId) {
+          throw new Error('User must be authenticated or provide a session ID');
+        }
 
-    // Find cart
-    let cart: Doc<'carts'> | null = null;
-    if (userId) {
-      cart = await ctx.db
-        .query('carts')
-        .withIndex('userId', (q) => q.eq('userId', userId))
-        .first();
-    } else if (args.sessionId) {
-      cart = await ctx.db
-        .query('carts')
-        .withIndex('sessionId', (q) => q.eq('sessionId', args.sessionId))
-        .first();
-    }
+        // Find cart
+        let cart: Doc<'carts'> | null = null;
+        if (userId) {
+          cart = await ctx.db
+            .query('carts')
+            .withIndex('userId', (q) => q.eq('userId', userId))
+            .first();
+        } else if (args.sessionId) {
+          cart = await ctx.db
+            .query('carts')
+            .withIndex('sessionId', (q) => q.eq('sessionId', args.sessionId))
+            .first();
+        }
 
-    if (!cart) {
-      throw new Error('Cart not found');
-    }
+        if (!cart) {
+          throw new Error('Cart not found');
+        }
 
-    // Find cart item
-    const cartItem = await ctx.db
-      .query('cartItems')
-      .withIndex('cartId_catalogId', (q) =>
-        q.eq('cartId', cart._id).eq('catalogId', args.catalogId),
-      )
-      .first();
+        // Find cart item
+        const cartItem = await ctx.db
+          .query('cartItems')
+          .withIndex('cartId_catalogId', (q) =>
+            q.eq('cartId', cart._id).eq('catalogId', args.catalogId),
+          )
+          .first();
 
-    if (!cartItem) {
-      throw new Error('Item not in cart');
-    }
+        if (!cartItem) {
+          throw new Error('Item not in cart');
+        }
 
-    if (args.quantity <= 0) {
-      // Remove item if quantity is 0 or less
-      await ctx.db.delete(cartItem._id);
-    } else {
-      // Update quantity
-      await ctx.db.patch(cartItem._id, {
+        if (args.quantity <= 0) {
+          // Remove item if quantity is 0 or less
+          await ctx.db.delete(cartItem._id);
+        } else {
+          // Update quantity
+          await ctx.db.patch(cartItem._id, {
+            quantity: args.quantity,
+            updatedAt: Date.now(),
+          });
+        }
+
+        // Update cart timestamp
+        await ctx.db.patch(cart._id, {
+          updatedAt: Date.now(),
+        });
+
+        return { success: true };
+      },
+      {
+        catalogId: args.catalogId,
         quantity: args.quantity,
-        updatedAt: Date.now(),
-      });
-    }
-
-    // Update cart timestamp
-    await ctx.db.patch(cart._id, {
-      updatedAt: Date.now(),
-    });
-
-    return { success: true };
+      },
+    );
   },
 });
 
@@ -190,50 +222,60 @@ export const removeFromCart = mutation({
     catalogId: v.id('catalog'),
     sessionId: v.optional(v.string()),
   },
+  returns: vSuccessResponse,
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    const userId = identity?.subject;
+    return await trackCartOperation(
+      ctx,
+      'removeFromCart',
+      async () => {
+        const identity = await ctx.auth.getUserIdentity();
+        const userId = identity?.subject;
 
-    if (!userId && !args.sessionId) {
-      throw new Error('User must be authenticated or provide a session ID');
-    }
+        if (!userId && !args.sessionId) {
+          throw new Error('User must be authenticated or provide a session ID');
+        }
 
-    // Find cart
-    let cart: Doc<'carts'> | null = null;
-    if (userId) {
-      cart = await ctx.db
-        .query('carts')
-        .withIndex('userId', (q) => q.eq('userId', userId))
-        .first();
-    } else if (args.sessionId) {
-      cart = await ctx.db
-        .query('carts')
-        .withIndex('sessionId', (q) => q.eq('sessionId', args.sessionId))
-        .first();
-    }
+        // Find cart
+        let cart: Doc<'carts'> | null = null;
+        if (userId) {
+          cart = await ctx.db
+            .query('carts')
+            .withIndex('userId', (q) => q.eq('userId', userId))
+            .first();
+        } else if (args.sessionId) {
+          cart = await ctx.db
+            .query('carts')
+            .withIndex('sessionId', (q) => q.eq('sessionId', args.sessionId))
+            .first();
+        }
 
-    if (!cart) {
-      throw new Error('Cart not found');
-    }
+        if (!cart) {
+          throw new Error('Cart not found');
+        }
 
-    // Find and delete cart item
-    const cartItem = await ctx.db
-      .query('cartItems')
-      .withIndex('cartId_catalogId', (q) =>
-        q.eq('cartId', cart._id).eq('catalogId', args.catalogId),
-      )
-      .first();
+        // Find and delete cart item
+        const cartItem = await ctx.db
+          .query('cartItems')
+          .withIndex('cartId_catalogId', (q) =>
+            q.eq('cartId', cart._id).eq('catalogId', args.catalogId),
+          )
+          .first();
 
-    if (cartItem) {
-      await ctx.db.delete(cartItem._id);
+        if (cartItem) {
+          await ctx.db.delete(cartItem._id);
 
-      // Update cart timestamp
-      await ctx.db.patch(cart._id, {
-        updatedAt: Date.now(),
-      });
-    }
+          // Update cart timestamp
+          await ctx.db.patch(cart._id, {
+            updatedAt: Date.now(),
+          });
+        }
 
-    return { success: true };
+        return { success: true };
+      },
+      {
+        catalogId: args.catalogId,
+      },
+    );
   },
 });
 
@@ -242,48 +284,56 @@ export const clearCart = mutation({
   args: {
     sessionId: v.optional(v.string()),
   },
+  returns: vSuccessResponse,
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    const userId = identity?.subject;
+    return await trackCartOperation(
+      ctx,
+      'clearCart',
+      async () => {
+        const identity = await ctx.auth.getUserIdentity();
+        const userId = identity?.subject;
 
-    if (!userId && !args.sessionId) {
-      throw new Error('User must be authenticated or provide a session ID');
-    }
+        if (!userId && !args.sessionId) {
+          throw new Error('User must be authenticated or provide a session ID');
+        }
 
-    // Find cart
-    let cart: Doc<'carts'> | null = null;
-    if (userId) {
-      cart = await ctx.db
-        .query('carts')
-        .withIndex('userId', (q) => q.eq('userId', userId))
-        .first();
-    } else if (args.sessionId) {
-      cart = await ctx.db
-        .query('carts')
-        .withIndex('sessionId', (q) => q.eq('sessionId', args.sessionId))
-        .first();
-    }
+        // Find cart
+        let cart: Doc<'carts'> | null = null;
+        if (userId) {
+          cart = await ctx.db
+            .query('carts')
+            .withIndex('userId', (q) => q.eq('userId', userId))
+            .first();
+        } else if (args.sessionId) {
+          cart = await ctx.db
+            .query('carts')
+            .withIndex('sessionId', (q) => q.eq('sessionId', args.sessionId))
+            .first();
+        }
 
-    if (!cart) {
-      return { success: true }; // No cart to clear
-    }
+        if (!cart) {
+          return { success: true }; // No cart to clear
+        }
 
-    // Delete all cart items
-    const cartItems = await ctx.db
-      .query('cartItems')
-      .withIndex('cartId', (q) => q.eq('cartId', cart._id))
-      .collect();
+        // Delete all cart items
+        const cartItems = await ctx.db
+          .query('cartItems')
+          .withIndex('cartId', (q) => q.eq('cartId', cart._id))
+          .collect();
 
-    for (const item of cartItems) {
-      await ctx.db.delete(item._id);
-    }
+        for (const item of cartItems) {
+          await ctx.db.delete(item._id);
+        }
 
-    // Update cart timestamp
-    await ctx.db.patch(cart._id, {
-      updatedAt: Date.now(),
-    });
+        // Update cart timestamp
+        await ctx.db.patch(cart._id, {
+          updatedAt: Date.now(),
+        });
 
-    return { success: true };
+        return { success: true };
+      },
+      {},
+    );
   },
 });
 
@@ -292,6 +342,7 @@ export const getCart = query({
   args: {
     sessionId: v.optional(v.string()),
   },
+  returns: v.union(vCartResponse, v.null()),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     const userId = identity?.subject;
@@ -391,6 +442,7 @@ export const getCartCount = query({
   args: {
     sessionId: v.optional(v.string()),
   },
+  returns: v.number(),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     const userId = identity?.subject;
@@ -432,6 +484,7 @@ export const mergeCart = mutation({
   args: {
     sessionId: v.string(),
   },
+  returns: vSuccessResponse,
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     const userId = identity?.subject;
@@ -520,6 +573,7 @@ export const validateCart = query({
   args: {
     sessionId: v.optional(v.string()),
   },
+  returns: vCartValidationResponse,
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     const userId = identity?.subject;
@@ -662,10 +716,10 @@ export const internal_getAuthUser = internalQuery({
     userId: v.string(),
   },
   handler: async (ctx, { userId }) => {
-    // Query the Better Auth user table directly
+    // Query the Better Auth user table directly using index
     const user = await ctx.db
       .query('betterAuth_user')
-      .filter((q) => q.eq(q.field('id'), userId))
+      .withIndex('id', (q) => q.eq('id', userId))
       .first();
     return user;
   },

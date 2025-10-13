@@ -8,6 +8,7 @@ import {
   mutation,
   query,
 } from '../_generated/server';
+import { vProductListItem, vSuccessResponse } from '../utils/validation';
 
 // Local type definitions for Polar SDK
 interface PolarProduct {
@@ -57,10 +58,11 @@ export const getProducts = query({
     limit: v.optional(v.number()),
     excludeSubscriptions: v.optional(v.boolean()),
   },
+  returns: v.array(vProductListItem),
   handler: async (ctx, args) => {
     let products = await ctx.db
       .query('catalog')
-      .filter((q) => q.eq(q.field('isActive'), true))
+      .withIndex('isActive', (q) => q.eq('isActive', true))
       .collect();
 
     // Exclude subscriptions if requested
@@ -148,6 +150,7 @@ export const getProducts = query({
 // Get single product by ID
 export const getProduct = query({
   args: { id: v.id('catalog') },
+  returns: v.union(vProductListItem, v.null()),
   handler: async (ctx, args) => {
     const product = await ctx.db.get(args.id);
     if (!product || !product.isActive) {
@@ -182,6 +185,7 @@ export const createProduct = mutation({
     inStock: v.optional(v.boolean()),
     inventory_qty: v.optional(v.number()),
   },
+  returns: v.id('catalog'),
   handler: async (ctx, args) => {
     const productId = await ctx.db.insert('catalog', {
       ...args,
@@ -359,6 +363,7 @@ export const updateProduct = mutation({
       inventory_qty: v.optional(v.number()),
     }),
   },
+  returns: vSuccessResponse,
   handler: async (ctx, args) => {
     const { productId, updates } = args;
 
@@ -400,6 +405,7 @@ export const deleteProduct = mutation({
   args: {
     productId: v.id('catalog'),
   },
+  returns: vSuccessResponse,
   handler: async (ctx, args) => {
     await ctx.db.delete(args.productId);
     return { success: true };
@@ -430,6 +436,11 @@ export const decrementInventory = mutation({
     productId: v.id('catalog'),
     quantity: v.number(),
   },
+  returns: v.object({
+    success: v.boolean(),
+    newInventory: v.number(),
+    inStock: v.boolean(),
+  }),
   handler: async (ctx, args) => {
     const product = await ctx.db.get(args.productId);
     if (!product) {
@@ -470,6 +481,21 @@ export const decrementInventoryInternal = internalMutation({
       inventory_qty: Math.max(0, newInventory),
       inStock: newInventory > 0,
       updatedAt: Date.now(),
+    });
+
+    // Audit log: Inventory decremented
+    await ctx.runMutation(internal.lib.audit.logEvent, {
+      eventType: 'inventory.decremented',
+      resourceType: 'product',
+      resourceId: args.productId,
+      action: `Decremented inventory by ${args.quantity}`,
+      details: {
+        productName: product.name,
+        quantity: args.quantity,
+        oldInventory: product.inventory_qty,
+        newInventory: Math.max(0, newInventory),
+      },
+      success: true,
     });
 
     return {

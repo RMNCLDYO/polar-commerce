@@ -263,7 +263,7 @@ export const listProducts = query({
   handler: async (ctx) => {
     return await ctx.db
       .query('catalog')
-      .filter((q) => q.eq(q.field('isActive'), true))
+      .withIndex('isActive', (q) => q.eq('isActive', true))
       .collect();
   },
 });
@@ -274,11 +274,12 @@ export const listProducts = query({
 export const listByCategory = query({
   args: { category: v.string() },
   handler: async (ctx, { category }) => {
-    return await ctx.db
+    // First get by category, then filter active in memory (small result set per category)
+    const products = await ctx.db
       .query('catalog')
       .withIndex('category', (q) => q.eq('category', category))
-      .filter((q) => q.eq(q.field('isActive'), true))
       .collect();
+    return products.filter(p => p.isActive);
   },
 });
 
@@ -291,7 +292,7 @@ export const syncAllProductsToPolar = internalMutation({
   handler: async (ctx) => {
     const products = await ctx.db
       .query('catalog')
-      .filter((q) => q.eq(q.field('isActive'), true))
+      .withIndex('isActive', (q) => q.eq('isActive', true))
       .collect();
 
     logger.info(`[CRON] Syncing ${products.length} products to Polar...`);
