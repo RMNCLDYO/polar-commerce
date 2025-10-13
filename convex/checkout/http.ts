@@ -5,13 +5,12 @@
  */
 
 import { ConvexError } from 'convex/values';
-import { api } from '../_generated/api';
 import { httpAction } from '../_generated/server';
 import type { CheckoutCustomFieldData } from '../types/metadata';
 import { getCorsHeaders, getPreflightHeaders } from '../utils/cors';
 import { logger } from '../utils/logger';
 import { ValidationError } from '../utils/validation';
-import type { CheckoutSessionResponse } from './types';
+import { createCheckoutSessionHelper } from './checkout';
 
 interface CheckoutRequestBody {
   sessionId?: string;
@@ -25,7 +24,6 @@ interface CheckoutRequestBody {
   customerEmail?: string;
   requireBillingAddress?: boolean;
   customFieldData?: CheckoutCustomFieldData;
-  customerIpAddress?: string;
   trialInterval?: 'day' | 'week' | 'month' | 'year';
   trialIntervalCount?: number;
   subscriptionId?: string;
@@ -97,14 +95,13 @@ export const createCheckout = httpAction(async (ctx, request) => {
     }
 
     logger.info('[Checkout HTTP] Guest checkout with IP tracking');
-    logger.debug('[Checkout HTTP] Calling createCheckoutSession...');
-    const result = (await ctx.runAction(
-      api.checkout.checkout.createCheckoutSession,
-      {
-        ...body,
-        customerIpAddress: customerIpAddress || undefined,
-      },
-    )) as CheckoutSessionResponse;
+    logger.debug('[Checkout HTTP] Calling createCheckoutSessionHelper...');
+
+    // Call helper directly to avoid ctx.runAction overhead
+    const result = await createCheckoutSessionHelper(ctx, {
+      ...body,
+      customerIpAddress: customerIpAddress || undefined,
+    });
 
     logger.info('[Checkout HTTP] Checkout created successfully');
 
