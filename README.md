@@ -8,9 +8,10 @@
 [![Better Auth](https://img.shields.io/badge/Better_Auth-1.3.27-7C3AED?style=flat-square)](https://better-auth.com)
 [![Polar](https://img.shields.io/badge/Polar-0.35.4-007ACC?style=flat-square)](https://polar.sh)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6?style=flat-square&logo=typescript)](https://typescriptlang.org)
+[![Vitest](https://img.shields.io/badge/Vitest-3.2.4-729B1B?style=flat-square&logo=vitest)](https://vitest.dev)
 [![MIT License](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)](LICENSE)
 
-> **157 files** · **~18K lines of code** · **100% TypeScript** · **100% Next.js 16 compliant** · **Zero deprecated APIs**
+> **165+ files** · **~18.5K lines of code** · **100% TypeScript** · **100% Next.js 16 compliant** · **Zero deprecated APIs** · **Full test suite**
 
 ## What's Inside
 
@@ -555,6 +556,13 @@ npm run polar:seed-subscriptions  # Seed subscriptions only
 npm run polar:verify-seed     # Verify seeding integrity
 npm run db:reset              # Clear database (⚠️  destructive)
 
+# Testing
+npm run test                  # Run tests in watch mode
+npm run test:ui               # Run tests with Vitest UI
+npm run test:coverage         # Generate coverage report
+npm run test:watch            # Run tests in watch mode
+npm run test:ci               # Run tests in CI mode
+
 # Code Quality
 npm run lint                  # ESLint + Convex TypeScript
 npm run format                # ESLint auto-fix
@@ -572,8 +580,9 @@ npm run clean                 # Clean build artifacts + reinstall
 | **Payments** | Polar SDK | 0.35.4 | Payment processing + subscriptions |
 | **UI Components** | shadcn/ui | Latest | Radix UI + Tailwind components |
 | **Styling** | Tailwind CSS | 4.0 | Utility-first CSS framework |
-| **Linter** | ESLint | 9.37.0 | With eslint-plugin-react-hooks@7.0.0 (React Compiler rules) |
-| **AI SDK** | Vercel AI SDK | 5.0.64 | AI integration framework |
+| **Testing** | Vitest | 3.2.4 | Unit testing with React Testing Library |
+| **Linter** | ESLint | 9.37.0 | With security, a11y, and React Compiler rules |
+| **AI SDK** | Vercel AI SDK | 5.0.68 | AI integration framework |
 | **AI Model** | Google Gemini | 2.0 Flash | Generative AI for virtual try-on |
 | **TypeScript** | TypeScript | 5.0+ | Type safety |
 | **Runtime** | Node.js | 20.9+ | JavaScript runtime (LTS) |
@@ -620,6 +629,9 @@ npm run clean                 # Clean build artifacts + reinstall
 ### Developer Experience
 - ✅ 100% TypeScript with strict mode
 - ✅ Auto-generated types from Convex schema
+- ✅ Unit testing with Vitest and React Testing Library
+- ✅ Code coverage reporting with @vitest/coverage-v8
+- ✅ Enhanced ESLint with security, accessibility, and import plugins
 - ✅ React Compiler-powered lint rules (refs, purity, immutability, set-state-in-render)
 - ✅ Hot module replacement (Turbopack)
 - ✅ File system caching for faster restarts
@@ -627,6 +639,76 @@ npm run clean                 # Clean build artifacts + reinstall
 - ✅ Verification tooling with 5 integrity checks
 - ✅ Structured logging (development + production)
 - ✅ Type-safe validation utilities
+- ✅ Development documentation (CONTRIBUTING.md, SECURITY.md)
+
+## Testing Infrastructure
+
+### Vitest Configuration
+
+This project uses Vitest for fast, modern testing:
+
+```typescript
+// vitest.config.ts
+export default defineConfig({
+  plugins: [react()],
+  test: {
+    environment: 'happy-dom',
+    setupFiles: ['./tests/setup.tsx'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html', 'lcov'],
+      exclude: ['node_modules/', 'dist/', '.next/', 'convex/_generated/'],
+    },
+  },
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './'),
+    },
+  },
+});
+```
+
+### Test Suite
+
+- **Unit Tests:** Core utilities and shared logic
+  - `lib/shared/utils.test.ts` - Utility function tests
+  - `app/error.test.tsx` - Error boundary component tests
+- **Testing Library:** React Testing Library for component testing
+- **Coverage:** V8 coverage with HTML reports
+- **Environment:** happy-dom for fast DOM simulation
+
+### Running Tests
+
+```bash
+npm run test           # Interactive watch mode
+npm run test:ui        # Vitest UI (visual test runner)
+npm run test:coverage  # Generate coverage report
+npm run test:ci        # CI mode with coverage output
+```
+
+### ESLint Configuration
+
+Enhanced with security and accessibility:
+
+```javascript
+// eslint.config.js
+export default [
+  // React Compiler rules (stable)
+  reactCompiler.configs.recommended,
+
+  // Security scanning
+  pluginSecurity.configs.recommended,
+
+  // Accessibility checks
+  pluginJsxA11y.flatConfigs.recommended,
+
+  // Import organization
+  pluginImport.flatConfigs.recommended,
+
+  // React Hooks rules (Next.js 16)
+  { plugins: { 'react-hooks': pluginReactHooks } }
+];
+```
 
 ## Important Notes
 
@@ -676,15 +758,18 @@ All changes implemented in this codebase.
 
 ## Project Statistics
 
-- **Total files:** 157 (146 TypeScript files)
-- **Lines of code:** ~18,000 TypeScript
+- **Total files:** 165+ (150+ TypeScript files)
+- **Lines of code:** ~18,500+ TypeScript
 - **Routes:** 35 (24 with Partial Prerendering)
 - **Components:** 34 files, 2,234 lines
 - **Backend functions:** 38 Convex files, 7,848 lines
 - **Scripts:** 7 seeding/verification files, 1,869 lines
+- **Tests:** Unit tests with Vitest + React Testing Library
+- **Test coverage:** V8 coverage reporting configured
 - **Type safety:** 100% (zero `any` types except intentional suppressions)
 - **Next.js 16 compliance:** 100% (zero deprecated APIs)
 - **Build time:** ~3.4 seconds (Turbopack)
+- **Documentation:** README.md, CONTRIBUTING.md, SECURITY.md, .env.example
 
 ## Security Headers
 
