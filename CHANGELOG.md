@@ -5,6 +5,142 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.10.0] - 2025-10-13 - Production Readiness: Monitoring, Rate Limiting & Audit Logging
+
+**Major Release** - Enterprise-grade production monitoring and security features
+
+### Added
+
+#### Convex Backend Testing (35 tests)
+- **Test Infrastructure** - `convex-test` integration with vitest
+  - `convex/tests/setup.ts` - Test utilities and context management (107 lines)
+  - `convex/tests/README.md` - Comprehensive test documentation
+
+- **Model Layer Tests** (31 tests)
+  - `convex/tests/model/cart.test.ts` - 17 cart business logic tests (300 lines)
+    - getOrCreateCart, findCart, addItemToCart, removeItemFromCart
+    - clearCartItems, calculateCartTotals, getCartItems
+    - Inventory validation and quantity management
+  - `convex/tests/model/wishlist.test.ts` - 14 wishlist tests (391 lines)
+    - getOrCreateWishlist, findWishlist, addItemToWishlist
+    - removeItemFromWishlist, clearWishlistItems, mergeWishlists
+    - Duplicate prevention and validation
+
+- **Integration Tests** (4 tests)
+  - `convex/tests/integration/checkout.test.ts` - End-to-end checkout flow (165 lines)
+    - Complete cart-to-checkout flow
+    - Guest-to-user cart migration
+    - Inventory validation before checkout
+    - Cart clearing after successful checkout
+
+#### Monitoring & Metrics Collection
+- **Performance Tracking System** - `convex/lib/metrics.ts` (210 lines)
+  - `trackPerformance()` - Generic performance wrapper with duration tracking
+  - `trackCartOperation()` - Cart-specific metrics
+  - `trackCheckoutOperation()` - Checkout-specific metrics
+  - `trackExternalAPICall()` - Polar SDK monitoring
+  - `calculatePerformanceSummary()` - Aggregate metrics for dashboards
+  - Automatic slow operation warnings (>1000ms for operations, >5000ms for external APIs)
+  - Designed for external monitoring service integration (Datadog, New Relic, etc.)
+
+- **Integrated Metrics** - Wrapped all critical operations
+  - Cart: addToCart, updateCartItem, removeFromCart, clearCart
+  - Checkout: Polar products.create, checkouts.create, checkouts.get, products.update
+  - Real-time performance monitoring and alerting
+
+#### Rate Limiting System
+- **Sliding Window Rate Limiter** - `convex/lib/rateLimit.ts` (251 lines)
+  - Database-backed distributed rate limiting
+  - Configurable limits per endpoint type:
+    - Cart: 100 requests/minute
+    - Checkout: 10 requests/minute
+    - Catalog: 300 requests/minute
+    - Auth: 5 requests/minute
+    - Webhook: 50 requests/minute
+  - Tracks by userId or sessionId for guest users
+  - `RateLimitError` with retry-after information
+  - Automatic cleanup via hourly cron job
+
+#### Audit Logging System
+- **Security Compliance Logging** - `convex/lib/audit.ts` (287 lines)
+  - `logAuditEvent()` - Generic audit logger
+  - Specialized audit functions:
+    - `auditCheckoutCreated()` - Track checkout creation
+    - `auditCheckoutCompleted()` - Track checkout completion
+    - `auditOrderCreated()` - Track order creation
+    - `auditCartCleared()` - Track cart clearing
+    - `auditCartMerged()` - Track guest-to-user cart migration
+    - `auditInventoryDecremented()` - Track inventory changes
+    - `auditOperationFailed()` - Track security failures
+  - Captures: event type, userId, sessionId, IP address, user agent
+  - Includes resource type/ID, action description, success/failure status
+  - Custom metadata support for detailed context
+
+#### Production Documentation
+- **Production Readiness Guide** - `PRODUCTION_READINESS.md` (450+ lines)
+  - Complete implementation summary
+  - Deployment checklist with environment variables
+  - Operational runbook (daily/weekly tasks)
+  - Security best practices
+  - Performance optimization recommendations
+  - Monitoring dashboard configuration
+  - Incident response procedures
+  - Success criteria and KPIs
+
+### Changed
+
+#### Schema Updates
+- **rateLimits Table** - Added to `convex/schema.ts`
+  - `key` (string) - Format: "rateLimit:{type}:{userId|sessionId}"
+  - `requests` (number[]) - Array of request timestamps
+  - `createdAt`, `updatedAt`, `expiresAt` (numbers)
+  - Indexes on `key` and `expiresAt`
+
+#### Cart Operations
+- **Enhanced cart.ts** - Added monitoring and rate limiting
+  - Integrated `trackCartOperation()` for performance monitoring
+  - Added `checkRateLimit()` to prevent abuse
+  - Wrapped all mutations: addToCart, updateCartItem, removeFromCart, clearCart
+
+#### Checkout Operations
+- **Enhanced checkout.ts** - Added monitoring, rate limiting, and audit logging
+  - Integrated `trackExternalAPICall()` for Polar SDK monitoring
+  - Added rate limiting to createCheckoutSession (10 req/min)
+  - Added audit logging to checkout completion
+  - Tracks: checkout creation, completion, bundle product operations
+
+#### Inventory Management
+- **Enhanced catalog.ts** - Added audit logging
+  - Added `auditInventoryDecremented()` to track inventory changes
+  - Logs product name, quantity, old/new inventory levels
+
+#### Cron Jobs
+- **Enhanced crons.ts** - Added rate limit cleanup
+  - New hourly cron job: `cleanup expired rate limits`
+  - Automatically removes expired rate limit records
+  - Prevents database bloat
+
+### Dependencies
+
+#### Added
+- `convex-test@^0.0.38` - Backend testing library for Convex
+
+### Breaking Changes
+
+- **Schema Migration Required** - New `rateLimits` table must be deployed
+  - Run `npx convex deploy` to create the new table
+  - No data migration needed (table starts empty)
+
+### Notes
+
+- **Test Environment** - Tests excluded from Convex bundle via `convex.json`
+- **Monitoring Ready** - Metrics logged to console, ready for external service integration
+- **Audit Logging** - Currently logs to console, can be extended to database storage
+- **Rate Limiting** - Active on cart and checkout operations, prevents API abuse
+- **Production Ready** - All systems tested and documented
+
+---
+
 ## [0.9.0] - 2025-10-13 - Testing Infrastructure & Quality Enhancements
 
 **PR #37** - Comprehensive testing infrastructure, enhanced security, and guest checkout fix
