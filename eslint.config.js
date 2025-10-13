@@ -22,6 +22,7 @@ export default [
       'convex/examples/**', // Example/pattern files
       'convex/lib/**', // Utility library files with flexible types
       'tests/**', // Frontend test files
+      'tests-convex/**', // Convex test files
       '**/*.test.ts',
       '**/*.test.tsx',
       '**/*.spec.ts',
