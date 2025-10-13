@@ -1,6 +1,6 @@
 {
   "name": "aisdk-storefront",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "type": "module",
   "description": "Production-ready e-commerce platform demonstrating Next.js 16 features (Cache Components, PPR, Server Components, modern caching) with Convex real-time database, Better Auth, Polar payments, and AI virtual try-on",
   "author": "Ray <hi@rmncldyo.com> (https://github.com/RMNCLDYO)",
