@@ -2,7 +2,7 @@ import { Polar as PolarSDK } from '@polar-sh/sdk';
 import { v } from 'convex/values';
 import { components, internal } from '../_generated/api';
 import type { Doc, Id } from '../_generated/dataModel';
-import { action, query } from '../_generated/server';
+import { action, query, type ActionCtx } from '../_generated/server';
 import { trackExternalAPICall } from '../lib/metrics';
 import * as CheckoutModel from '../model/checkout';
 import { logger } from '../utils/logger';
@@ -79,6 +79,388 @@ async function createBundleProduct(
 }
 
 /**
+ * Shared checkout creation logic
+ * Extracted as helper to avoid ctx.runAction overhead and code duplication
+ */
+export async function createCheckoutSessionHelper(
+  ctx: ActionCtx,
+  args: {
+    sessionId?: string;
+    successUrl: string;
+    metadata?: Record<string, unknown>;
+    customerIpAddress?: string;
+    customerEmail?: string;
+    discountId?: string;
+    discountCode?: string;
+    allowDiscountCodes?: boolean;
+    requireBillingAddress?: boolean;
+    customFieldData?: Record<string, unknown> | {
+      organizationName?: string;
+      taxExemptId?: string;
+      purchaseOrderNumber?: string;
+      department?: string;
+      costCenter?: string;
+      projectCode?: string;
+      additionalNotes?: string;
+      orderNotes?: string;
+    };
+    trialInterval?: 'day' | 'week' | 'month' | 'year';
+    trialIntervalCount?: number;
+    subscriptionId?: string;
+    isBusinessCustomer?: boolean;
+    customerBillingName?: string;
+    customerTaxId?: string;
+  },
+): Promise<CheckoutSessionResponse> {
+  const identity = await ctx.auth.getUserIdentity();
+  const userId = identity?.subject;
+
+  logger.debug('[Checkout] userId:', userId);
+  logger.debug('[Checkout] sessionId:', args.sessionId);
+
+  if (!userId && !args.sessionId) {
+    throw new Error('User must be authenticated or provide a session ID');
+  }
+
+  // Rate limiting - protect checkout endpoint
+  await ctx.runMutation(internal.lib.rateLimit.checkAndUpdate, {
+    limitType: 'checkout',
+    userId: userId || undefined,
+    sessionId: args.sessionId || undefined,
+  });
+
+  let cart: Doc<'carts'> | null = null;
+  if (userId) {
+    logger.debug('[Checkout] Looking up cart by userId');
+    cart = (await ctx.runQuery(internal.cart.cart.internal_getCartByUserId, {
+      userId,
+    })) as Doc<'carts'> | null;
+  } else if (args.sessionId) {
+    logger.debug('[Checkout] Looking up cart by sessionId:', args.sessionId);
+    cart = await ctx.runQuery(
+      internal.cart.cart.internal_getCartBySessionId,
+      {
+        sessionId: args.sessionId,
+      },
+    );
+  }
+
+  logger.debug('[Checkout] Cart found:', cart !== null);
+  if (cart) {
+    logger.debug('[Checkout] Cart ID:', cart._id);
+  }
+
+  if (!cart) {
+    throw new Error(
+      'Cart is empty. Please add items to your cart before checking out.',
+    );
+  }
+
+  // Get cart items with product details
+  const cartItemsRaw = await ctx.runQuery(
+    internal.cart.cart.internal_getCartItems,
+    {
+      cartId: cart._id,
+    },
+  );
+
+  // Filter out null items (TypeScript safety)
+  const cartItems = cartItemsRaw.filter(
+    (
+      item: (typeof cartItemsRaw)[number],
+    ): item is NonNullable<(typeof cartItemsRaw)[number]> => item !== null,
+  );
+
+  if (cartItems.length === 0) {
+    throw new Error('Cart is empty');
+  }
+
+  // Batch fetch all Polar products in parallel (eliminates N+1 query pattern)
+  const polarProducts = await CheckoutModel.batchFetchPolarProducts(
+    ctx,
+    cartItems,
+  );
+
+  // Get customer info for pre-filling checkout form
+  // We don't create the customer here - Polar will handle it automatically
+  let customerId: string | undefined;
+  let customerEmail: string | undefined;
+  let customerName: string | undefined;
+  let customerBillingAddress: Address | undefined;
+  let customerTaxId: string | undefined;
+
+  // Use provided IP address
+  const customerIpAddress = args.customerIpAddress;
+
+  if (userId) {
+    // Check if customer exists in Convex (synced from Polar via webhook)
+    const existingCustomer = await ctx.runQuery(
+      components.polar.lib.getCustomerByUserId,
+      { userId },
+    );
+
+    if (existingCustomer) {
+      // Use existing customer data to pre-fill checkout
+      customerId = existingCustomer.id;
+      customerEmail = existingCustomer.email || undefined;
+      customerName = existingCustomer.name || undefined;
+
+      // Pre-fill billing address if available
+      if (existingCustomer.billing_address) {
+        customerBillingAddress = {
+          line1: existingCustomer.billing_address.line1 || undefined,
+          line2: existingCustomer.billing_address.line2 || undefined,
+          postal_code:
+            existingCustomer.billing_address.postal_code || undefined,
+          city: existingCustomer.billing_address.city || undefined,
+          state: existingCustomer.billing_address.state || undefined,
+          country: existingCustomer.billing_address.country,
+        };
+      }
+
+      // Pre-fill tax ID if available
+      if (existingCustomer.tax_id) {
+        customerTaxId =
+          Array.isArray(existingCustomer.tax_id) &&
+          existingCustomer.tax_id.length > 0
+            ? existingCustomer.tax_id[0]
+            : undefined;
+      }
+    }
+
+    // If no customer found in Convex, get user info from auth
+    // Polar will create the customer during checkout, then webhook will sync it
+    if (!customerEmail) {
+      const user = await ctx.runQuery(
+        internal.cart.cart.internal_getAuthUser,
+        {
+          userId,
+        },
+      ) as { email: string; name?: string } | null;
+      if (user) {
+        customerEmail = user.email;
+        customerName = user.name || undefined;
+      }
+    }
+  }
+
+  // Initialize Polar SDK
+  const token = process.env.POLAR_ORGANIZATION_TOKEN;
+  if (!token) {
+    throw new Error('POLAR_ORGANIZATION_TOKEN not set');
+  }
+
+  const polarClient = new PolarSDK({
+    accessToken: token,
+    server:
+      (process.env.POLAR_SERVER as 'sandbox' | 'production') || 'sandbox',
+  });
+
+  try {
+    // Build the checkout metadata with cart items
+    // Polar supports up to 50 key-value pairs, so store items individually
+    const checkoutMetadata: Metadata = {
+      cartId: cart._id,
+      itemCount: polarProducts.length,
+    };
+
+    // Add each item to metadata (Polar supports up to 50 key-value pairs)
+    polarProducts.forEach((item, index) => {
+      checkoutMetadata[`item_${index}_id`] = item.polarProductId;
+      checkoutMetadata[`item_${index}_name`] = item.name;
+      checkoutMetadata[`item_${index}_quantity`] = item.quantity;
+      checkoutMetadata[`item_${index}_price`] = item.price;
+    });
+
+    // Only add userId/sessionId if they have values
+    if (userId) {
+      checkoutMetadata.userId = userId;
+    }
+    if (args.sessionId) {
+      checkoutMetadata.sessionId = args.sessionId;
+    }
+
+    // Add user-provided metadata
+    if (args.metadata) {
+      Object.assign(checkoutMetadata, args.metadata);
+    }
+
+    // Build customer metadata (separate from checkout metadata)
+    const customerMetadata: Metadata = {
+      source: 'storefront',
+      cartId: cart._id,
+    };
+
+    // Calculate total amount
+    const totalAmount = polarProducts.reduce(
+      (sum, p) => sum + p.price * p.quantity,
+      0,
+    );
+
+    // Prepare checkout data with ALL Polar API features
+    const firstProduct = polarProducts[0];
+    if (!firstProduct) {
+      throw new Error('No products in cart');
+    }
+
+    // HACK: Create bundle product for multi-product carts
+    // Polar doesn't support multiple products in one checkout
+    let checkoutProductId: string;
+    let isBundleCheckout = false;
+
+    if (polarProducts.length > 1) {
+      // Multiple products - create a bundle
+      checkoutProductId = await createBundleProduct(
+        polarClient,
+        polarProducts,
+        totalAmount,
+      );
+      isBundleCheckout = true;
+      // Store bundle ID in metadata for cleanup later
+      checkoutMetadata.bundleProductId = checkoutProductId;
+    } else {
+      // Single product - use it directly
+      checkoutProductId = firstProduct.polarProductId;
+    }
+
+    const checkoutData = {
+      // Required fields - Polar only supports one product in checkout
+      // For multi-item carts, we create a bundle product
+      products: [checkoutProductId],
+      success_url: args.successUrl,
+
+      // Metadata
+      metadata: checkoutMetadata,
+      customer_metadata: customerMetadata,
+
+      // Customer identification
+      ...(customerId && { customer_id: customerId }),
+      ...(customerEmail && { customer_email: customerEmail }),
+      ...(customerName && { customer_name: customerName }),
+      ...(userId && { external_customer_id: userId }),
+
+      // Business customer support
+      ...(args.isBusinessCustomer !== undefined && {
+        is_business_customer: args.isBusinessCustomer,
+      }),
+
+      // Billing information
+      ...(args.customerBillingName && {
+        customer_billing_name: args.customerBillingName,
+      }),
+      ...(customerBillingAddress && {
+        customer_billing_address: customerBillingAddress,
+      }),
+      ...((args.customerTaxId || customerTaxId) && {
+        customer_tax_id: args.customerTaxId || customerTaxId,
+      }),
+
+      // Require billing address flag
+      ...(args.requireBillingAddress !== undefined && {
+        require_billing_address: args.requireBillingAddress,
+      }),
+
+      // Discount support
+      ...(args.discountId && { discount_id: args.discountId }),
+      ...(args.allowDiscountCodes !== undefined && {
+        allow_discount_codes: args.allowDiscountCodes,
+      }),
+
+      // Custom field data
+      ...(args.customFieldData && {
+        custom_field_data: args.customFieldData,
+      }),
+
+      // Trial period configuration
+      ...(args.trialInterval && { trial_interval: args.trialInterval }),
+      ...(args.trialIntervalCount && {
+        trial_interval_count: args.trialIntervalCount,
+      }),
+
+      // Subscription upgrade
+      ...(args.subscriptionId && { subscription_id: args.subscriptionId }),
+
+      // IP address for fraud prevention and tax calculation
+      ...(customerIpAddress && { customer_ip_address: customerIpAddress }),
+    };
+
+    // For bundle checkouts, the amount is already set in the bundle product
+    // For single products with quantity > 1, set custom amount
+    if (!isBundleCheckout && firstProduct.quantity > 1) {
+      // @ts-expect-error - Dynamic property assignment for checkout data
+      checkoutData.amount = totalAmount;
+    }
+
+    logger.debug('[Checkout] Creating Polar checkout with data:');
+    logger.debug('Customer IP:', args.customerIpAddress || 'not provided');
+    logger.debug('Customer Email:', customerEmail || 'not provided');
+    logger.debug(
+      'Billing Address:',
+      customerBillingAddress ? 'provided' : 'not provided',
+    );
+    logger.debug('Product ID:', checkoutProductId);
+    logger.debug('Is Bundle:', isBundleCheckout);
+    logger.debug('Amount: $', totalAmount / 100);
+    logger.debug('Environment:', process.env.POLAR_SERVER);
+
+    const checkout = await trackExternalAPICall(
+      'Polar',
+      'checkouts.create',
+      async () => {
+        return await polarClient.checkouts.create(checkoutData);
+      },
+      {
+        productCount: polarProducts.length,
+        totalAmount,
+        isBundleCheckout,
+      },
+    );
+
+    if (!checkout || !checkout.url) {
+      throw new Error('Failed to create checkout session');
+    }
+
+    logger.info('[Checkout] Polar checkout created:', checkout.id);
+    logger.debug('Subtotal (amount): $', checkout.amount / 100);
+    logger.debug(
+      'Tax (tax_amount): $',
+      checkout.taxAmount ? checkout.taxAmount / 100 : 0,
+    );
+    logger.debug('Total (total_amount): $', checkout.totalAmount / 100);
+
+    // Store checkout session ID and discount info in the cart
+    await ctx.runMutation(internal.cart.cart.internal_updateCartCheckout, {
+      cartId: cart._id,
+      checkoutId: checkout.id,
+      checkoutUrl: checkout.url,
+      discountId: args.discountId,
+      discountCode: args.discountCode,
+      customFieldData: args.customFieldData,
+    });
+
+    const response: CheckoutSessionResponse = {
+      success: true,
+      checkoutId: checkout.id,
+      checkoutUrl: checkout.url,
+      clientSecret: checkout.clientSecret,
+      amount: checkout.totalAmount,
+      currency: checkout.currency,
+      status: checkout.status,
+      expiresAt: checkout.expiresAt.toString(),
+    };
+
+    return response;
+  } catch (error: unknown) {
+    const errorMessage =
+      error instanceof Error
+        ? error.message
+        : 'Failed to create checkout session';
+    logger.error('Failed to create checkout session:', error);
+    throw new Error(errorMessage);
+  }
+}
+
+/**
  * Create a Polar checkout session for the current cart
  *
  * Implements ALL Polar Checkout API features:
@@ -125,724 +507,8 @@ export const createCheckoutSession = action({
     customerTaxId: v.optional(v.string()),
   },
   returns: vCheckoutSessionResponse,
-  handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    const userId = identity?.subject;
-
-    logger.debug('[Checkout] userId:', userId);
-    logger.debug('[Checkout] sessionId:', args.sessionId);
-
-    if (!userId && !args.sessionId) {
-      throw new Error('User must be authenticated or provide a session ID');
-    }
-
-    // Rate limiting - protect checkout endpoint
-    await ctx.runMutation(internal.lib.rateLimit.checkAndUpdate, {
-      limitType: 'checkout',
-      userId: userId || undefined,
-      sessionId: args.sessionId || undefined,
-    });
-
-    let cart: Doc<'carts'> | null = null;
-    if (userId) {
-      logger.debug('[Checkout] Looking up cart by userId');
-      cart = (await ctx.runQuery(internal.cart.cart.internal_getCartByUserId, {
-        userId,
-      })) as Doc<'carts'> | null;
-    } else if (args.sessionId) {
-      logger.debug('[Checkout] Looking up cart by sessionId:', args.sessionId);
-      cart = await ctx.runQuery(
-        internal.cart.cart.internal_getCartBySessionId,
-        {
-          sessionId: args.sessionId,
-        },
-      );
-    }
-
-    logger.debug('[Checkout] Cart found:', cart !== null);
-    if (cart) {
-      logger.debug('[Checkout] Cart ID:', cart._id);
-    }
-
-    if (!cart) {
-      throw new Error(
-        'Cart is empty. Please add items to your cart before checking out.',
-      );
-    }
-
-    // Get cart items with product details
-    const cartItemsRaw = await ctx.runQuery(
-      internal.cart.cart.internal_getCartItems,
-      {
-        cartId: cart._id,
-      },
-    );
-
-    // Filter out null items (TypeScript safety)
-    const cartItems = cartItemsRaw.filter(
-      (
-        item: (typeof cartItemsRaw)[number],
-      ): item is NonNullable<(typeof cartItemsRaw)[number]> => item !== null,
-    );
-
-    if (cartItems.length === 0) {
-      throw new Error('Cart is empty');
-    }
-
-    // Batch fetch all Polar products in parallel (eliminates N+1 query pattern)
-    const polarProducts = await CheckoutModel.batchFetchPolarProducts(
-      ctx,
-      cartItems,
-    );
-
-    // Get customer info for pre-filling checkout form
-    // We don't create the customer here - Polar will handle it automatically
-    let customerId: string | undefined;
-    let customerEmail: string | undefined;
-    let customerName: string | undefined;
-    let customerBillingAddress: Address | undefined;
-    let customerTaxId: string | undefined;
-
-    // Use provided IP address
-    const customerIpAddress = args.customerIpAddress;
-
-    if (userId) {
-      // Check if customer exists in Convex (synced from Polar via webhook)
-      const existingCustomer = await ctx.runQuery(
-        components.polar.lib.getCustomerByUserId,
-        { userId },
-      );
-
-      if (existingCustomer) {
-        // Use existing customer data to pre-fill checkout
-        customerId = existingCustomer.id;
-        customerEmail = existingCustomer.email || undefined;
-        customerName = existingCustomer.name || undefined;
-
-        // Pre-fill billing address if available
-        if (existingCustomer.billing_address) {
-          customerBillingAddress = {
-            line1: existingCustomer.billing_address.line1 || undefined,
-            line2: existingCustomer.billing_address.line2 || undefined,
-            postal_code:
-              existingCustomer.billing_address.postal_code || undefined,
-            city: existingCustomer.billing_address.city || undefined,
-            state: existingCustomer.billing_address.state || undefined,
-            country: existingCustomer.billing_address.country,
-          };
-        }
-
-        // Pre-fill tax ID if available
-        if (existingCustomer.tax_id) {
-          customerTaxId =
-            Array.isArray(existingCustomer.tax_id) &&
-            existingCustomer.tax_id.length > 0
-              ? existingCustomer.tax_id[0]
-              : undefined;
-        }
-      }
-
-      // If no customer found in Convex, get user info from auth
-      // Polar will create the customer during checkout, then webhook will sync it
-      if (!customerEmail) {
-        const user = await ctx.runQuery(
-          internal.cart.cart.internal_getAuthUser,
-          {
-            userId,
-          },
-        ) as { email: string; name?: string } | null;
-        if (user) {
-          customerEmail = user.email;
-          customerName = user.name || undefined;
-        }
-      }
-    }
-
-    // Initialize Polar SDK
-    const token = process.env.POLAR_ORGANIZATION_TOKEN;
-    if (!token) {
-      throw new Error('POLAR_ORGANIZATION_TOKEN not set');
-    }
-
-    const polarClient = new PolarSDK({
-      accessToken: token,
-      server:
-        (process.env.POLAR_SERVER as 'sandbox' | 'production') || 'sandbox',
-    });
-
-    try {
-      // Build the checkout metadata with cart items
-      // Polar supports up to 50 key-value pairs, so store items individually
-      const checkoutMetadata: Metadata = {
-        cartId: cart._id,
-        itemCount: polarProducts.length,
-      };
-
-      // Add each item to metadata (Polar supports up to 50 key-value pairs)
-      polarProducts.forEach((item, index) => {
-        checkoutMetadata[`item_${index}_id`] = item.polarProductId;
-        checkoutMetadata[`item_${index}_name`] = item.name;
-        checkoutMetadata[`item_${index}_quantity`] = item.quantity;
-        checkoutMetadata[`item_${index}_price`] = item.price;
-      });
-
-      // Only add userId/sessionId if they have values
-      if (userId) {
-        checkoutMetadata.userId = userId;
-      }
-      if (args.sessionId) {
-        checkoutMetadata.sessionId = args.sessionId;
-      }
-
-      // Add user-provided metadata
-      if (args.metadata) {
-        Object.assign(checkoutMetadata, args.metadata);
-      }
-
-      // Build customer metadata (separate from checkout metadata)
-      const customerMetadata: Metadata = {
-        source: 'storefront',
-        cartId: cart._id,
-      };
-
-      // Calculate total amount
-      const totalAmount = polarProducts.reduce(
-        (sum, p) => sum + p.price * p.quantity,
-        0,
-      );
-
-      // Prepare checkout data with ALL Polar API features
-      const firstProduct = polarProducts[0];
-      if (!firstProduct) {
-        throw new Error('No products in cart');
-      }
-
-      // HACK: Create bundle product for multi-product carts
-      // Polar doesn't support multiple products in one checkout
-      let checkoutProductId: string;
-      let isBundleCheckout = false;
-
-      if (polarProducts.length > 1) {
-        // Multiple products - create a bundle
-        checkoutProductId = await createBundleProduct(
-          polarClient,
-          polarProducts,
-          totalAmount,
-        );
-        isBundleCheckout = true;
-        // Store bundle ID in metadata for cleanup later
-        checkoutMetadata.bundleProductId = checkoutProductId;
-      } else {
-        // Single product - use it directly
-        checkoutProductId = firstProduct.polarProductId;
-      }
-
-      const checkoutData = {
-        // Required fields - Polar only supports one product in checkout
-        // For multi-item carts, we create a bundle product
-        products: [checkoutProductId],
-        success_url: args.successUrl,
-
-        // Metadata
-        metadata: checkoutMetadata,
-        customer_metadata: customerMetadata,
-
-        // Customer identification
-        ...(customerId && { customer_id: customerId }),
-        ...(customerEmail && { customer_email: customerEmail }),
-        ...(customerName && { customer_name: customerName }),
-        ...(userId && { external_customer_id: userId }),
-
-        // Business customer support
-        ...(args.isBusinessCustomer !== undefined && {
-          is_business_customer: args.isBusinessCustomer,
-        }),
-
-        // Billing information
-        ...(args.customerBillingName && {
-          customer_billing_name: args.customerBillingName,
-        }),
-        ...(customerBillingAddress && {
-          customer_billing_address: customerBillingAddress,
-        }),
-        ...((args.customerTaxId || customerTaxId) && {
-          customer_tax_id: args.customerTaxId || customerTaxId,
-        }),
-
-        // Require billing address flag
-        ...(args.requireBillingAddress !== undefined && {
-          require_billing_address: args.requireBillingAddress,
-        }),
-
-        // Discount support
-        ...(args.discountId && { discount_id: args.discountId }),
-        ...(args.allowDiscountCodes !== undefined && {
-          allow_discount_codes: args.allowDiscountCodes,
-        }),
-
-        // Custom field data
-        ...(args.customFieldData && {
-          custom_field_data: args.customFieldData,
-        }),
-
-        // Trial period configuration
-        ...(args.trialInterval && { trial_interval: args.trialInterval }),
-        ...(args.trialIntervalCount && {
-          trial_interval_count: args.trialIntervalCount,
-        }),
-
-        // Subscription upgrade
-        ...(args.subscriptionId && { subscription_id: args.subscriptionId }),
-
-        // IP address for fraud prevention and tax calculation
-        ...(customerIpAddress && { customer_ip_address: customerIpAddress }),
-      };
-
-      // For bundle checkouts, the amount is already set in the bundle product
-      // For single products with quantity > 1, set custom amount
-      if (!isBundleCheckout && firstProduct.quantity > 1) {
-        // @ts-expect-error - Dynamic property assignment for checkout data
-        checkoutData.amount = totalAmount;
-      }
-
-      logger.debug('[Checkout] Creating Polar checkout with data:');
-      logger.debug('Customer IP:', args.customerIpAddress || 'not provided');
-      logger.debug('Customer Email:', customerEmail || 'not provided');
-      logger.debug(
-        'Billing Address:',
-        customerBillingAddress ? 'provided' : 'not provided',
-      );
-      logger.debug('Product ID:', checkoutProductId);
-      logger.debug('Is Bundle:', isBundleCheckout);
-      logger.debug('Amount: $', totalAmount / 100);
-      logger.debug('Environment:', process.env.POLAR_SERVER);
-
-      const checkout = await trackExternalAPICall(
-        'Polar',
-        'checkouts.create',
-        async () => {
-          return await polarClient.checkouts.create(checkoutData);
-        },
-        {
-          productCount: polarProducts.length,
-          totalAmount,
-          isBundleCheckout,
-        },
-      );
-
-      if (!checkout || !checkout.url) {
-        throw new Error('Failed to create checkout session');
-      }
-
-      logger.info('[Checkout] Polar checkout created:', checkout.id);
-      logger.debug('Subtotal (amount): $', checkout.amount / 100);
-      logger.debug(
-        'Tax (tax_amount): $',
-        checkout.taxAmount ? checkout.taxAmount / 100 : 0,
-      );
-      logger.debug('Total (total_amount): $', checkout.totalAmount / 100);
-
-      // Store checkout session ID and discount info in the cart
-      await ctx.runMutation(internal.cart.cart.internal_updateCartCheckout, {
-        cartId: cart._id,
-        checkoutId: checkout.id,
-        checkoutUrl: checkout.url,
-        discountId: args.discountId,
-        discountCode: args.discountCode,
-        customFieldData: args.customFieldData,
-      });
-
-      const response: CheckoutSessionResponse = {
-        success: true,
-        checkoutId: checkout.id,
-        checkoutUrl: checkout.url,
-        clientSecret: checkout.clientSecret,
-        amount: checkout.totalAmount,
-        currency: checkout.currency,
-        status: checkout.status,
-        expiresAt: checkout.expiresAt.toString(),
-      };
-
-      return response;
-    } catch (error: unknown) {
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : 'Failed to create checkout session';
-      logger.error('Failed to create checkout session:', error);
-      throw new Error(errorMessage);
-    }
-  },
-});
-
-/**
- * Create checkout session with IP address tracking
- * This action accepts the customer IP address from request headers
- * Note: This is now the same as createCheckoutSession since IP tracking is built-in
- */
-export const createCheckoutSessionWithIP = action({
-  args: {
-    sessionId: v.optional(v.string()),
-    successUrl: v.string(),
-    embedOrigin: v.optional(v.string()),
-    metadata: v.optional(v.record(v.string(), v.any())),
-    customerIpAddress: v.string(),
-    customerEmail: v.optional(v.string()),
-
-    discountId: v.optional(v.string()),
-    discountCode: v.optional(v.string()),
-    allowDiscountCodes: v.optional(v.boolean()),
-    requireBillingAddress: v.optional(v.boolean()),
-    customFieldData: v.optional(v.record(v.string(), v.any())),
-
-    trialInterval: v.optional(
-      v.union(
-        v.literal('day'),
-        v.literal('week'),
-        v.literal('month'),
-        v.literal('year'),
-      ),
-    ),
-    trialIntervalCount: v.optional(v.number()),
-
-    subscriptionId: v.optional(v.string()),
-
-    isBusinessCustomer: v.optional(v.boolean()),
-    customerBillingName: v.optional(v.string()),
-    customerTaxId: v.optional(v.string()),
-  },
-  returns: vCheckoutSessionResponse,
   handler: async (ctx, args): Promise<CheckoutSessionResponse> => {
-    // This is just an alias for createCheckoutSession with explicit IP tracking
-    // Both now support the same features
-    const identity = await ctx.auth.getUserIdentity();
-    const userId = identity?.subject;
-
-    if (!userId && !args.sessionId) {
-      throw new Error('User must be authenticated or provide a session ID');
-    }
-
-    // Get the cart with items
-    let cart: Doc<'carts'> | null = null;
-    if (userId) {
-      cart = await ctx.runQuery(internal.cart.cart.internal_getCartByUserId, {
-        userId,
-      });
-    } else if (args.sessionId) {
-      cart = await ctx.runQuery(
-        internal.cart.cart.internal_getCartBySessionId,
-        {
-          sessionId: args.sessionId,
-        },
-      );
-    }
-
-    if (!cart) {
-      throw new Error('Cart not found');
-    }
-
-    // Get cart items with product details
-    const cartItemsRaw = await ctx.runQuery(
-      internal.cart.cart.internal_getCartItems,
-      {
-        cartId: cart._id,
-      },
-    );
-
-    // Filter out null items (TypeScript safety)
-    const cartItems = cartItemsRaw.filter(
-      (
-        item: (typeof cartItemsRaw)[number],
-      ): item is NonNullable<(typeof cartItemsRaw)[number]> => item !== null,
-    );
-
-    if (cartItems.length === 0) {
-      throw new Error('Cart is empty');
-    }
-
-    // Batch fetch all Polar products in parallel (eliminates N+1 query pattern)
-    const polarProducts = await CheckoutModel.batchFetchPolarProducts(
-      ctx,
-      cartItems,
-    );
-
-    // Get customer info for pre-filling checkout form
-    // We don't create the customer here - Polar will handle it automatically
-    let customerId: string | undefined;
-    let customerEmail: string | undefined;
-    let customerName: string | undefined;
-    let customerBillingAddress: Address | undefined;
-    let customerTaxId: string | undefined;
-
-    // Use provided IP address
-    const customerIpAddress = args.customerIpAddress;
-
-    if (userId) {
-      // Check if customer exists in Convex (synced from Polar via webhook)
-      const existingCustomer = await ctx.runQuery(
-        components.polar.lib.getCustomerByUserId,
-        { userId },
-      );
-
-      if (existingCustomer) {
-        // Use existing customer data to pre-fill checkout
-        customerId = existingCustomer.id;
-        customerEmail = existingCustomer.email || undefined;
-        customerName = existingCustomer.name || undefined;
-
-        // Pre-fill billing address if available
-        if (existingCustomer.billing_address) {
-          customerBillingAddress = {
-            line1: existingCustomer.billing_address.line1 || undefined,
-            line2: existingCustomer.billing_address.line2 || undefined,
-            postal_code:
-              existingCustomer.billing_address.postal_code || undefined,
-            city: existingCustomer.billing_address.city || undefined,
-            state: existingCustomer.billing_address.state || undefined,
-            country: existingCustomer.billing_address.country,
-          };
-        }
-
-        // Pre-fill tax ID if available
-        if (existingCustomer.tax_id) {
-          customerTaxId =
-            Array.isArray(existingCustomer.tax_id) &&
-            existingCustomer.tax_id.length > 0
-              ? existingCustomer.tax_id[0]
-              : undefined;
-        }
-      }
-
-      // If no customer found in Convex, get user info from auth
-      // Polar will create the customer during checkout, then webhook will sync it
-      if (!customerEmail) {
-        const user = await ctx.runQuery(
-          internal.cart.cart.internal_getAuthUser,
-          {
-            userId,
-          },
-        ) as { email: string; name?: string } | null;
-        if (user) {
-          customerEmail = user.email;
-          customerName = user.name || undefined;
-        }
-      }
-    }
-
-    // Initialize Polar SDK
-    const token = process.env.POLAR_ORGANIZATION_TOKEN;
-    if (!token) {
-      throw new Error('POLAR_ORGANIZATION_TOKEN not set');
-    }
-
-    const polarClient = new PolarSDK({
-      accessToken: token,
-      server:
-        (process.env.POLAR_SERVER as 'sandbox' | 'production') || 'sandbox',
-    });
-
-    try {
-      // Build the checkout metadata with cart items
-      // Polar supports up to 50 key-value pairs, so store items individually
-      const checkoutMetadata: Metadata = {
-        cartId: cart._id,
-        itemCount: polarProducts.length,
-      };
-
-      // Add each item to metadata (Polar supports up to 50 key-value pairs)
-      polarProducts.forEach((item, index) => {
-        checkoutMetadata[`item_${index}_id`] = item.polarProductId;
-        checkoutMetadata[`item_${index}_name`] = item.name;
-        checkoutMetadata[`item_${index}_quantity`] = item.quantity;
-        checkoutMetadata[`item_${index}_price`] = item.price;
-      });
-
-      // Only add userId/sessionId if they have values
-      if (userId) {
-        checkoutMetadata.userId = userId;
-      }
-      if (args.sessionId) {
-        checkoutMetadata.sessionId = args.sessionId;
-      }
-
-      // Add user-provided metadata
-      if (args.metadata) {
-        Object.assign(checkoutMetadata, args.metadata);
-      }
-
-      // Build customer metadata (separate from checkout metadata)
-      const customerMetadata: Metadata = {
-        source: 'storefront',
-        cartId: cart._id,
-      };
-
-      // Calculate total amount
-      const totalAmount = polarProducts.reduce(
-        (sum, p) => sum + p.price * p.quantity,
-        0,
-      );
-
-      // Prepare checkout data with ALL Polar API features
-      const firstProduct = polarProducts[0];
-      if (!firstProduct) {
-        throw new Error('No products in cart');
-      }
-
-      // HACK: Create bundle product for multi-product carts
-      // Polar doesn't support multiple products in one checkout
-      let checkoutProductId: string;
-      let isBundleCheckout = false;
-
-      if (polarProducts.length > 1) {
-        // Multiple products - create a bundle
-        checkoutProductId = await createBundleProduct(
-          polarClient,
-          polarProducts,
-          totalAmount,
-        );
-        isBundleCheckout = true;
-        // Store bundle ID in metadata for cleanup later
-        checkoutMetadata.bundleProductId = checkoutProductId;
-      } else {
-        // Single product - use it directly
-        checkoutProductId = firstProduct.polarProductId;
-      }
-
-      const checkoutData = {
-        // Required fields - Polar only supports one product in checkout
-        // For multi-item carts, we create a bundle product
-        products: [checkoutProductId],
-        success_url: args.successUrl,
-
-        // Metadata
-        metadata: checkoutMetadata,
-        customer_metadata: customerMetadata,
-
-        // Customer identification
-        ...(customerId && { customer_id: customerId }),
-        ...(customerEmail && { customer_email: customerEmail }),
-        ...(customerName && { customer_name: customerName }),
-        ...(userId && { external_customer_id: userId }),
-
-        // Business customer support
-        ...(args.isBusinessCustomer !== undefined && {
-          is_business_customer: args.isBusinessCustomer,
-        }),
-
-        // Billing information
-        ...(args.customerBillingName && {
-          customer_billing_name: args.customerBillingName,
-        }),
-        ...(customerBillingAddress && {
-          customer_billing_address: customerBillingAddress,
-        }),
-        ...((args.customerTaxId || customerTaxId) && {
-          customer_tax_id: args.customerTaxId || customerTaxId,
-        }),
-
-        // Require billing address flag
-        ...(args.requireBillingAddress !== undefined && {
-          require_billing_address: args.requireBillingAddress,
-        }),
-
-        // Discount support
-        ...(args.discountId && { discount_id: args.discountId }),
-        ...(args.allowDiscountCodes !== undefined && {
-          allow_discount_codes: args.allowDiscountCodes,
-        }),
-
-        // Custom field data
-        ...(args.customFieldData && {
-          custom_field_data: args.customFieldData,
-        }),
-
-        // Trial period configuration
-        ...(args.trialInterval && { trial_interval: args.trialInterval }),
-        ...(args.trialIntervalCount && {
-          trial_interval_count: args.trialIntervalCount,
-        }),
-
-        // Subscription upgrade
-        ...(args.subscriptionId && { subscription_id: args.subscriptionId }),
-
-        // IP address for fraud prevention and tax calculation
-        ...(customerIpAddress && { customer_ip_address: customerIpAddress }),
-      };
-
-      // For bundle checkouts, the amount is already set in the bundle product
-      // For single products with quantity > 1, set custom amount
-      if (!isBundleCheckout && firstProduct.quantity > 1) {
-        // @ts-expect-error - Dynamic property assignment for checkout data
-        checkoutData.amount = totalAmount;
-      }
-
-      logger.debug('[Checkout] Creating Polar checkout with data:');
-      logger.debug('Customer IP:', args.customerIpAddress || 'not provided');
-      logger.debug('Customer Email:', customerEmail || 'not provided');
-      logger.debug(
-        'Billing Address:',
-        customerBillingAddress ? 'provided' : 'not provided',
-      );
-      logger.debug('Product ID:', checkoutProductId);
-      logger.debug('Is Bundle:', isBundleCheckout);
-      logger.debug('Amount: $', totalAmount / 100);
-      logger.debug('Environment:', process.env.POLAR_SERVER);
-
-      const checkout = await trackExternalAPICall(
-        'Polar',
-        'checkouts.create',
-        async () => {
-          return await polarClient.checkouts.create(checkoutData);
-        },
-        {
-          productCount: polarProducts.length,
-          totalAmount,
-          isBundleCheckout,
-        },
-      );
-
-      if (!checkout || !checkout.url) {
-        throw new Error('Failed to create checkout session');
-      }
-
-      logger.info('[Checkout] Polar checkout created:', checkout.id);
-      logger.debug('Subtotal (amount): $', checkout.amount / 100);
-      logger.debug(
-        'Tax (tax_amount): $',
-        checkout.taxAmount ? checkout.taxAmount / 100 : 0,
-      );
-      logger.debug('Total (total_amount): $', checkout.totalAmount / 100);
-
-      // Store checkout session ID and discount info in the cart
-      await ctx.runMutation(internal.cart.cart.internal_updateCartCheckout, {
-        cartId: cart._id,
-        checkoutId: checkout.id,
-        checkoutUrl: checkout.url,
-        discountId: args.discountId,
-        discountCode: args.discountCode,
-        customFieldData: args.customFieldData,
-      });
-
-      const response: CheckoutSessionResponse = {
-        success: true,
-        checkoutId: checkout.id,
-        checkoutUrl: checkout.url,
-        clientSecret: checkout.clientSecret,
-        amount: checkout.totalAmount,
-        currency: checkout.currency,
-        status: checkout.status,
-        expiresAt: checkout.expiresAt.toString(),
-      };
-
-      return response;
-    } catch (error: unknown) {
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : 'Failed to create checkout session';
-      logger.error('Failed to create checkout session:', error);
-      throw new Error(errorMessage);
-    }
+    return await createCheckoutSessionHelper(ctx, args);
   },
 });
 
@@ -855,7 +521,7 @@ export const handleCheckoutSuccess = action({
     checkoutId: v.string(),
   },
   returns: vCheckoutSuccessResponse,
-  handler: async (ctx, { checkoutId }) => {
+  handler: async (ctx, { checkoutId }): Promise<{ success: boolean; status: string; orderId: string }> => {
     const token = process.env.POLAR_ORGANIZATION_TOKEN;
     if (!token) {
       throw new Error('POLAR_ORGANIZATION_TOKEN not set');
@@ -1012,29 +678,35 @@ export const handleCheckoutSuccess = action({
         const itemCount = metadata.itemCount as number;
         logger.info(`[Checkout] Decrementing inventory for ${itemCount} items`);
 
+        // Batch inventory updates: Extract all items to update
+        const inventoryUpdates: Array<{
+          productId: Id<'catalog'>;
+          quantity: number;
+          name: string;
+        }> = [];
+
         for (let i = 0; i < itemCount; i++) {
           const productId = metadata[`item_${i}_id`] as string;
           const quantity = metadata[`item_${i}_quantity`] as number;
+          const name = metadata[`item_${i}_name`] as string;
 
           if (productId && quantity) {
-            try {
-              await ctx.runMutation(
-                internal.catalog.catalog.decrementInventoryInternal,
-                {
-                  productId: productId as Id<'catalog'>,
-                  quantity,
-                },
-              );
-              logger.debug(
-                `Decremented inventory for ${metadata[`item_${i}_name`]} by ${quantity}`,
-              );
-            } catch (error) {
-              logger.error(
-                `Failed to decrement inventory for ${productId}:`,
-                error,
-              );
-            }
+            inventoryUpdates.push({
+              productId: productId as Id<'catalog'>,
+              quantity,
+              name,
+            });
           }
+        }
+
+        // Call batched inventory update mutation
+        if (inventoryUpdates.length > 0) {
+          await ctx.runMutation(
+            internal.catalog.catalog.batchDecrementInventory,
+            {
+              updates: inventoryUpdates,
+            },
+          );
         }
 
         await ctx.runMutation(internal.cart.cart.internal_clearCartItems, {

@@ -509,3 +509,86 @@ export const decrementInventoryInternal = internalMutation({
     };
   },
 });
+
+// Batched internal mutation for decrementing multiple products' inventory
+// This runs in a single transaction, ensuring consistency
+export const batchDecrementInventory = internalMutation({
+  args: {
+    updates: v.array(
+      v.object({
+        productId: v.id('catalog'),
+        quantity: v.number(),
+        name: v.string(),
+      }),
+    ),
+  },
+  returns: v.object({
+    success: v.boolean(),
+    updatedCount: v.number(),
+    errors: v.array(
+      v.object({
+        productId: v.string(),
+        name: v.string(),
+        error: v.string(),
+      }),
+    ),
+  }),
+  handler: async (ctx, args) => {
+    let updatedCount = 0;
+    const errors: Array<{ productId: string; name: string; error: string }> =
+      [];
+
+    // Process all updates in single transaction
+    for (const update of args.updates) {
+      try {
+        const product = await ctx.db.get(update.productId);
+        if (!product) {
+          errors.push({
+            productId: update.productId,
+            name: update.name,
+            error: 'Product not found',
+          });
+          continue;
+        }
+
+        const newInventory = product.inventory_qty - update.quantity;
+
+        await ctx.db.patch(update.productId, {
+          inventory_qty: Math.max(0, newInventory),
+          inStock: newInventory > 0,
+          updatedAt: Date.now(),
+        });
+
+        // Audit log: Inventory decremented
+        await ctx.runMutation(internal.lib.audit.logEvent, {
+          eventType: 'inventory.decremented',
+          resourceType: 'product',
+          resourceId: update.productId,
+          action: `Decremented inventory by ${update.quantity}`,
+          details: {
+            productName: product.name,
+            quantity: update.quantity,
+            oldInventory: product.inventory_qty,
+            newInventory: Math.max(0, newInventory),
+          },
+          success: true,
+        });
+
+        updatedCount++;
+      } catch (error) {
+        errors.push({
+          productId: update.productId,
+          name: update.name,
+          error:
+            error instanceof Error ? error.message : 'Unknown error occurred',
+        });
+      }
+    }
+
+    return {
+      success: errors.length === 0,
+      updatedCount,
+      errors,
+    };
+  },
+});

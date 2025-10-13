@@ -2,6 +2,7 @@ import { Polar as PolarSDK } from '@polar-sh/sdk';
 import { v } from 'convex/values';
 import { api, components, internal } from '../_generated/api';
 import { action, internalAction } from '../_generated/server';
+import { ensurePolarCustomerHelper } from '../polarCustomer';
 import { toCountryCode } from '../types/metadata';
 import type { CustomerMetadata } from '../types/metadata';
 import { logger } from '../utils/logger';
@@ -142,7 +143,8 @@ export const ensureUserSynced = action({
   }> => {
     logger.debug(`Ensuring user is synced: ${email}`);
 
-    const result = await ctx.runAction(api.polarCustomer.ensurePolarCustomer, {
+    // Call helper directly instead of ctx.runAction to avoid overhead
+    const result = await ensurePolarCustomerHelper(ctx, {
       userId,
       email,
     });
