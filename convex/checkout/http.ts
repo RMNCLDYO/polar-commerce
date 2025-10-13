@@ -6,9 +6,23 @@
 
 import { api } from '../_generated/api';
 import { httpAction } from '../_generated/server';
+import type { CheckoutCustomFieldData } from '../types/metadata';
 import { getCorsHeaders, getPreflightHeaders } from '../utils/cors';
 import { logger } from '../utils/logger';
 import type { CheckoutSessionResponse } from './types';
+
+interface CheckoutRequestBody {
+  sessionId?: string;
+  successUrl: string;
+  allowDiscountCodes?: boolean;
+  isBusinessCustomer?: boolean;
+  discountCode?: string;
+  customerBillingName?: string;
+  customerTaxId?: string;
+  requireBillingAddress?: boolean;
+  customFieldData?: CheckoutCustomFieldData;
+  customerIpAddress?: string;
+}
 
 /**
  * Extract customer IP address from request headers
@@ -17,19 +31,19 @@ import type { CheckoutSessionResponse } from './types';
 function getClientIp(headers: Headers): string | null {
   // Try Cloudflare header first
   const cfIp = headers.get('cf-connecting-ip');
-  if (cfIp) return cfIp;
+  if (cfIp) {return cfIp;}
 
   // Try X-Forwarded-For (may contain multiple IPs)
   const forwardedFor = headers.get('x-forwarded-for');
   if (forwardedFor) {
     // Take the first IP (client IP)
     const firstIp = forwardedFor.split(',')[0];
-    if (firstIp) return firstIp.trim();
+    if (firstIp) {return firstIp.trim();}
   }
 
   // Try X-Real-IP
   const realIp = headers.get('x-real-ip');
-  if (realIp) return realIp;
+  if (realIp) {return realIp;}
 
   // No IP found
   return null;
@@ -45,7 +59,7 @@ export const createCheckout = httpAction(async (ctx, request) => {
   const origin = request.headers.get('origin');
 
   try {
-    const body = await request.json();
+    const body = await request.json() as CheckoutRequestBody;
     logger.debug(
       '[Checkout HTTP] Request body:',
       JSON.stringify(body, null, 2),

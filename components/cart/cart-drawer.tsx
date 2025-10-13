@@ -120,11 +120,11 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
           ) : (
             <div className="space-y-4">
               {cart.items.map((item: (typeof cart.items)[number]) => {
-                if (!item) return null;
+                if (!item) {return null;}
                 const isUpdating = updatingItems.has(item.catalogId);
                 return (
                   <div
-                    key={item.id}
+                    key={item._id}
                     className={cn(
                       'flex gap-4 py-4 border-b last:border-0',
                       isUpdating && 'opacity-50',
@@ -136,13 +136,19 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
                       onClick={handleProductClick}
                       className="relative w-20 h-20 bg-muted rounded-lg overflow-hidden flex-shrink-0"
                     >
-                      <Image
-                        src={item.product.image}
-                        alt={item.product.name}
-                        fill
-                        className="object-cover"
-                        sizes="80px"
-                      />
+                      {item.product.imageUrl ? (
+                        <Image
+                          src={item.product.imageUrl}
+                          alt={item.product.name}
+                          fill
+                          className="object-cover"
+                          sizes="80px"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <ShoppingBag className="w-8 h-8 text-muted-foreground" />
+                        </div>
+                      )}
                     </Link>
 
                     {/* Product Details */}
@@ -168,7 +174,7 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
                             variant="ghost"
                             size="icon"
                             onClick={() =>
-                              handleQuantityChange(
+                              void handleQuantityChange(
                                 item.catalogId,
                                 Math.max(1, item.quantity - 1),
                               )
@@ -185,7 +191,7 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
                             variant="ghost"
                             size="icon"
                             onClick={() =>
-                              handleQuantityChange(
+                              void handleQuantityChange(
                                 item.catalogId,
                                 item.quantity + 1,
                               )
@@ -199,9 +205,9 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
                             variant="ghost"
                             size="icon"
                             onClick={() =>
-                              handleRemoveItem(item.catalogId, {
+                              void handleRemoveItem(item.catalogId, {
                                 name: item.product.name,
-                                image: item.product.image,
+                                image: item.product.imageUrl,
                                 price: `$${(item.price / 100).toFixed(2)}`,
                               })
                             }
@@ -214,7 +220,7 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
                       </div>
 
                       {/* Price change warning */}
-                      {item.price !== item.currentPrice && (
+                      {item.price !== item.product.price && (
                         <p className="text-xs text-yellow-600 dark:text-yellow-500 mt-1">
                           Price changed from ${(item.price / 100).toFixed(2)}
                         </p>
@@ -229,7 +235,7 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={clearCart}
+                  onClick={() => void clearCart()}
                   className="w-full text-muted-foreground hover:text-foreground"
                 >
                   Clear cart
@@ -265,7 +271,7 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
               onClick={handleCheckout}
               className="w-full"
               size="lg"
-              disabled={cartValidation && !cartValidation.valid}
+              disabled={cartValidation ? !cartValidation.valid : false}
             >
               Checkout
             </Button>

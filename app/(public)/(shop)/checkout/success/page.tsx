@@ -43,7 +43,7 @@ export default function CheckoutSuccessPage() {
       }
     };
 
-    processCheckout();
+    void processCheckout();
   }, [checkoutId, handleCheckoutSuccess]);
 
   if (isProcessing) {

@@ -93,7 +93,7 @@ export const deleteProduct = mutation({
   },
   handler: async (ctx, { productId }) => {
     const product = await ctx.db.get(productId);
-    if (!product) throw new Error('Product not found');
+    if (!product) {throw new Error('Product not found');}
 
     // 1. Mark as inactive (soft delete)
     await ctx.db.patch(productId, {

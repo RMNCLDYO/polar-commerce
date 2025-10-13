@@ -73,7 +73,7 @@ export const AddTodoForm = ({
   onSubmit?: (event: FormEvent<HTMLFormElement>) => Promise<void>;
 }) => {
   return (
-    <form className="flex gap-2" action={action} onSubmit={onSubmit}>
+    <form className="flex gap-2" action={action} onSubmit={onSubmit ? (e) => void onSubmit(e) : undefined}>
       <Input
         name="text"
         placeholder="Add a new todo..."

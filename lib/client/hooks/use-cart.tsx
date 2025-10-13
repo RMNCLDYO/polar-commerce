@@ -6,10 +6,11 @@ import { useEffect, useEffectEvent, useState } from 'react';
 import { toast } from 'sonner';
 import { api } from '@/convex/_generated/api';
 import type { Id } from '@/convex/_generated/dataModel';
+import type { CurrentUser, CartWithItems, CartValidation } from '@/types/convex';
 
 // Generate or get session ID for guest users
 function getSessionId(): string {
-  if (typeof window === 'undefined') return '';
+  if (typeof window === 'undefined') {return '';}
 
   let sessionId = localStorage.getItem('cart-session-id');
   if (!sessionId) {
@@ -44,17 +45,17 @@ export function useCart() {
   // Queries
   // For authenticated users (sessionId = ''), pass empty object to use userId from auth context
   // For guest users, pass sessionId
-  const cart = useQuery(api.cart.cart.getCart, sessionId ? { sessionId } : {});
+  const cart = useQuery(api.cart.cart.getCart, sessionId ? { sessionId } : {}) as CartWithItems | null | undefined;
 
   const cartCount = useQuery(
     api.cart.cart.getCartCount,
     sessionId ? { sessionId } : {},
-  );
+  ) as number | null | undefined;
 
   const cartValidation = useQuery(
     api.cart.cart.validateCart,
     sessionId ? { sessionId } : {},
-  );
+  ) as CartValidation | null | undefined;
 
   // Mutations
   const addToCartMutation = useMutation(api.cart.cart.addToCart);
@@ -195,7 +196,7 @@ export function useCart() {
 
   // Merge guest cart with user cart after login
   const mergeCart = async () => {
-    if (!sessionId) return;
+    if (!sessionId) {return;}
 
     try {
       await mergeCartMutation({ sessionId });
@@ -231,7 +232,7 @@ export function useCart() {
 // Independent of useCart to avoid unnecessary queries in root layout
 export function useCartMerge() {
   const mergeCartMutation = useMutation(api.cart.cart.mergeCart);
-  const user = useQuery(api.auth.auth.getCurrentUser);
+  const user = useQuery(api.auth.auth.getCurrentUser) as CurrentUser | null | undefined;
   const [hasRunMerge, setHasRunMerge] = useState(false);
 
   // React 19.2: Use Effect Event for cart merge logic

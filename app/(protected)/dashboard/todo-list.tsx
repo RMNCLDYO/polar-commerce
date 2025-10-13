@@ -34,10 +34,10 @@ export const TodoList = () => {
           <TodoItem key={todo._id}>
             <TodoCompleteButton
               completed={todo.completed}
-              onClick={() => toggle({ id: todo._id })}
+              onClick={() => void toggle({ id: todo._id })}
             />
             <TodoText text={todo.text} completed={todo.completed} />
-            <TodoRemoveButton onClick={() => remove({ id: todo._id })} />
+            <TodoRemoveButton onClick={() => void remove({ id: todo._id })} />
           </TodoItem>
         ))}
       </TodoListComponent>

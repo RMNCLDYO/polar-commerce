@@ -64,17 +64,15 @@ export function Uploader() {
 
   return (
     <>
-      <section
+      <div
         className="fixed bottom-8 right-8 z-40 animate-slide-up"
         style={{ animationDelay: '900ms' }}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-        aria-label="Photo upload area"
       >
-        <button
-          type="button"
+        <div
+          role="button"
+          tabIndex={0}
           aria-label="Upload photo for AI try-on"
+          aria-dropeffect="copy"
           className={cn(
             'border-2 border-dashed transition-all duration-300 p-8 text-center w-64 cursor-pointer',
             isDragOver
@@ -83,15 +81,25 @@ export function Uploader() {
             'hover:shadow-md',
           )}
           onClick={() => fileInputRef.current?.click()}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              fileInputRef.current?.click();
+            }
+          }}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
         >
           <Input
             ref={fileInputRef}
             type="file"
             accept="image/*"
             className="hidden"
+            aria-hidden="true"
             onChange={(e) => {
               const file = e.target.files?.[0];
-              if (file) handlePhotoUpload(file);
+              if (file) {handlePhotoUpload(file);}
             }}
           />
 
@@ -126,8 +134,8 @@ export function Uploader() {
               </Button>
             </>
           )}
-        </button>
-      </section>
+        </div>
+      </div>
 
       {isDragOver && (
         <div className="fixed inset-0 z-20 bg-foreground/5 border-4 border-dashed border-foreground pointer-events-none animate-in fade-in duration-200" />

@@ -10,11 +10,13 @@
 
 import { internal } from '../_generated/api';
 import { httpAction } from '../_generated/server';
+import type { PolarWebhookBody } from '../types/convex_internals';
+import type { CheckoutMetadata } from '../types/metadata';
 import { logger } from '../utils/logger';
 
 export const handleOrderWebhook = httpAction(async (ctx, request) => {
   try {
-    const body = await request.json();
+    const body = await request.json() as PolarWebhookBody;
     const eventType = body.type;
 
     logger.info('[Order Webhook] Received:', eventType);
@@ -28,10 +30,10 @@ export const handleOrderWebhook = httpAction(async (ctx, request) => {
       });
     }
 
-    const order = body.data;
+    const order = body.data as { checkout_id: string; id: string; order_id?: string; metadata?: CheckoutMetadata };
     const checkoutId = order.checkout_id;
-    const orderId = order.id;
-    const metadata = order.metadata || {};
+    const orderId = order.order_id || order.id;
+    const metadata = (order.metadata || {}) as CheckoutMetadata;
 
     logger.info('[Order Webhook] Processing order:', orderId);
     logger.debug('[Order Webhook] Checkout ID:', checkoutId);
@@ -48,7 +50,7 @@ export const handleOrderWebhook = httpAction(async (ctx, request) => {
     await ctx.runMutation(internal.orders.webhook.handleOrderPaid, {
       checkoutId,
       orderId,
-      metadata,
+      metadata: metadata as Record<string, string | number | boolean>,
     });
 
     logger.info('[Order Webhook] Order processing initiated');

@@ -25,7 +25,7 @@ export function QuickAddButton({
 
   const handleQuickAdd = async (e: React.MouseEvent) => {
     e.preventDefault(); // Prevent navigation when clicking
-    if (!inStock) return;
+    if (!inStock) {return;}
     setIsLoading(true);
     await addToCart(catalogId, 1, productInfo);
     setIsLoading(false);
@@ -35,7 +35,7 @@ export function QuickAddButton({
     <Button
       variant="outline"
       size="sm"
-      onClick={handleQuickAdd}
+      onClick={(e) => void handleQuickAdd(e)}
       disabled={isLoading || !inStock}
       className={cn(
         'text-xs font-semibold tracking-widest uppercase',

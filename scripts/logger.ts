@@ -50,11 +50,11 @@ export class Logger {
   }
 
   info(message: string): void {
-    console.log(this.format(`${colors.cyan}ℹ ${message}${colors.reset}`));
+    logger.debug(this.format(`${colors.cyan}ℹ ${message}${colors.reset}`));
   }
 
   success(message: string): void {
-    console.log(this.format(`${colors.green}✓ ${message}${colors.reset}`));
+    logger.debug(this.format(`${colors.green}✓ ${message}${colors.reset}`));
   }
 
   warning(message: string, error?: Error | unknown): void {
@@ -75,49 +75,49 @@ export class Logger {
 
   debug(message: string): void {
     if (process.env.DEBUG) {
-      console.debug(this.format(`${colors.dim}⊙ ${message}${colors.reset}`));
+      logger.debug(this.format(`${colors.dim}⊙ ${message}${colors.reset}`));
     }
   }
 
   section(title: string): void {
-    console.log(`\n${colors.bright}${colors.magenta}${title}${colors.reset}`);
-    console.log('='.repeat(70));
+    logger.debug(`\n${colors.bright}${colors.magenta}${title}${colors.reset}`);
+    logger.debug('='.repeat(70));
   }
 
   subsection(title: string): void {
-    console.log(`\n${colors.yellow}${title}${colors.reset}`);
+    logger.debug(`\n${colors.yellow}${title}${colors.reset}`);
   }
 
   step(stepNumber: number, title: string): void {
-    console.log(`\n${colors.yellow}${stepNumber}️⃣  ${title}${colors.reset}`);
+    logger.debug(`\n${colors.yellow}${stepNumber}️⃣  ${title}${colors.reset}`);
   }
 
   divider(): void {
-    console.log('─'.repeat(70));
+    logger.debug('─'.repeat(70));
   }
 
   separator(): void {
-    console.log('='.repeat(70));
+    logger.debug('='.repeat(70));
   }
 
   blank(): void {
-    console.log();
+    logger.debug();
   }
 
   item(key: string, value: string | number | boolean): void {
-    console.log(`  ${colors.dim}${key}:${colors.reset} ${value}`);
+    logger.debug(`  ${colors.dim}${key}:${colors.reset} ${value}`);
   }
 
   list(items: string[]): void {
     items.forEach((item) => {
-      console.log(`  • ${item}`);
+      logger.debug(`  • ${item}`);
     });
   }
 
   progress(current: number, total: number, item?: string): void {
     const percentage = Math.round((current / total) * 100);
     const itemText = item ? ` - ${item}` : '';
-    console.log(
+    logger.debug(
       `  ${colors.cyan}[${current}/${total}] ${percentage}%${itemText}${colors.reset}`,
     );
   }
@@ -134,10 +134,10 @@ export class Logger {
         .join(' | ');
     };
 
-    console.log(formatRow(headers));
-    console.log(columnWidths.map((w) => '─'.repeat(w)).join('─┼─'));
+    logger.debug(formatRow(headers));
+    logger.debug(columnWidths.map((w) => '─'.repeat(w)).join('─┼─'));
     rows.forEach((row) => {
-      console.log(formatRow(row));
+      logger.debug(formatRow(row));
     });
   }
 }

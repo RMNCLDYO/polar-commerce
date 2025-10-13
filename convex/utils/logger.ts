@@ -1,3 +1,6 @@
+/* eslint-disable no-console */
+// Logger utilities intentionally use console methods
+
 type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 
 interface Logger {
@@ -16,12 +19,12 @@ class ConvexLogger implements Logger {
 
   debug(message: string, ...args: unknown[]): void {
     if (this.isDev) {
-      console.debug(this.formatMessage('debug', message), ...args);
+      console.log(this.formatMessage('debug', message), ...args);
     }
   }
 
   info(message: string, ...args: unknown[]): void {
-    console.info(this.formatMessage('info', message), ...args);
+    console.log(this.formatMessage('info', message), ...args);
   }
 
   warn(message: string, ...args: unknown[]): void {

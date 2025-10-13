@@ -6,12 +6,12 @@
  * @requires TypeScript 5+
  */
 
-import { createHash } from 'node:crypto';
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
 import { Polar } from '@polar-sh/sdk';
 import { ConvexHttpClient } from 'convex/browser';
 import * as dotenv from 'dotenv';
+import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { api } from '../convex/_generated/api';
 import type { Id } from '../convex/_generated/dataModel';
 import { createLogger } from './logger';
@@ -409,7 +409,7 @@ export async function seedProducts(): Promise<void> {
     logger.subsection('Processed Products:');
     logger.divider();
     processedProducts.forEach((p, i) => {
-      console.log(`${i + 1}. ${p.name}`);
+      logger.debug(`${i + 1}. ${p.name}`);
       logger.item('Polar ID', p.polarId);
       logger.item('Convex ID', p.convexId);
       logger.blank();
@@ -420,7 +420,7 @@ export async function seedProducts(): Promise<void> {
     finalConvexProducts.forEach((p) => {
       const hasImage = p.polarImageUrl ? '✅' : '❌';
       const hasLink = p.polarProductId ? '✅' : '❌';
-      console.log(`  ${hasLink} Linked  ${hasImage} Image  - ${p.name}`);
+      logger.debug(`  ${hasLink} Linked  ${hasImage} Image  - ${p.name}`);
     });
 
     logger.separator();

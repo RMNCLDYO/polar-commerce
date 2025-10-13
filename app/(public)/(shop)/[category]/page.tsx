@@ -87,7 +87,10 @@ async function CachedCategoryContent({
   cacheLife('hours');
   cacheTag('products', `category-${category}`);
 
-  const config = categoryConfig[category];
+  // Use safe property access
+  const config = Object.prototype.hasOwnProperty.call(categoryConfig, category)
+    ? categoryConfig[category as CategorySlug]
+    : undefined;
 
   if (!config || !isValidCategory(category)) {
     notFound();
@@ -110,7 +113,7 @@ async function CachedCategoryContent({
   };
 
   const getProductCount = () => {
-    if (products.length === 0) return getEmptyMessage();
+    if (products.length === 0) {return getEmptyMessage();}
 
     if (category === 'new') {
       return `${products.length} fresh additions to our premium sportswear collection`;
@@ -258,7 +261,10 @@ export async function generateMetadata({
 }: CategoryPageProps): Promise<Metadata> {
   const { category } = await params;
 
-  const config = categoryConfig[category];
+  // Use safe property access
+  const config = Object.prototype.hasOwnProperty.call(categoryConfig, category)
+    ? categoryConfig[category as CategorySlug]
+    : undefined;
 
   if (!config || !isValidCategory(category)) {
     return {

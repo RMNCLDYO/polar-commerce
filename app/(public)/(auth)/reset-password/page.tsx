@@ -3,6 +3,7 @@
 import { Loader2 } from 'lucide-react';
 import { redirect, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -30,10 +31,11 @@ export default function ResetPassword() {
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!token) return;
+    if (!token) {return;}
 
-    if (password !== confirmPassword) {
-      alert('Passwords do not match');
+    // Use length comparison first for efficiency, then compare strings
+    if (password.length !== confirmPassword.length || password !== confirmPassword) {
+      toast.error('Passwords do not match');
       return;
     }
 
@@ -52,7 +54,7 @@ export default function ResetPassword() {
         },
         onError: (ctx: AuthErrorContext) => {
           setLoading(false);
-          alert(ctx.error.message);
+          toast.error(ctx.error.message);
         },
       },
     );
@@ -84,7 +86,7 @@ export default function ResetPassword() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleResetPassword} className="grid gap-4">
+          <form onSubmit={(e) => void handleResetPassword(e)} className="grid gap-4">
             <div className="grid gap-2">
               <Label htmlFor="password">New Password</Label>
               <Input

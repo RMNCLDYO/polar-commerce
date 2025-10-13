@@ -91,9 +91,9 @@ export const getProducts = query({
     if (args.minPrice !== undefined || args.maxPrice !== undefined) {
       products = products.filter((p) => {
         if (args.minPrice !== undefined && p.price < args.minPrice * 100)
-          return false;
+          {return false;}
         if (args.maxPrice !== undefined && p.price > args.maxPrice * 100)
-          return false;
+          {return false;}
         return true;
       });
     }
@@ -254,6 +254,7 @@ export const syncProductsToPolar = action({
     const polarProductsIter = await polarClient.products.list({ limit: 100 });
     const polarProducts: PolarProduct[] = [];
     for await (const response of polarProductsIter) {
+      // Polar SDK returns IteratorResult with nested response structure
       const resp = response as unknown as PageIteratorResponse;
       if (resp.ok && resp.value) {
         const data = resp.value;

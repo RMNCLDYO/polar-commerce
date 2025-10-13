@@ -1,5 +1,6 @@
-// @ts-nocheck - React needed for convex TypeScript compilation
 import { Heading, Link, Text } from '@react-email/components';
+// @ts-ignore - React is used implicitly in JSX
+import * as React from 'react';
 import { BaseEmail, styles } from './components/BaseEmail';
 
 interface MagicLinkEmailProps {

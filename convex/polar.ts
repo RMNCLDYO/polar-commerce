@@ -8,8 +8,9 @@ import { logger } from './utils/logger';
 export const polar = new Polar(components.polar, {
   // Required: provide a function the component can use to get the current user's ID and email
   getUserInfo: async (ctx): Promise<{ userId: string; email: string }> => {
-    // @ts-ignore - Type instantiation depth issue (Next.js build only, not tsc -p convex)
-    const user = await ctx.runQuery(api.auth.auth.getCurrentUser);
+    // Use getCurrentUserBasic to avoid type instantiation depth issue
+    // @ts-ignore - TypeScript deep instantiation issue with Convex
+    const user = await ctx.runQuery(api.auth.auth.getCurrentUserBasic);
     if (!user) {
       throw new Error('User not authenticated');
     }

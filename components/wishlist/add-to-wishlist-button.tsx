@@ -38,7 +38,7 @@ export function AddToWishlistButton({
 
   return (
     <Button
-      onClick={handleToggle}
+      onClick={(e) => void handleToggle(e)}
       variant={variant}
       size={size}
       className={cn('transition-colors', className)}

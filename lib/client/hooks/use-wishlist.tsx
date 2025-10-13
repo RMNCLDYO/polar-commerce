@@ -6,9 +6,10 @@ import { useEffect, useEffectEvent, useState } from 'react';
 import { toast } from 'sonner';
 import { api } from '@/convex/_generated/api';
 import type { Id } from '@/convex/_generated/dataModel';
+import type { CurrentUser, WishlistWithItems, ToggleWishlistResponse } from '@/types/convex';
 
 function getSessionId(): string {
-  if (typeof window === 'undefined') return '';
+  if (typeof window === 'undefined') {return '';}
 
   let sessionId = localStorage.getItem('wishlist-session-id');
   if (!sessionId) {
@@ -43,12 +44,12 @@ export function useWishlist() {
   const wishlist = useQuery(
     api.wishlist.wishlist.getWishlist,
     sessionId ? { sessionId } : {},
-  );
+  ) as WishlistWithItems | null | undefined;
 
   const wishlistCount = useQuery(
     api.wishlist.wishlist.getWishlistCount,
     sessionId ? { sessionId } : {},
-  );
+  ) as number | null | undefined;
 
   const addToWishlistMutation = useMutation(
     api.wishlist.wishlist.addToWishlist,
@@ -149,7 +150,7 @@ export function useWishlist() {
       const result = await toggleWishlistMutation({
         catalogId,
         sessionId: sessionId || undefined,
-      });
+      }) as ToggleWishlistResponse;
 
       if (result.action === 'added') {
         if (productInfo) {
@@ -235,7 +236,7 @@ export function useWishlist() {
   };
 
   const mergeWishlist = async () => {
-    if (!sessionId) return;
+    if (!sessionId) {return;}
 
     try {
       await mergeWishlistMutation({ sessionId });
@@ -263,7 +264,7 @@ export function useWishlistMerge() {
   const mergeWishlistMutation = useMutation(
     api.wishlist.wishlist.mergeWishlist,
   );
-  const user = useQuery(api.auth.auth.getCurrentUser);
+  const user = useQuery(api.auth.auth.getCurrentUser) as CurrentUser | null | undefined;
   const [hasRunMerge, setHasRunMerge] = useState(false);
 
   // React 19.2: Use Effect Event for wishlist merge logic

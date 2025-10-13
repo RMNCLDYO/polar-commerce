@@ -9,14 +9,29 @@ import { Card } from '@/components/ui/card';
 import { ViewTransition } from '@/components/view-transition';
 import { api } from '@/convex/_generated/api';
 import subscriptionsData from '@/data/subscriptions.json';
+import type { CurrentUser } from '@/types/convex';
+
+interface PolarProduct {
+  id: string;
+  name: string;
+  description?: string;
+}
+
+type PolarProductsResponse = {
+  starterMonthly?: PolarProduct;
+  starterYearly?: PolarProduct;
+  premiumMonthly?: PolarProduct;
+  premiumYearly?: PolarProduct;
+  [key: string]: PolarProduct | undefined;
+};
 
 type BillingCycle = 'monthly' | 'yearly';
 
 export default function PricingPage() {
   const [billingCycle, setBillingCycle] = useState<BillingCycle>('monthly');
   const [loading, setLoading] = useState<string | null>(null);
-  const products = useQuery(api.polar.getSubscriptionProducts);
-  const user = useQuery(api.auth.auth.getCurrentUser);
+  const products = useQuery(api.polar.getSubscriptionProducts) as PolarProductsResponse | undefined;
+  const user = useQuery(api.auth.auth.getCurrentUser) as CurrentUser | null | undefined;
   const generateCheckout = useAction(api.polar.generateCheckoutLink);
   const ensureCustomer = useAction(api.polarCustomer.ensurePolarCustomer);
   const router = useRouter();
@@ -63,9 +78,8 @@ export default function PricingPage() {
           origin: window.location.origin,
           successUrl: `${window.location.origin}/pricing?success=true`,
         });
-        // React Compiler: window.location.href modification is allowed in async handlers
-        // eslint-disable-next-line react-hooks/immutability
-        window.location.href = checkout.url;
+        // Navigate to checkout URL
+        router.push(checkout.url);
       } catch (error) {
         console.error('Failed to generate checkout link:', error);
         setLoading(null);
@@ -122,16 +136,23 @@ export default function PricingPage() {
 
       <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
         {subscriptions.map((subscription) => {
-          const pricing = subscription.pricing[billingCycle];
+          const pricing = billingCycle === 'monthly'
+            ? subscription.pricing.monthly
+            : subscription.pricing.yearly;
           const isCurrentPlan = userTier === subscription.tier;
           const isFree = subscription.id === 'free';
 
           // Get Polar product ID for non-free tiers
           let polarProductId: string | null = null;
           if (!isFree && products) {
-            const productKey =
-              `${subscription.id}${billingCycle.charAt(0).toUpperCase()}${billingCycle.slice(1)}` as keyof typeof products;
-            const product = products[productKey];
+            // Construct product key and safely access
+            const productKey = billingCycle === 'monthly'
+              ? `${subscription.id}Monthly`
+              : `${subscription.id}Yearly`;
+            // Validate productKey to prevent object injection
+            const product = Object.prototype.hasOwnProperty.call(products, productKey)
+              ? products[productKey as keyof typeof products]
+              : undefined;
             polarProductId = product?.id || null;
           }
 
@@ -160,9 +181,9 @@ export default function PricingPage() {
                 </div>
                 {billingCycle === 'yearly' &&
                   'savings' in pricing &&
-                  pricing.savings && (
+                  (pricing as { savings?: string }).savings && (
                     <p className="text-sm text-green-600 dark:text-green-500 font-medium">
-                      {pricing.savings}
+                      {(pricing as { savings: string }).savings}
                     </p>
                   )}
                 <p className="text-muted-foreground mt-2">
@@ -186,7 +207,7 @@ export default function PricingPage() {
                   className="w-full"
                   size="lg"
                   onClick={() =>
-                    handlePlanSelect(subscription.id, billingCycle)
+                    void handlePlanSelect(subscription.id, billingCycle)
                   }
                 >
                   {!user
@@ -201,7 +222,7 @@ export default function PricingPage() {
                   variant={subscription.highlighted ? 'default' : 'outline'}
                   size="lg"
                   onClick={() =>
-                    handlePlanSelect(subscription.id, billingCycle)
+                    void handlePlanSelect(subscription.id, billingCycle)
                   }
                 >
                   Sign in to Upgrade
@@ -217,7 +238,7 @@ export default function PricingPage() {
                   size="lg"
                   disabled={loading === polarProductId}
                   onClick={() =>
-                    handlePlanSelect(
+                    void handlePlanSelect(
                       subscription.id,
                       billingCycle,
                       polarProductId,

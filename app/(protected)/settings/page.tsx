@@ -5,6 +5,7 @@ import { useQuery } from 'convex/react';
 import { AlertTriangle, ArrowLeft, Crown } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { Link } from '@/components/link';
 import { Button } from '@/components/ui/button';
 import {
@@ -18,11 +19,27 @@ import { api } from '@/convex/_generated/api';
 import { authClient } from '@/lib/client/auth';
 import EnableTwoFactor from './EnableTwoFactor';
 
+interface Subscription {
+  productKey?: string;
+  status: string;
+  currentPeriodStart?: string;
+  currentPeriodEnd?: string;
+}
+
+interface User {
+  _id: string;
+  email: string;
+  name?: string;
+  image?: string;
+  subscription?: Subscription;
+  tier?: 'free' | 'starter' | 'premium';
+}
+
 export default function SettingsPage() {
   const [showEnable2FA, setShowEnable2FA] = useState(false);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const user = useQuery(api.auth.auth.getCurrentUser);
+  const user = useQuery(api.auth.auth.getCurrentUser) as User | null | undefined;
 
   const handleDisable2FA = async () => {
     try {
@@ -31,25 +48,50 @@ export default function SettingsPage() {
         password: '',
       });
     } catch {
-      alert('Failed to disable 2FA. Please try again.');
+      toast.error('Failed to disable 2FA. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
   const handleDeleteAccount = async () => {
-    if (
-      window.confirm(
-        'Are you sure you want to delete your account? This action cannot be undone.',
-      )
-    ) {
-      try {
-        await authClient.deleteUser();
-        router.push('/');
-      } catch {
-        alert('Failed to delete account. Please try again.');
-      }
-    }
+    toast.custom(
+      (t) => (
+        <div className="bg-background border rounded-lg shadow-lg p-4 min-w-[350px]">
+          <h3 className="font-semibold mb-2">Delete Account</h3>
+          <p className="text-sm text-muted-foreground mb-4">
+            Are you sure you want to delete your account? This action cannot be undone.
+          </p>
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              variant="destructive"
+              onClick={() => {
+                void (async () => {
+                  toast.dismiss(t);
+                  try {
+                    await authClient.deleteUser();
+                    router.push('/');
+                  } catch {
+                    toast.error('Failed to delete account. Please try again.');
+                  }
+                })();
+              }}
+            >
+              Delete Account
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => toast.dismiss(t)}
+            >
+              Cancel
+            </Button>
+          </div>
+        </div>
+      ),
+      { duration: Infinity }
+    );
   };
 
   return (
@@ -101,7 +143,7 @@ export default function SettingsPage() {
                     </Button>
                     <Button
                       variant="destructive"
-                      onClick={handleDisable2FA}
+                      onClick={() => void handleDisable2FA()}
                       disabled={loading}
                     >
                       Disable 2FA
@@ -175,7 +217,7 @@ export default function SettingsPage() {
                     </p>
                   </div>
                   <div>
-                    <Button variant="destructive" onClick={handleDeleteAccount}>
+                    <Button variant="destructive" onClick={() => void handleDeleteAccount()}>
                       Delete Account
                     </Button>
                   </div>

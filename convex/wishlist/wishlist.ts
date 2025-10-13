@@ -269,24 +269,29 @@ export const getWishlist = query({
     const itemsWithProducts = await Promise.all(
       wishlistItems.map(async (item) => {
         const product = await ctx.db.get(item.catalogId);
-        if (!product) return null;
+        if (!product) {return null;}
 
         return {
-          id: item._id,
+          _id: item._id,
           catalogId: item.catalogId,
           addedAt: item.addedAt,
           notes: item.notes,
           product: {
-            id: product._id,
+            _id: product._id,
+            _creationTime: product._creationTime,
             name: product.name,
-            description: product.description,
-            category: product.category,
             price: product.price,
-            image: product.polarImageUrl || product.imageUrl,
+            category: product.category,
+            imageUrl: product.polarImageUrl || product.imageUrl || '',
+            polarImageUrl: product.polarImageUrl,
+            polarImageId: product.polarImageId,
+            description: product.description,
             polarProductId: product.polarProductId,
             isActive: product.isActive,
             inStock: product.inStock,
             inventory_qty: product.inventory_qty,
+            createdAt: product.createdAt,
+            updatedAt: product.updatedAt,
           },
         };
       }),
