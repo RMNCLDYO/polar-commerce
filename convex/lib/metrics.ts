@@ -145,7 +145,7 @@ export async function trackCheckoutOperation<T>(
 }
 
 /**
- * Track external API calls (Polar, etc.)
+ * Track external API calls (Polar, etc.) with automatic retry logic
  */
 export async function trackExternalAPICall<T>(
   apiName: string,
@@ -154,24 +154,64 @@ export async function trackExternalAPICall<T>(
   metadata?: Record<string, unknown>
 ): Promise<T> {
   const start = Date.now();
+  const maxRetries = 3;
+  const initialDelayMs = 1000;
+  const retryableErrors = ['429', '500', '502', '503', '504', 'ECONNREFUSED', 'ETIMEDOUT'];
 
-  try {
-    const result = await fn();
-    const duration = Date.now() - start;
+  let lastError: any;
+  let delay = initialDelayMs;
+  let attempt = 0;
 
-    logger.info(`[External API] ${apiName}.${operation} - ${duration}ms`, metadata);
+  while (attempt <= maxRetries) {
+    try {
+      const result = await fn();
+      const duration = Date.now() - start;
 
-    // Warn on slow external calls
-    if (duration > 5000) {
-      logger.warn(`[External API] Slow call: ${apiName}.${operation} took ${duration}ms`);
+      // Log success (include retry info if retried)
+      if (attempt > 0) {
+        logger.info(`[External API] ${apiName}.${operation} - ${duration}ms (succeeded after ${attempt} retries)`, metadata);
+      } else {
+        logger.info(`[External API] ${apiName}.${operation} - ${duration}ms`, metadata);
+      }
+
+      // Warn on slow external calls
+      if (duration > 5000) {
+        logger.warn(`[External API] Slow call: ${apiName}.${operation} took ${duration}ms`);
+      }
+
+      return result;
+    } catch (error: any) {
+      lastError = error;
+      attempt++;
+
+      // Check if error is retryable
+      const errorMessage = error.message || String(error);
+      const errorCode = error.code || error.statusCode || error.status;
+      const isRetryable = retryableErrors.some(code =>
+        errorMessage.includes(code) || String(errorCode).includes(code)
+      );
+
+      // If not retryable or out of retries, fail immediately
+      if (!isRetryable || attempt > maxRetries) {
+        const duration = Date.now() - start;
+        logger.error(`[External API] ${apiName}.${operation} failed after ${duration}ms (${attempt} attempts):`, error);
+        throw error;
+      }
+
+      // Log retry attempt
+      logger.warn(`[External API] ${apiName}.${operation} failed (attempt ${attempt}/${maxRetries + 1}), retrying in ${delay}ms...`, {
+        error: errorMessage,
+        code: errorCode,
+      });
+
+      // Wait before retry (exponential backoff)
+      await new Promise(resolve => setTimeout(resolve, delay));
+      delay = Math.min(delay * 2, 10000); // Cap at 10s
     }
-
-    return result;
-  } catch (error) {
-    const duration = Date.now() - start;
-    logger.error(`[External API] ${apiName}.${operation} failed after ${duration}ms:`, error);
-    throw error;
   }
+
+  // This should never be reached, but TypeScript needs it
+  throw lastError;
 }
 
 /**
