@@ -1,7 +1,7 @@
 import { Polar as PolarSDK } from '@polar-sh/sdk';
 import { v } from 'convex/values';
 import { components } from './_generated/api';
-import { action, internalAction } from './_generated/server';
+import { action, internalAction, type ActionCtx } from './_generated/server';
 import { validateMetadata } from './polar/types';
 import { toCountryCode } from './types/metadata';
 import type { CustomerMetadata } from './types/metadata';
@@ -118,47 +118,40 @@ function mapPolarCustomerToSchema(
 }
 
 /**
- * Ensures a Polar customer exists for a user
- * Simplified to rely on the Polar component's webhook-based sync
- *
- * Flow:
- * 1. Check if customer exists in Convex (synced via webhook)
- * 2. If not, create in Polar with basic info
- * 3. Webhook will sync it back to Convex automatically
- *
- * Note: In most cases, you don't need to call this explicitly.
- * Just pass customer_email to checkout and Polar will handle it.
+ * Shared helper for ensuring Polar customer exists
+ * Extracted to avoid ctx.runAction overhead
+ * Exported for use by other actions in the same runtime
  */
-export const ensurePolarCustomer = action({
+export async function ensurePolarCustomerHelper(
+  ctx: ActionCtx,
   args: {
-    userId: v.string(),
-    email: v.string(),
-    name: v.optional(v.string()),
+    userId: string;
+    email: string;
+    name?: string;
   },
-  handler: async (
-    ctx,
-    { userId, email, name },
-  ): Promise<{
-    success: boolean;
-    customerId?: string;
-    source?: string;
-    message?: string;
-  }> => {
-    // Check if customer already exists in Convex (synced via webhook)
-    const existingCustomer = await ctx.runQuery(
-      components.polar.lib.getCustomerByUserId,
-      {
-        userId,
-      },
-    );
+): Promise<{
+  success: boolean;
+  customerId?: string;
+  source?: string;
+  message?: string;
+}> {
+  const { userId, email, name } = args;
 
-    if (existingCustomer) {
-      return {
-        success: true,
-        customerId: existingCustomer.id,
-        source: 'existing',
-      };
-    }
+  // Check if customer already exists in Convex (synced via webhook)
+  const existingCustomer = await ctx.runQuery(
+    components.polar.lib.getCustomerByUserId,
+    {
+      userId,
+    },
+  );
+
+  if (existingCustomer) {
+    return {
+      success: true,
+      customerId: existingCustomer.id,
+      source: 'existing',
+    };
+  }
 
     // Customer not in Convex - create in Polar
     // Webhook will automatically sync it back to Convex
@@ -298,6 +291,36 @@ export const ensurePolarCustomer = action({
 
       throw error;
     }
+}
+
+/**
+ * Ensures a Polar customer exists for a user
+ * Public action wrapper that calls the shared helper
+ *
+ * Flow:
+ * 1. Check if customer exists in Convex (synced via webhook)
+ * 2. If not, create in Polar with basic info
+ * 3. Webhook will sync it back to Convex automatically
+ *
+ * Note: In most cases, you don't need to call this explicitly.
+ * Just pass customer_email to checkout and Polar will handle it.
+ */
+export const ensurePolarCustomer = action({
+  args: {
+    userId: v.string(),
+    email: v.string(),
+    name: v.optional(v.string()),
+  },
+  handler: async (
+    ctx,
+    { userId, email, name },
+  ): Promise<{
+    success: boolean;
+    customerId?: string;
+    source?: string;
+    message?: string;
+  }> => {
+    return await ensurePolarCustomerHelper(ctx, { userId, email, name });
   },
 });
 
