@@ -230,22 +230,79 @@ export const linkPolarProduct = mutation({
 // Internal query to get all products (for syncing)
 export const getAllProducts = internalQuery({
   args: {},
+  returns: v.array(
+    v.object({
+      _id: v.id('catalog'),
+      _creationTime: v.number(),
+      name: v.string(),
+      price: v.number(),
+      category: v.string(),
+      imageUrl: v.string(),
+      polarImageUrl: v.optional(v.string()),
+      polarImageId: v.optional(v.string()),
+      description: v.string(),
+      polarProductId: v.optional(v.string()),
+      isActive: v.boolean(),
+      inStock: v.boolean(),
+      inventory_qty: v.number(),
+      createdAt: v.number(),
+      updatedAt: v.number(),
+    }),
+  ),
   handler: async (ctx) => {
     return await ctx.db.query('catalog').collect();
   },
 });
 
-// Public query to get all raw products (for scripts)
-export const getAllProductsRaw = query({
+// Internal query to get all raw products (for scripts and internal use)
+export const getAllProductsRaw = internalQuery({
   args: {},
+  returns: v.array(
+    v.object({
+      _id: v.id('catalog'),
+      _creationTime: v.number(),
+      name: v.string(),
+      price: v.number(),
+      category: v.string(),
+      imageUrl: v.string(),
+      polarImageUrl: v.optional(v.string()),
+      polarImageId: v.optional(v.string()),
+      description: v.string(),
+      polarProductId: v.optional(v.string()),
+      isActive: v.boolean(),
+      inStock: v.boolean(),
+      inventory_qty: v.number(),
+      createdAt: v.number(),
+      updatedAt: v.number(),
+    }),
+  ),
   handler: async (ctx) => {
     return await ctx.db.query('catalog').collect();
   },
 });
 
-// Simple list query (alias for getAllProductsRaw)
-export const list = query({
+// Internal query - Simple list query (alias for getAllProductsRaw)
+export const list = internalQuery({
   args: {},
+  returns: v.array(
+    v.object({
+      _id: v.id('catalog'),
+      _creationTime: v.number(),
+      name: v.string(),
+      price: v.number(),
+      category: v.string(),
+      imageUrl: v.string(),
+      polarImageUrl: v.optional(v.string()),
+      polarImageId: v.optional(v.string()),
+      description: v.string(),
+      polarProductId: v.optional(v.string()),
+      isActive: v.boolean(),
+      inStock: v.boolean(),
+      inventory_qty: v.number(),
+      createdAt: v.number(),
+      updatedAt: v.number(),
+    }),
+  ),
   handler: async (ctx) => {
     return await ctx.db.query('catalog').collect();
   },
