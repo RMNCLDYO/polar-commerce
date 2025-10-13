@@ -436,6 +436,11 @@ export const updateProductImageUrl = mutation({
     polarImageId: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    const { isAdmin } = await import('../auth/auth');
+    if (!(await isAdmin(ctx))) {
+      throw new Error('Unauthorized: Admin access required');
+    }
+
     await ctx.db.patch(args.productId, {
       imageUrl: args.imageUrl,
       polarImageUrl: args.polarImageUrl || args.imageUrl,
