@@ -1,8 +1,20 @@
 import { v } from 'convex/values';
 import { mutation, query } from '../_generated/server';
 
+// Return type validator for a demo todo
+const vDemoTodo = v.object({
+  _id: v.id('demoTodos'),
+  _creationTime: v.number(),
+  text: v.string(),
+  completed: v.boolean(),
+  userId: v.string(),
+  createdAt: v.number(),
+  updatedAt: v.number(),
+});
+
 export const get = query({
   args: {},
+  returns: v.array(vDemoTodo),
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
@@ -18,6 +30,7 @@ export const get = query({
 
 export const create = mutation({
   args: { text: v.string() },
+  returns: v.id('demoTodos'),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
@@ -25,7 +38,7 @@ export const create = mutation({
     }
 
     const now = Date.now();
-    await ctx.db.insert('demoTodos', {
+    return await ctx.db.insert('demoTodos', {
       text: args.text,
       completed: false,
       userId: identity.subject,
@@ -37,6 +50,7 @@ export const create = mutation({
 
 export const toggle = mutation({
   args: { id: v.id('demoTodos') },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
@@ -52,11 +66,14 @@ export const toggle = mutation({
       completed: !todo.completed,
       updatedAt: Date.now(),
     });
+
+    return null;
   },
 });
 
 export const remove = mutation({
   args: { id: v.id('demoTodos') },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
@@ -69,5 +86,7 @@ export const remove = mutation({
     }
 
     await ctx.db.delete(args.id);
+
+    return null;
   },
 });
