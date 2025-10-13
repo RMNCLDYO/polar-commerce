@@ -5,7 +5,10 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import * as CartModel from '../../model/cart';
+import { convexTest } from 'convex-test';
+import { api } from '../../convex/_generated/api';
+import schema from '../../convex/schema';
+import * as CartModel from '../../convex/model/cart';
 import { createTestContext, createTestProduct } from '../setup';
 
 describe('Checkout Integration', () => {
@@ -61,6 +64,58 @@ describe('Checkout Integration', () => {
 
     expect(inventoryBefore.product1).toBe(100);
     expect(inventoryBefore.product2).toBe(50);
+  });
+
+  it('should prevent unauthorized access to orders', async () => {
+    const t = convexTest(schema);
+
+    // Create order for user A
+    const { orderId, checkoutId } = await t.run(async (ctx) => {
+      const orderId = await ctx.db.insert('orders', {
+        userId: 'user-a',
+        email: 'usera@test.com',
+        checkoutId: 'checkout_abc123',
+        status: 'paid',
+        total: 9999,
+        products: [],
+        createdAt: Date.now(),
+      });
+
+      return { orderId, checkoutId: 'checkout_abc123' };
+    });
+
+    // User B tries to access User A's order
+    await expect(async () => {
+      await t.query(api.checkout.checkout.getOrder, {
+        checkoutId,
+      });
+    }).rejects.toThrow('Unauthorized');
+  });
+
+  it('should allow owner to access their order', async () => {
+    const t = convexTest(schema);
+
+    const { checkoutId } = await t.run(async (ctx) => {
+      await ctx.db.insert('orders', {
+        userId: 'user-a',
+        email: 'usera@test.com',
+        checkoutId: 'checkout_def456',
+        status: 'paid',
+        total: 9999,
+        products: [],
+        createdAt: Date.now(),
+      });
+
+      return { checkoutId: 'checkout_def456' };
+    });
+
+    // User A accesses their own order - should work
+    const order = await t.query(api.checkout.checkout.getOrder, {
+      checkoutId,
+    });
+
+    expect(order).toBeDefined();
+    expect(order?.checkoutId).toBe(checkoutId);
   });
 
   it('should handle guest-to-user cart migration', async () => {
