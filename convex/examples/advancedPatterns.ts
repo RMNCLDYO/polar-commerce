@@ -18,10 +18,10 @@ import { query, mutation, action } from '../_generated/server';
 
 // Import utilities
 import { todoCRUD } from '../lib/crud';
-import { getCartWithItems, batchGetProducts } from '../lib/relationships';
-import { withRetry, withPolarRetry } from '../lib/retries';
-import { rlsQuery, rlsMutation, secureQuery } from '../lib/rlsWrappers';
-import { zodQuery, zodMutation, zodAction, commonSchemas } from '../lib/zodMiddleware';
+import { getCartWithItems } from '../lib/relationships';
+import { withPolarRetry } from '../lib/retries';
+import { rlsQuery, secureQuery } from '../lib/rlsWrappers';
+import { zodQuery, zodMutation, commonSchemas } from '../lib/zodMiddleware';
 
 // Import models
 import * as CartModel from '../model/cart';
