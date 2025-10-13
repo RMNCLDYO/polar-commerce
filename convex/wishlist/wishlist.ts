@@ -156,7 +156,7 @@ export const getWishlist = query({
 
     const wishlistItems = await ctx.db
       .query('wishlistItems')
-      .withIndex('wishlistId', (q) => q.eq('wishlistId', wishlist._id))
+      .withIndex('wishlistId_catalogId', (q) => q.eq('wishlistId', wishlist._id))
       .collect();
 
     const itemsWithProducts = await Promise.all(
@@ -234,7 +234,7 @@ export const getWishlistCount = query({
 
     const wishlistItems = await ctx.db
       .query('wishlistItems')
-      .withIndex('wishlistId', (q) => q.eq('wishlistId', wishlist._id))
+      .withIndex('wishlistId_catalogId', (q) => q.eq('wishlistId', wishlist._id))
       .collect();
 
     return wishlistItems.length;

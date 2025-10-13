@@ -139,7 +139,7 @@ export async function getCartItems(
 ) {
   const items = await ctx.db
     .query('cartItems')
-    .withIndex('cartId', (q) => q.eq('cartId', cartId))
+    .withIndex('cartId_catalogId', (q) => q.eq('cartId', cartId))
     .collect();
 
   const itemsWithProducts = await Promise.all(
@@ -216,7 +216,7 @@ export async function clearCartItems(
 ): Promise<void> {
   const items = await ctx.db
     .query('cartItems')
-    .withIndex('cartId', (q) => q.eq('cartId', cartId))
+    .withIndex('cartId_catalogId', (q) => q.eq('cartId', cartId))
     .collect();
 
   for (const item of items) {
