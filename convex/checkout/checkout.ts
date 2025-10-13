@@ -4,8 +4,8 @@ import { components, internal } from '../_generated/api';
 import type { Doc, Id } from '../_generated/dataModel';
 import { action, query } from '../_generated/server';
 import { trackExternalAPICall } from '../lib/metrics';
-import { logger } from '../utils/logger';
 import * as CheckoutModel from '../model/checkout';
+import { logger } from '../utils/logger';
 import type {
   Address,
   CartItemForCheckout,
