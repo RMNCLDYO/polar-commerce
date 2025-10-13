@@ -14,14 +14,30 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { api } from '@/convex/_generated/api';
 
+interface Subscription {
+  productKey: string;
+  status: string;
+  currentPeriodStart?: string;
+  currentPeriodEnd?: string;
+}
+
+interface User {
+  _id: string;
+  email: string;
+  name?: string;
+  image?: string;
+  subscription?: Subscription;
+  tier?: 'free' | 'starter' | 'premium';
+}
+
 export default function CustomerPortalPage() {
-  const user = useQuery(api.auth.auth.getCurrentUser);
+  const user = useQuery(api.auth.auth.getCurrentUser) as User | null | undefined;
 
   if (user === undefined) {
     return <div>Loading...</div>;
   }
 
-  const subscription = user.subscription;
+  const subscription = user?.subscription;
 
   return (
     <main

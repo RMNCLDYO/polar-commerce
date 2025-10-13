@@ -3,6 +3,7 @@
 import { Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -58,7 +59,7 @@ export default function SignIn() {
         },
         onError: (ctx: AuthErrorContext) => {
           setOtpLoading(false);
-          alert(ctx.error.message);
+          toast.error(ctx.error.message);
         },
       },
     );
@@ -71,9 +72,9 @@ export default function SignIn() {
         email,
         redirectTo: `${window.location.origin}/reset-password`,
       });
-      alert('Check your email for the reset password link!');
+      toast.success('Check your email for the reset password link!');
     } catch {
-      alert('Failed to send reset password link. Please try again.');
+      toast.error('Failed to send reset password link. Please try again.');
     } finally {
       setForgotLoading(false);
     }
@@ -90,11 +91,11 @@ export default function SignIn() {
         },
         onSuccess: () => {
           setMagicLinkLoading(false);
-          alert('Check your email for the magic link!');
+          toast.success('Check your email for the magic link!');
         },
         onError: (ctx: AuthErrorContext) => {
           setMagicLinkLoading(false);
-          alert(ctx.error.message);
+          toast.error(ctx.error.message);
         },
       },
     );
@@ -111,7 +112,7 @@ export default function SignIn() {
         },
         onResponse: () => setOtpLoading(false),
         onError: (ctx: AuthErrorContext) => {
-          alert(ctx.error.message);
+          toast.error(ctx.error.message);
         },
       },
     );
@@ -130,7 +131,7 @@ export default function SignIn() {
           onSubmit={(e) => {
             e.preventDefault();
             if (signInMethod === 'password') {
-              handleSignIn();
+              void handleSignIn();
             }
           }}
           className="grid gap-4"
@@ -157,7 +158,7 @@ export default function SignIn() {
                   variant="link"
                   size="sm"
                   type="button"
-                  onClick={handleResetPassword}
+                  onClick={() => void handleResetPassword()}
                   className="cursor-pointer"
                   disabled={forgotLoading || !email}
                 >
@@ -190,7 +191,7 @@ export default function SignIn() {
                 type="button"
                 className="w-full"
                 disabled={magicLinkLoading}
-                onClick={handleMagicLinkSignIn}
+                onClick={() => void handleMagicLinkSignIn()}
               >
                 {magicLinkLoading ? (
                   <Loader2 size={16} className="animate-spin" />
@@ -233,7 +234,7 @@ export default function SignIn() {
             variant="outline"
             className="w-full gap-2"
             disabled={otpLoading}
-            onClick={handleGithubSignIn}
+            onClick={() => void handleGithubSignIn()}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"

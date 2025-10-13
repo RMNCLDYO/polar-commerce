@@ -82,7 +82,7 @@ export function UserMenu({ user }: UserMenuProps) {
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
+        <DropdownMenuItem onClick={() => void handleSignOut()} className="cursor-pointer">
           <LogOut className="size-4 mr-2" />
           Sign Out
         </DropdownMenuItem>

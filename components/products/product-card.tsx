@@ -174,9 +174,9 @@ export function ProductCard({
               size="sm"
               className="text-xs font-semibold tracking-widest uppercase"
               disabled={isAddingToCart || !product.inStock}
-              onClick={async (e) => {
+              onClick={(e) => void (async () => {
                 e.preventDefault();
-                if (!product.inStock) return;
+                if (!product.inStock) {return;}
                 setIsAddingToCart(true);
                 await addToCart(product.id as Id<'catalog'>, 1, {
                   name: product.name,
@@ -187,7 +187,7 @@ export function ProductCard({
                   price: product.price,
                 });
                 setIsAddingToCart(false);
-              }}
+              })()}
             >
               {isAddingToCart ? (
                 <Loader2 className="h-3 w-3 animate-spin" />

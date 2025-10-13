@@ -178,7 +178,7 @@ export default function SignUp() {
             type="submit"
             className="w-full"
             disabled={loading}
-            onClick={handleSignUp}
+            onClick={() => void handleSignUp()}
           >
             {loading ? (
               <Loader2 size={16} className="animate-spin" />

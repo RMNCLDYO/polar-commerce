@@ -1,7 +1,6 @@
 'use client';
 
-import { Activity } from 'react';
-import { useEffect, useState } from 'react';
+import { Activity , useEffect, useState } from 'react';
 import { CheckoutPreloader } from '@/components/checkout-preloader';
 
 /**

@@ -9,9 +9,9 @@ import './globals.css';
 
 export const metadata: Metadata = {
   // NEXT_PUBLIC_BASE_URL is used for absolute URL generation in metadata
-  // Falls back to production URL if not set in environment
+  // Must be configured in production environment
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_BASE_URL || 'https://aisdk-storefront.vercel.app',
+    process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000',
   ),
   title: 'BANANA SPORTSWEAR - Premium Athletic Gear | Vercel AI SDK Showcase',
   description:

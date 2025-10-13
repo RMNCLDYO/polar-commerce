@@ -33,7 +33,7 @@ export function AddToCartButton({
   const [isLoading, setIsLoading] = useState(false);
 
   const handleAddToCart = async () => {
-    if (!inStock) return;
+    if (!inStock) {return;}
     setIsLoading(true);
     await addToCart(catalogId, quantity, productInfo);
     setIsLoading(false);
@@ -41,7 +41,7 @@ export function AddToCartButton({
 
   return (
     <Button
-      onClick={handleAddToCart}
+      onClick={() => void handleAddToCart()}
       variant={variant}
       size={size}
       className={className}

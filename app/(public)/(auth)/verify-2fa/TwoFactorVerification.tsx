@@ -3,6 +3,7 @@
 import { Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { Link } from '@/components/link';
 import { Button } from '@/components/ui/button';
 import {
@@ -44,8 +45,8 @@ export default function TwoFactorVerification() {
         },
       });
     } catch (error) {
-      console.log('error', error);
-      alert('Failed to verify code. Please try again.');
+      console.error('TOTP verification error:', error);
+      toast.error('Failed to verify code. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -56,8 +57,9 @@ export default function TwoFactorVerification() {
       setLoading(true);
       await authClient.twoFactor.sendOtp();
       setOtpSent(true);
-    } catch {
-      alert('Failed to send verification code. Please try again.');
+    } catch (error) {
+      console.error('OTP send error:', error);
+      toast.error('Failed to send verification code. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -71,8 +73,9 @@ export default function TwoFactorVerification() {
         trustDevice,
       });
       // Redirect will happen automatically on success
-    } catch {
-      alert('Failed to verify code. Please try again.');
+    } catch (error) {
+      console.error('OTP verification error:', error);
+      toast.error('Failed to verify code. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -85,8 +88,9 @@ export default function TwoFactorVerification() {
         code,
       });
       // Redirect will happen automatically on success
-    } catch {
-      alert('Failed to verify backup code. Please try again.');
+    } catch (error) {
+      console.error('Backup code verification error:', error);
+      toast.error('Failed to verify backup code. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -107,15 +111,15 @@ export default function TwoFactorVerification() {
           onSubmit={(e) => {
             e.preventDefault();
             if (method === 'totp') {
-              handleTotpVerify();
+              void handleTotpVerify();
             } else if (method === 'otp') {
               if (otpSent) {
-                handleOtpVerify();
+                void handleOtpVerify();
               } else {
-                handleOtpSend();
+                void handleOtpSend();
               }
             } else {
-              handleBackupCodeVerify();
+              void handleBackupCodeVerify();
             }
           }}
           className="grid gap-4"
