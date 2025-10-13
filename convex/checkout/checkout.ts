@@ -5,6 +5,7 @@ import type { Doc, Id } from '../_generated/dataModel';
 import { action, query } from '../_generated/server';
 import { trackExternalAPICall } from '../lib/metrics';
 import { logger } from '../utils/logger';
+import * as CheckoutModel from '../model/checkout';
 import type {
   Address,
   CartItemForCheckout,
@@ -188,38 +189,11 @@ export const createCheckoutSession = action({
       throw new Error('Cart is empty');
     }
 
-    // Validate all products have Polar product IDs and gather pricing info
-    const polarProducts: CartItemForCheckout[] = [];
-
-    for (const item of cartItems) {
-      if (!item.product.polarProductId) {
-        throw new Error(
-          `Product "${item.product.name}" is not available for checkout`,
-        );
-      }
-
-      // Get the Polar product details to find the price ID
-      const polarProduct = await ctx.runQuery(components.polar.lib.getProduct, {
-        id: item.product.polarProductId,
-      });
-
-      if (!polarProduct) {
-        throw new Error(`Polar product not found for "${item.product.name}"`);
-      }
-
-      // Find the active price
-      const activePrice = polarProduct.prices.find(
-        (p: (typeof polarProduct.prices)[number]) => !p.isArchived,
-      );
-
-      polarProducts.push({
-        polarProductId: item.product.polarProductId,
-        polarPriceId: activePrice?.id || null,
-        quantity: item.quantity,
-        name: item.product.name,
-        price: item.price,
-      });
-    }
+    // Batch fetch all Polar products in parallel (eliminates N+1 query pattern)
+    const polarProducts = await CheckoutModel.batchFetchPolarProducts(
+      ctx,
+      cartItems,
+    );
 
     // Get customer info for pre-filling checkout form
     // We don't create the customer here - Polar will handle it automatically
@@ -586,38 +560,11 @@ export const createCheckoutSessionWithIP = action({
       throw new Error('Cart is empty');
     }
 
-    // Validate all products have Polar product IDs and gather pricing info
-    const polarProducts: CartItemForCheckout[] = [];
-
-    for (const item of cartItems) {
-      if (!item.product.polarProductId) {
-        throw new Error(
-          `Product "${item.product.name}" is not available for checkout`,
-        );
-      }
-
-      // Get the Polar product details to find the price ID
-      const polarProduct = await ctx.runQuery(components.polar.lib.getProduct, {
-        id: item.product.polarProductId,
-      });
-
-      if (!polarProduct) {
-        throw new Error(`Polar product not found for "${item.product.name}"`);
-      }
-
-      // Find the active price
-      const activePrice = polarProduct.prices.find(
-        (p: (typeof polarProduct.prices)[number]) => !p.isArchived,
-      );
-
-      polarProducts.push({
-        polarProductId: item.product.polarProductId,
-        polarPriceId: activePrice?.id || null,
-        quantity: item.quantity,
-        name: item.product.name,
-        price: item.price,
-      });
-    }
+    // Batch fetch all Polar products in parallel (eliminates N+1 query pattern)
+    const polarProducts = await CheckoutModel.batchFetchPolarProducts(
+      ctx,
+      cartItems,
+    );
 
     // Get customer info for pre-filling checkout form
     // We don't create the customer here - Polar will handle it automatically

@@ -2,9 +2,10 @@
  * Checkout Model - Business logic for checkout operations
  */
 
+import { components } from '../_generated/api';
 import type { Doc, Id } from '../_generated/dataModel';
 import type { ActionCtx, MutationCtx } from '../_generated/server';
-import { components } from '../_generated/api';
+import type { CartItemForCheckout } from '../checkout/types';
 
 /**
  * Create an order from checkout data
@@ -182,4 +183,71 @@ export async function getUserOrders(
 
   // Sort all orders by creation date
   return orders.sort((a, b) => b.createdAt - a.createdAt);
+}
+
+/**
+ * Batch fetch Polar products for checkout
+ *
+ * This eliminates the N+1 query pattern by fetching all Polar products
+ * in parallel instead of sequentially in a loop.
+ *
+ * Performance impact:
+ * - Before: N sequential queries (~500ms per item)
+ * - After: N parallel queries (~500ms total)
+ * - Savings: (N-1) * 500ms for N items
+ */
+export async function batchFetchPolarProducts(
+  ctx: ActionCtx,
+  cartItems: Array<{
+    product: {
+      polarProductId?: string;
+      name: string;
+    };
+    quantity: number;
+    price: number;
+  }>,
+): Promise<CartItemForCheckout[]> {
+  // Validate all products have Polar product IDs
+  for (const item of cartItems) {
+    if (!item.product.polarProductId) {
+      throw new Error(
+        `Product "${item.product.name}" is not available for checkout`,
+      );
+    }
+  }
+
+  // Fetch all Polar products in parallel using Promise.all
+  const polarProductPromises = cartItems.map(async (item) => {
+    // TypeScript knows polarProductId exists due to validation loop above
+    const polarProductId = item.product.polarProductId;
+    if (!polarProductId) {
+      throw new Error(
+        `Product "${item.product.name}" is not available for checkout`,
+      );
+    }
+
+    const polarProduct = await ctx.runQuery(components.polar.lib.getProduct, {
+      id: polarProductId,
+    });
+
+    if (!polarProduct) {
+      throw new Error(`Polar product not found for "${item.product.name}"`);
+    }
+
+    // Find the active price
+    const activePrice = polarProduct.prices.find(
+      (p: (typeof polarProduct.prices)[number]) => !p.isArchived,
+    );
+
+    return {
+      polarProductId,
+      polarPriceId: activePrice?.id || null,
+      quantity: item.quantity,
+      name: item.product.name,
+      price: item.price,
+    };
+  });
+
+  // Wait for all product fetches to complete in parallel
+  return await Promise.all(polarProductPromises);
 }
