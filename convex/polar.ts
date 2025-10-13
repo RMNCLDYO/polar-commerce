@@ -49,8 +49,10 @@ export const {
 // to sync them to your Convex database
 export const syncProducts = action({
   args: {},
+  returns: v.null(),
   handler: async (ctx) => {
     await polar.syncProducts(ctx);
+    return null;
   },
 });
 
@@ -58,6 +60,7 @@ export const syncProducts = action({
 // Matches products by name to subscription tiers
 export const getSubscriptionProducts = query({
   args: {},
+  returns: v.any(),
   handler: async (
     ctx,
   ): Promise<Record<string, { id: string; [key: string]: unknown }>> => {
@@ -93,13 +96,14 @@ export const archiveBundleProduct = internalAction({
   args: {
     productId: v.string(),
   },
+  returns: v.null(),
   handler: async (_ctx, args) => {
     logger.info('[Polar] Archiving bundle product:', args.productId);
 
     const token = process.env.POLAR_ORGANIZATION_TOKEN;
     if (!token) {
       logger.error('[Polar] POLAR_ORGANIZATION_TOKEN not set');
-      return;
+      return null;
     }
 
     try {
@@ -122,5 +126,7 @@ export const archiveBundleProduct = internalAction({
         error instanceof Error ? error.message : 'Unknown error';
       logger.error('[Polar] Failed to archive bundle product:', errorMessage);
     }
+
+    return null;
   },
 });

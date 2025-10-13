@@ -1,4 +1,5 @@
 import { Polar } from '@polar-sh/sdk';
+import { v } from 'convex/values';
 import { action, query } from '../_generated/server';
 
 // Local type definitions for Polar SDK
@@ -37,6 +38,7 @@ interface PageIteratorResponse {
  */
 export const inspectAllData = query({
   args: {},
+  returns: v.record(v.string(), v.number()),
   handler: async (ctx) => {
     const results: Record<string, number> = {};
 
@@ -53,6 +55,10 @@ export const inspectAllData = query({
  */
 export const inspectPolarData = action({
   args: {},
+  returns: v.union(
+    v.record(v.string(), v.number()),
+    v.object({ error: v.string() }),
+  ),
   handler: async (_ctx) => {
     const token = process.env.POLAR_ORGANIZATION_TOKEN;
     if (!token) {
