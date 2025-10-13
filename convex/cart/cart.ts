@@ -14,6 +14,9 @@ import {
   vSuccessResponse,
   vCartResponse,
   vCartValidationResponse,
+  vCartDoc,
+  vAuthUser,
+  vCartItemWithProduct,
 } from '../utils/validation';
 
 // Helper to get or create cart for a user/session
@@ -665,6 +668,7 @@ export const internal_getCartByUserId = internalQuery({
   args: {
     userId: v.string(),
   },
+  returns: vCartDoc,
   handler: async (ctx, { userId }) => {
     return await ctx.db
       .query('carts')
@@ -677,6 +681,7 @@ export const internal_getCartBySessionId = internalQuery({
   args: {
     sessionId: v.string(),
   },
+  returns: vCartDoc,
   handler: async (ctx, { sessionId }) => {
     return await ctx.db
       .query('carts')
@@ -689,6 +694,7 @@ export const internal_getCartItems = internalQuery({
   args: {
     cartId: v.id('carts'),
   },
+  returns: v.array(vCartItemWithProduct),
   handler: async (ctx, { cartId }) => {
     const items = await ctx.db
       .query('cartItems')
@@ -707,7 +713,7 @@ export const internal_getCartItems = internalQuery({
       }),
     );
 
-    return itemsWithProducts.filter(Boolean);
+    return itemsWithProducts.filter((item): item is NonNullable<typeof item> => item !== null);
   },
 });
 
@@ -715,13 +721,22 @@ export const internal_getAuthUser = internalQuery({
   args: {
     userId: v.string(),
   },
+  returns: vAuthUser,
   handler: async (ctx, { userId }) => {
     // Query the Better Auth user table directly using index
     const user = await ctx.db
       .query('betterAuth_user')
       .withIndex('id', (q) => q.eq('id', userId))
       .first();
-    return user;
+
+    if (!user) {
+      return null;
+    }
+
+    return {
+      email: user.email,
+      name: user.name || undefined,
+    };
   },
 });
 
@@ -734,6 +749,7 @@ export const internal_updateCartCheckout = internalMutation({
     discountCode: v.optional(v.string()),
     customFieldData: v.optional(v.record(v.string(), v.any())),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const updateData: {
       lastCheckoutId: string;
@@ -753,6 +769,7 @@ export const internal_updateCartCheckout = internalMutation({
     if (args.customFieldData) {updateData.customFieldData = args.customFieldData;}
 
     await ctx.db.patch(args.cartId, updateData);
+    return null;
   },
 });
 
@@ -760,6 +777,7 @@ export const internal_clearCartItems = internalMutation({
   args: {
     cartId: v.id('carts'),
   },
+  returns: v.null(),
   handler: async (ctx, { cartId }) => {
     const items = await ctx.db
       .query('cartItems')
@@ -773,6 +791,8 @@ export const internal_clearCartItems = internalMutation({
     await ctx.db.patch(cartId, {
       updatedAt: Date.now(),
     });
+
+    return null;
   },
 });
 
@@ -833,6 +853,7 @@ export const internal_createOrder = internalMutation({
     metadata: v.optional(v.record(v.string(), v.any())),
     customFieldData: v.optional(v.record(v.string(), v.any())),
   },
+  returns: v.id('orders'),
   handler: async (ctx, args) => {
     // Check if order already exists
     const existingOrder = await ctx.db

@@ -227,6 +227,39 @@ export const vToggleWishlistResponse = v.object({
   action: v.union(v.literal('added'), v.literal('removed')),
 });
 
+// Internal mutation return validators
+export const vCartDoc = v.union(
+  v.object({
+    _id: v.id('carts'),
+    _creationTime: v.number(),
+    userId: v.optional(v.string()),
+    sessionId: v.optional(v.string()),
+    lastCheckoutId: v.optional(v.string()),
+    lastCheckoutUrl: v.optional(v.string()),
+    discountId: v.optional(v.string()),
+    discountCode: v.optional(v.string()),
+    customFieldData: v.optional(v.record(v.string(), v.any())),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+    expiresAt: v.optional(v.number()),
+  }),
+  v.null(),
+);
+
+export const vAuthUser = v.union(
+  v.object({
+    email: v.string(),
+    name: v.optional(v.string()),
+  }),
+  v.null(),
+);
+
+export const vInventoryUpdateResponse = v.object({
+  success: v.boolean(),
+  newInventory: v.number(),
+  inStock: v.boolean(),
+});
+
 // Orders validators
 export const vLinkOrdersResponse = v.object({
   success: v.boolean(),

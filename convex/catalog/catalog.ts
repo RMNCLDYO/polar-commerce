@@ -8,7 +8,11 @@ import {
   mutation,
   query,
 } from '../_generated/server';
-import { vProductListItem, vSuccessResponse } from '../utils/validation';
+import {
+  vProductListItem,
+  vSuccessResponse,
+  vInventoryUpdateResponse,
+} from '../utils/validation';
 
 // Local type definitions for Polar SDK
 interface PolarProduct {
@@ -347,11 +351,13 @@ export const linkProductInternal = internalMutation({
     productId: v.id('catalog'),
     polarProductId: v.string(),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     await ctx.db.patch(args.productId, {
       polarProductId: args.polarProductId,
       updatedAt: Date.now(),
     });
+    return null;
   },
 });
 
@@ -466,6 +472,7 @@ export const decrementInventoryInternal = internalMutation({
     productId: v.id('catalog'),
     quantity: v.number(),
   },
+  returns: vInventoryUpdateResponse,
   handler: async (ctx, args) => {
     const product = await ctx.db.get(args.productId);
     if (!product) {
