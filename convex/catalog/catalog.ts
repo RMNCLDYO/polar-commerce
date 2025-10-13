@@ -370,6 +370,11 @@ export const updateProduct = mutation({
   },
   returns: vSuccessResponse,
   handler: async (ctx, args) => {
+    const { isAdmin } = await import('../auth/auth');
+    if (!(await isAdmin(ctx))) {
+      throw new Error('Unauthorized: Admin access required');
+    }
+
     const { productId, updates } = args;
 
     await ctx.db.patch(productId, {
