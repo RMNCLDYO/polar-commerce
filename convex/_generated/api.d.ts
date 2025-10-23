@@ -9,6 +9,7 @@
  */
 
 import type * as auth_auth from "../auth/auth.js";
+import type * as auth_cleanup from "../auth/cleanup.js";
 import type * as auth_sync from "../auth/sync.js";
 import type * as cart_cart from "../cart/cart.js";
 import type * as cart_cleanup from "../cart/cleanup.js";
@@ -74,6 +75,7 @@ import type {
  */
 declare const fullApi: ApiFromModules<{
   "auth/auth": typeof auth_auth;
+  "auth/cleanup": typeof auth_cleanup;
   "auth/sync": typeof auth_sync;
   "cart/cart": typeof cart_cart;
   "cart/cleanup": typeof cart_cleanup;
