@@ -1,3 +1,4 @@
+import { authComponent } from '../auth/auth';
 import type { Doc } from '../_generated/dataModel';
 import type { QueryCtx, MutationCtx } from '../_generated/server';
 
@@ -82,10 +83,7 @@ export async function rlsRules(ctx: QueryCtx | MutationCtx) {
       read: async (order: Doc<'orders'>) => {
         if (userId && order.userId === userId) {return true;}
         if (userId) {
-          const user = await ctx.db
-            .query('betterAuth_user')
-            .withIndex('id', (q) => q.eq('id', userId))
-            .first();
+          const user = await authComponent.getAnyUserById(ctx, userId);
           if (user && order.email === user.email) {return true;}
         }
         return false;

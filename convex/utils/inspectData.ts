@@ -39,7 +39,13 @@ export const inspectAllData = query({
     const results: Record<string, number> = {};
 
     results.catalog = (await ctx.db.query('catalog').collect()).length;
+    results.carts = (await ctx.db.query('carts').collect()).length;
+    results.cartItems = (await ctx.db.query('cartItems').collect()).length;
+    results.wishlists = (await ctx.db.query('wishlists').collect()).length;
+    results.wishlistItems = (await ctx.db.query('wishlistItems').collect()).length;
+    results.orders = (await ctx.db.query('orders').collect()).length;
     results.demoTodos = (await ctx.db.query('demoTodos').collect()).length;
+    results.rateLimits = (await ctx.db.query('rateLimits').collect()).length;
 
     return results;
   },

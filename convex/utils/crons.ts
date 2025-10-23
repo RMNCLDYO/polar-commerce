@@ -27,4 +27,10 @@ crons.hourly(
   internal.lib.rateLimit.cleanup,
 );
 
+crons.daily(
+  'cleanup stale auth accounts',
+  { hourUTC: 2, minuteUTC: 30 },
+  internal.auth.cleanup.cleanupStaleAccounts,
+);
+
 export default crons;
