@@ -2,13 +2,6 @@ import 'server-only';
 import { google } from '@ai-sdk/google';
 import { generateText } from 'ai';
 import { type NextRequest, NextResponse } from 'next/server';
-import { logger } from '@/lib/shared/logger';
-
-/**
- * API Route for generating images using Google Gemini.
- * Uses GOOGLE_GENERATIVE_AI_API_KEY environment variable automatically via Vercel AI SDK.
- * This is a server-only route that handles multimodal AI generation.
- */
 
 async function convertImageToSupportedFormat(
   file: File,
@@ -104,17 +97,9 @@ export async function POST(request: NextRequest) {
       usage: result.usage,
     });
   } catch (error) {
-    const { message, details, retryable } = logger.apiError(
-      '/api/generate-image',
-      error,
-      500,
-    );
-
     return NextResponse.json(
       {
-        error: message,
-        retryable,
-        details,
+        error: 'An error occurred',
       },
       {
         status:
