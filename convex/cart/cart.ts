@@ -7,6 +7,7 @@ import {
   mutation,
   query,
 } from '../_generated/server';
+import { authComponent } from '../auth/auth';
 import { checkRateLimit } from '../lib/rateLimit';
 import {
   validateQuantity,
@@ -630,10 +631,7 @@ export const internal_getAuthUser = internalQuery({
   },
   returns: vAuthUser,
   handler: async (ctx, { userId }) => {
-    const user = await ctx.db
-      .query('betterAuth_user')
-      .withIndex('id', (q) => q.eq('id', userId))
-      .first();
+    const user = await authComponent.getAnyUserById(ctx, userId);
 
     if (!user) {
       return null;

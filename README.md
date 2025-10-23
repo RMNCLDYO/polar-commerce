@@ -1,803 +1,96 @@
-# AI SDK Storefront
+# Polar Commerce
 
-**Production-grade Next.js 16 e-commerce platform** demonstrating real-world integration of Cache Components, Turbopack, React Compiler, and modern full-stack architecture with Convex + Better Auth + Polar.
+Polar doesn't have a cart system. Convex isn't designed for e-commerce. This repo hacks around both limitations.
 
-[![Next.js 16](https://img.shields.io/badge/Next.js-16.0.0--canary.0-black?style=flat-square&logo=next.js)](https://nextjs.org)
-[![React 19.2](https://img.shields.io/badge/React-19.2.0-61DAFB?style=flat-square&logo=react)](https://react.dev)
-[![Convex](https://img.shields.io/badge/Convex-1.27.5-FF6B35?style=flat-square)](https://convex.dev)
-[![Better Auth](https://img.shields.io/badge/Better_Auth-1.3.27-7C3AED?style=flat-square)](https://better-auth.com)
-[![Polar](https://img.shields.io/badge/Polar-0.35.4-007ACC?style=flat-square)](https://polar.sh)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6?style=flat-square&logo=typescript)](https://typescriptlang.org)
-[![Vitest](https://img.shields.io/badge/Vitest-3.2.4-729B1B?style=flat-square&logo=vitest)](https://vitest.dev)
-[![MIT License](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)](LICENSE)
+**The workaround:** Cart state lives in Convex with real-time sync. At checkout, multiple cart items bundle into a single ephemeral Polar product. Original cart composition stored in checkout metadata. Post-payment webhook reconstructs the full order.
 
-> **165+ files** · **~18.5K lines of code** · **100% TypeScript** · **100% Next.js 16 compliant** · **Zero deprecated APIs** · **Full test suite**
-
-## What's Inside
-
-A complete e-commerce platform showcasing Next.js 16's latest features in production:
-
-- **Authentication** - Better Auth (email/password, GitHub OAuth, 2FA, magic links)
-- **Database** - Convex (real-time, type-safe, auto-generated API)
-- **Payments** - Polar (subscriptions + one-time purchases + customer portal)
-- **Frontend** - Next.js 16 (Cache Components, Turbopack, React Compiler, View Transitions)
-- **UI** - shadcn/ui + Tailwind CSS v4
-- **AI** - Vercel AI SDK + Google Gemini (virtual try-on)
+Also testing Next.js 16 canary (Cache Components, Turbopack, React Compiler) + React 19 (View Transitions).
 
 ## Quick Start
 
 ```bash
-git clone https://github.com/RMNCLDYO/aisdk-storefront.git
-cd aisdk-storefront
+git clone https://github.com/RMNCLDYO/polar-commerce.git
+cd polar-commerce
 npm install
 cp .env.example .env.local
-# Add required environment variables (see below)
-npm run polar:seed          # Seed products + subscriptions
-npm run dev                 # Start dev server
+# Add CONVEX_DEPLOYMENT, POLAR_ORGANIZATION_TOKEN, etc. (see .env.example)
+npm run db:reset        # Clear database (18s)
+npm run polar:seed      # Seed products (29s)
+npm run dev             # Start dev server
 # Open https://localhost:3000
 ```
 
-## Why This Exists
+## How It Works
 
-**This is not a tutorial.** It's a production-ready codebase demonstrating how modern web technologies work together at scale:
+**Cart → Bundle → Payment:**
+1. Cart items stored in Convex with real-time sync across devices
+2. At checkout, [`createBundleProduct()`](convex/checkout/checkout.ts#L123) bundles N items into one Polar product
+3. Original cart composition stored in checkout metadata
+4. Polar processes payment for bundle
+5. Webhook receives payment confirmation, reconstructs order from metadata
 
-- **Next.js 16 (Canary)** - Cache Components, Turbopack File System Caching, React Compiler, Enhanced Routing
-- **React 19.2** - View Transitions, Server Components, useEffectEvent, Activity component
-- **Convex** - Real-time database with webhooks, type-safe client, server functions
-- **Better Auth** - Modern auth with built-in 2FA, social login, session management
-- **Polar** - Payment processing with subscriptions and customer portals
+**Stack:**
+- Next.js 16 canary (Cache Components, Turbopack, React Compiler)
+- Convex (real-time database + Better Auth/Polar components)
+- Better Auth (email/OAuth/2FA via Convex adapter)
+- Polar (subscriptions + one-time payments)
+- React 19 (View Transitions, useEffectEvent)
 
-Shows the **complete picture**: auth flows, real-time updates, payment processing, inventory management, webhooks, caching strategies, and security—all in one codebase.
+**What's implemented:**
+Cart/wishlist with real-time sync, user authentication (Better Auth), checkout flow with bundling, webhook-based order reconstruction, subscription + one-time payment support.
 
-## Next.js 16 Features (Stable & Experimental)
+**What's not (yet):**
+Cart expiration crons, bundle cleanup strategy, per-item tax calculation. See [DOCS.md](DOCS.md) for implementation details.
 
-### ✅ Stable Features
+## Why
 
-| Feature | Implementation | Files |
-|---------|---------------|-------|
-| **React Compiler** | Auto-memoization with `babel-plugin-react-compiler@1.0.0` | `next.config.ts` |
-| **Turbopack** | Default bundler with 2-5× faster builds | All builds |
-| **Enhanced Routing** | Layout deduplication, incremental prefetching | `components/link.tsx` |
-| **Async Params** | `await params`, `await searchParams` | 51 route files |
-| **Server Components** | 37% bundle reduction, data preloading | 85% of components |
-| **Server Actions** | Type-safe mutations with validation | `lib/server/` |
+Wanted to see if Convex's real-time subscriptions + type-safe schema would work for e-commerce despite being designed for SaaS. Turns out live cart sync across devices is trivial with Convex subscriptions. Inventory updates propagate instantly. Type generation catches schema mismatches at compile time.
 
-### 🧪 Experimental Features
+Polar's payment infrastructure handles subscriptions well, but no native multi-product checkout meant building the bundling workaround. Side benefit: the same codebase demonstrates both SaaS patterns (recurring billing, tiered access) and e-commerce primitives (cart, checkout, inventory) using identical backend infrastructure.
 
-| Feature | Implementation | Status |
-|---------|---------------|--------|
-| **Cache Components** | `'use cache'`, `cacheLife()`, `cacheTag()` | `experimental.cacheComponents: true` |
-| **Custom cacheLife Profiles** | `default`, `max`, `hours`, `days` | `next.config.ts` |
-| **Turbopack FS Caching** | Persistent dev cache across restarts | `experimental.turbopackFileSystemCacheForDev: true` |
-| **New Caching APIs** | `revalidateTag(tag, profile)`, `updateTag()`, `refresh()` | `lib/server/actions/` |
+This is an experiment - someone may have built cart/wishlist/checkout with Convex before, but I haven't seen it documented. The bundling hack for Polar's checkout limitation is definitely unique to this repo.
 
-### 📊 Build Statistics
+## Benchmarks
 
-```
-✓ 35 routes generated
-✓ 24 routes with Partial Prerendering (PPR)
-✓ Static shell + dynamic streaming
-✓ Custom cache profiles active (1h-1y revalidation)
-✓ Compiled in 3.4s with Turbopack
-```
+Apple Silicon M-series:
 
-## React 19.2 Features
+| Command | Time | Description |
+|---------|------|-------------|
+| `npm run lint` | 7s | ESLint + Convex TypeScript |
+| `npm run format` | 4s | ESLint auto-fix |
+| `npm run build` | 10s | Next.js production build (3.9s compile + 2.8s TS + 1.0s static gen) |
+| `npm run dev` | 10s | Frontend (451ms) + Convex backend (9.3s) |
 
-### View Transitions
+**Build output:**
+- 35 routes (24 with Partial Prerendering)
+- 165+ files, ~18.5K lines TypeScript
+- Zero `any` types (except intentional suppressions)
+- Zero deprecated Next.js 16 APIs
 
-Browser-native page transition animations with forward-compatible component wrapper:
+## Contributing
 
-```typescript
-// Forward-compatible wrapper (components/view-transition.tsx)
-<ViewTransition name="product-detail" className="px-8 py-12">
-  <ProductContent />
-</ViewTransition>
+Open experiment. Contributions welcome on:
 
-// Renders with viewTransitionName for browser API
-// Easy migration when React's <ViewTransition> becomes stable
-```
+**Core challenges:**
+- Bundle lifecycle management (when to delete bundled Polar products?)
+- Cart expiration + cleanup crons
+- Partial refund logic (unbundling individual items)
+- Per-product tax calculation before bundling
+- Better concurrent checkout handling
 
-**Benefits:**
-- Clean, declarative API with type-safe props
-- Shared element transitions between routes
-- Automatic animations for matching view transition names
-- Easy future migration to React's native `<ViewTransition>` component
+**Missing features:**
+Multi-currency, shipping integrations, integration tests, deployment guides.
 
-**Used on 4+ pages** including product details, checkout, pricing, and home page.
-
-### useEffectEvent
-
-Separates "event" logic from Effects to prevent unnecessary re-runs:
-
-```typescript
-// Before: theme changes cause chat room to reconnect
-useEffect(() => {
-  const connection = createConnection(roomId);
-  connection.on('connected', () => {
-    showNotification('Connected!', theme); // theme triggers re-run
-  });
-  connection.connect();
-}, [roomId, theme]); // ❌ theme causes reconnection
-
-// After: only roomId changes cause reconnection
-const onConnected = useEffectEvent(() => {
-  showNotification('Connected!', theme); // always sees latest theme
-});
-
-useEffect(() => {
-  const connection = createConnection(roomId);
-  connection.on('connected', onConnected);
-  connection.connect();
-}, [roomId]); // ✅ Effect Events aren't dependencies
-```
-
-**Used in 4 files:** `use-cart.tsx`, `use-wishlist.tsx`, `EnableTwoFactor.tsx` (consistent session management patterns)
-
-### Activity Component
-
-Pre-renders hidden parts of the app for instant navigation:
-
-```tsx
-<Activity mode={preloadCheckout ? 'visible' : 'hidden'}>
-  <CheckoutPreloader />
-</Activity>
-```
-
-**Benefits:**
-- Loads checkout data/CSS/images in background
-- Zero impact on visible page performance
-- Makes navigation feel instant
-
-**Implementation:** Shop layout pre-renders checkout when cart has items
-
-### Performance Tracks
-
-Chrome DevTools now shows React-specific performance tracks:
-
-1. **Open Chrome DevTools** → Performance tab
-2. **Record profile** while using the app
-3. **Look for custom tracks:**
-   - **Scheduler ⚛** - What React is working on by priority (blocking vs transition)
-   - **Components ⚛** - Which components are rendering/running effects
-
-**See:** [React Performance Tracks docs](https://react.dev/reference/dev-tools/react-performance-tracks)
-
-### Server Components
-
-- **51 async route files** with proper `await params` and `await searchParams`
-- **Data preloading** with `preloadQuery` for optimal performance
-- **27 client components** clearly marked with `'use client'`
-- **5 server-only modules** protected with `'server-only'` package
-
-## Architecture Deep Dive
-
-### Frontend Layer (Next.js 16)
-
-```
-app/
-├── (protected)/              # Auth-required routes (proxy.ts middleware)
-│   ├── dashboard/            # Real-time todos with Convex live queries
-│   ├── settings/             # Account management + 2FA setup
-│   └── portal/               # Polar customer billing portal
-├── (public)/
-│   ├── (shop)/               # E-commerce with PPR (24 routes)
-│   │   ├── page.tsx          # Homepage (PPR: 1h revalidate, 2h expire)
-│   │   ├── [category]/       # Dynamic categories (PPR: 1d revalidate, 1y expire)
-│   │   ├── products/         # Product grid with filters
-│   │   ├── product/[id]/     # Product detail with AI try-on
-│   │   ├── pricing/          # Subscription tiers
-│   │   ├── checkout/         # Multi-product checkout
-│   │   └── wishlist/         # Guest + authenticated wishlist
-│   └── (auth)/               # Better Auth flows
-│       ├── sign-in/          # Email + OAuth + magic link
-│       ├── sign-up/          # Registration with email verification
-│       ├── verify-2fa/       # TOTP authentication
-│       └── reset-password/   # Password reset flow
-
-components/
-├── cart/                     # Real-time cart with optimistic updates
-│   ├── cart-drawer.tsx       # Drawer with live Convex queries
-│   └── cart-button.tsx       # Badge with real-time count
-├── layout/
-│   ├── header/               # Navigation with user menu
-│   │   ├── header.tsx        # Server component with auth preload
-│   │   └── user-menu.tsx     # Client component with tier display
-│   └── footer/               # Footer with links
-├── link.tsx                  # Custom Link with 4 prefetch strategies
-│   # 'hover' | 'visible' | 'always' | 'never'
-├── view-transition.tsx       # React 19.2 View Transitions wrapper
-└── products/                 # Product UI components
-
-lib/
-├── server/                   # Server-only code (protected)
-│   ├── auth.ts               # Server-side auth utilities
-│   ├── actions/
-│   │   └── revalidate.ts     # New Next.js 16 caching APIs
-│   └── data/
-│       └── products.ts       # Cache Components with 'use cache'
-├── client/                   # Client-side code
-│   ├── auth.ts               # Client auth utilities
-│   └── hooks/
-│       ├── use-cart.tsx      # Real-time cart with useEffectEvent
-│       └── use-wishlist.tsx  # Wishlist with useEffectEvent
-└── shared/                   # Isomorphic utilities
-    ├── utils.ts              # Shared utilities
-    └── logger.ts             # Environment-aware logging
-```
-
-### Backend Layer (Convex)
-
-```
-convex/
-├── schema.ts                 # Type-safe schema with comprehensive docs
-│   # 7 tables: catalog, carts, cartItems, wishlists,
-│   #           wishlistItems, orders, demoTodos
-├── auth/
-│   ├── auth.ts               # Better Auth integration with lifecycle hooks
-│   └── sync.ts               # Auto-sync users to Polar on signup
-├── cart/
-│   └── cart.ts               # Real-time cart (guest + authenticated)
-│   # - Guest cart with sessionId + auto-merge on auth
-│   # - Inventory validation before adding items
-│   # - Price snapshots at time of adding
-├── catalog/
-│   ├── catalog.ts            # Product queries with filters
-│   └── sync.ts               # Bidirectional Polar sync
-├── checkout/
-│   ├── checkout.ts           # Comprehensive Polar checkout
-│   │   # - IP tracking for fraud prevention
-│   │   # - Business customer support (tax ID, billing address)
-│   │   # - Trial periods and subscription upgrades
-│   │   # - Custom field data (order notes)
-│   │   # - Multi-product bundling (Polar limitation workaround)
-│   └── http.ts               # HTTP endpoint with IP extraction
-├── orders/
-│   ├── sync.ts               # Order creation and fulfillment
-│   ├── webhook.ts            # Polar webhook handlers
-│   └── http.ts               # Order API endpoints
-├── polar/                    # Polar component (extended API)
-│   ├── schema.ts             # Polar-specific tables
-│   └── lib.ts                # Polar utilities
-├── utils/
-│   ├── cors.ts               # CORS configuration
-│   ├── logger.ts             # Structured logging
-│   ├── validation.ts         # Type-safe validators
-│   ├── crons.ts              # Scheduled tasks (orphaned customer sync)
-│   └── polyfills.ts          # Environment polyfills
-├── emails/                   # React email templates
-│   ├── verifyEmail.tsx       # Email verification
-│   ├── resetPassword.tsx     # Password reset
-│   ├── magicLink.tsx         # Magic link authentication
-│   └── verifyOTP.tsx         # 2FA OTP
-└── http.ts                   # HTTP router with webhook handlers
-```
-
-### Data Layer (Seeding & Verification)
-
-```
-scripts/
-├── seedAll.ts                # Master orchestration (218 lines)
-│   # 1. Seed subscriptions → 2. Seed products → 3. Verify
-├── seedProducts.ts           # Product seeding (461 lines)
-│   # - S3 image uploads via Polar
-│   # - SHA-256 checksum verification
-│   # - Convex database sync
-├── seedSubscriptions.ts      # Subscription seeding (507 lines)
-│   # - Monthly + yearly variants
-│   # - Polar + Convex catalog sync
-├── verifySeeding.ts          # Comprehensive verification (415 lines)
-│   # 5 checks: Polar products, Convex tables, subscriptions,
-│   #           data consistency, order linking
-├── logger.ts                 # Structured logging with ANSI colors
-├── types.ts                  # Type definitions for all scripts
-└── tsconfig.json             # Separate TypeScript config for Node.js
-```
-
-## Configuration Files
-
-### next.config.ts - Complete Next.js 16 Setup
-
-```typescript
-const nextConfig = {
-  reactCompiler: true,  // React Compiler (stable)
-
-  experimental: {
-    cacheComponents: true,  // Cache Components (PPR integration)
-    turbopackFileSystemCacheForDev: true,  // Faster dev restarts
-
-    // Custom cache profiles for revalidateTag(tag, profile)
-    cacheLife: {
-      default: { stale: 3600, revalidate: 3600, expire: 86400 },
-      max: { stale: Infinity, revalidate: 86400, expire: Infinity },
-      hours: { stale: 3600, revalidate: 3600, expire: 7200 },
-      days: { stale: 86400, revalidate: 86400, expire: 604800 },
-    },
-  },
-
-  images: {
-    minimumCacheTTL: 14400,  // 4 hours (Next.js 16 default)
-    qualities: [60, 75, 90],  // E-commerce product images
-    maximumRedirects: 3,  // Security: prevent redirect loops
-    dangerouslyAllowLocalIP: false,  // Security: block local IPs
-    remotePatterns: [/* Polar S3 buckets */],
-  },
-
-  async headers() {
-    return [/* Comprehensive security headers */];
-  },
-} satisfies NextConfig;
-```
-
-### tsconfig.json - Strict TypeScript
-
-```json
-{
-  "compilerOptions": {
-    "strict": true,
-    "moduleResolution": "bundler",  // Next.js 16 recommended
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
-    "noUncheckedIndexedAccess": true  // Safe array access
-  },
-  "exclude": ["node_modules", "scripts"]
-}
-```
-
-### proxy.ts - Middleware (Renamed from middleware.ts)
-
-```typescript
-// Next.js 16 deprecates middleware.ts → proxy.ts
-export default async function middleware(request: NextRequest) {
-  const sessionCookie = getSessionCookie(request);
-
-  // Redirect authenticated users away from auth pages
-  if (isAuthFlowRoute && sessionCookie) {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
-  }
-
-  // Protect routes requiring authentication
-  if (isProtectedRoute && !sessionCookie) {
-    return NextResponse.redirect(new URL('/sign-in', request.url));
-  }
-
-  return NextResponse.next();
-}
-```
-
-## Key Integrations
-
-### Convex Real-Time Database
-
-**What it provides:**
-- Type-safe client/server functions
-- Real-time subscriptions (no polling)
-- Automatic type generation from schema
-- Webhook handling with components
-
-**Implementation highlights:**
-```typescript
-// Server function (Convex mutation)
-export const addToCart = mutation({
-  args: { catalogId: v.id('catalog'), quantity: v.number() },
-  handler: async (ctx, args) => {
-    const product = await ctx.db.get(args.catalogId);
-    validateQuantity(args.quantity, product.inventory_qty);
-    // ... insert cart item
-  },
-});
-
-// Client component (real-time query)
-export function CartDrawer() {
-  const cart = useQuery(api.cart.cart.getCart);
-  // Automatically updates when cart changes
-}
-```
-
-### Better Auth Integration
-
-**Features:**
-- Convex adapter for native integration
-- Auto-sync users to Polar on signup
-- Lifecycle hooks (onCreate, onDelete)
-- 2FA with QR code generation
-- Magic link authentication
-- GitHub OAuth
-
-**User flow:**
-1. User signs up → Better Auth creates user in Convex
-2. Lifecycle hook triggers → Create Polar customer
-3. Link guest orders to new user account
-4. Assign FREE tier (default)
-
-### Polar Payment Integration
-
-**Checkout features:**
-- IP address tracking (fraud prevention + tax calculation)
-- Business customer support (tax ID, billing address)
-- Discount codes (pre-applied or customer-entered)
-- Trial periods with configurable intervals
-- Subscription upgrades from existing plans
-- Custom field data (order notes, special instructions)
-- Multi-product bundling (workaround for Polar limitation)
-
-**Webhook events handled:**
-```typescript
-polar.registerRoutes(http, {
-  onSubscriptionCreated: async (ctx, event) => {
-    // Update user tier in auth context
-  },
-  onSubscriptionUpdated: async (ctx, event) => {
-    // Handle plan changes, cancellations
-  },
-  onProductCreated: async (ctx, event) => {
-    // Auto-sync to Convex catalog
-  },
-});
-```
-
-## Caching Strategy
-
-### Cache Components (Experimental)
-
-```typescript
-// lib/server/data/products.ts
-import { unstable_cacheLife as cacheLife, unstable_cacheTag as cacheTag } from 'next/cache';
-
-export async function getProducts(filters?: ProductFilters): Promise<Product[]> {
-  'use cache';  // Cache Components directive
-  cacheLife('hours');  // Use custom profile from next.config
-  cacheTag('products');  // Tag for granular revalidation
-
-  const products = await fetchQuery(api.catalog.catalog.getProducts, { /* ... */ });
-  return products;
-}
-```
-
-### New Caching APIs
-
-```typescript
-// Server Action with read-your-writes semantics
-'use server';
-import { updateTag } from 'next/cache';
-
-export async function updateProduct(id: string, data: ProductData) {
-  await db.products.update(id, data);
-  updateTag('products');  // Immediate cache refresh
-}
-
-// Server Action with stale-while-revalidate
-'use server';
-import { revalidateTag } from 'next/cache';
-
-export async function revalidateProducts() {
-  revalidateTag('products', 'max');  // Background revalidation
-}
-
-// Server Action for uncached data
-'use server';
-import { refresh } from 'next/cache';
-
-export async function markNotificationRead(id: string) {
-  await db.notifications.update(id);
-  refresh();  // Refresh uncached notification count
-}
-```
-
-### Custom Link Component
-
-```typescript
-// components/link.tsx
-type LinkProps = {
-  prefetchStrategy?: 'hover' | 'visible' | 'always' | 'never';
-};
-
-export function Link({ prefetchStrategy = 'visible', ...props }: LinkProps) {
-  // 'visible' - prefetch when link enters viewport (default)
-  // 'hover' - prefetch on mouse enter
-  // 'always' - prefetch immediately on page load
-  // 'never' - disable prefetching
-
-  const prefetchValue = /* ... calculate based on strategy ... */;
-  return <NextLink {...props} prefetch={prefetchValue} />;
-}
-```
-
-**Benefits:**
-- Layout deduplication (download shared layouts once)
-- Incremental prefetching (only fetch missing parts)
-- Smart cancellation (when link leaves viewport)
-- Hover optimization (prioritize on mouse enter)
-
-## Environment Variables
-
-```env
-# Convex (auto-configured by npx convex dev)
-CONVEX_DEPLOYMENT=dev:your-deployment
-NEXT_PUBLIC_CONVEX_URL=https://your-deployment.convex.cloud
-NEXT_PUBLIC_CONVEX_SITE_URL=https://your-deployment.convex.site
-
-# Better Auth
-BETTER_AUTH_SECRET=your_secret_key_min_32_chars
-GITHUB_CLIENT_ID=your_github_oauth_client_id
-GITHUB_CLIENT_SECRET=your_github_oauth_secret
-
-# Polar Payments
-POLAR_ORGANIZATION_TOKEN=polar_pat_your_token
-POLAR_WEBHOOK_SECRET=whsec_your_webhook_secret
-POLAR_SERVER=sandbox  # or 'production'
-
-# AI Features (optional)
-GOOGLE_GENERATIVE_AI_API_KEY=your_gemini_api_key
-
-# Application
-SITE_URL=https://localhost:3000
-NEXT_PUBLIC_BASE_URL=https://localhost:3000
-```
-
-## Commands
-
-```bash
-# Development
-npm run dev                   # Start dev server (frontend + backend)
-npm run dev:frontend          # Next.js only (port 3000)
-npm run dev:backend           # Convex only (with type checking)
-
-# Production
-npm run build                 # Production build with Turbopack
-npm run start                 # Start production server
-npm run generate              # Generate Convex types once
-
-# Database
-npm run polar:seed            # Seed products + subscriptions
-npm run polar:seed-products   # Seed products only
-npm run polar:seed-subscriptions  # Seed subscriptions only
-npm run polar:verify-seed     # Verify seeding integrity
-npm run db:reset              # Clear database (⚠️  destructive)
-
-# Testing
-npm run test                  # Run tests in watch mode
-npm run test:ui               # Run tests with Vitest UI
-npm run test:coverage         # Generate coverage report
-npm run test:watch            # Run tests in watch mode
-npm run test:ci               # Run tests in CI mode
-
-# Code Quality
-npm run lint                  # ESLint + Convex TypeScript
-npm run format                # ESLint auto-fix
-npm run clean                 # Clean build artifacts + reinstall
-```
-
-## Tech Stack
-
-| Layer | Technology | Version | Purpose |
-|-------|-----------|---------|---------|
-| **Framework** | Next.js | 16.0.0-canary.0 | React framework with App Router |
-| **React** | React | 19.2.0 | UI library with Server Components |
-| **Database** | Convex | 1.27.5 | Real-time database with type-safe API |
-| **Auth** | Better Auth | 1.3.27 | Authentication with 2FA + OAuth |
-| **Payments** | Polar SDK | 0.35.4 | Payment processing + subscriptions |
-| **UI Components** | shadcn/ui | Latest | Radix UI + Tailwind components |
-| **Styling** | Tailwind CSS | 4.0 | Utility-first CSS framework |
-| **Testing** | Vitest | 3.2.4 | Unit testing with React Testing Library |
-| **Linter** | ESLint | 9.37.0 | With security, a11y, and React Compiler rules |
-| **AI SDK** | Vercel AI SDK | 5.0.68 | AI integration framework |
-| **AI Model** | Google Gemini | 2.0 Flash | Generative AI for virtual try-on |
-| **TypeScript** | TypeScript | 5.0+ | Type safety |
-| **Runtime** | Node.js | 20.9+ | JavaScript runtime (LTS) |
-
-## Features
-
-### Authentication & Authorization
-- ✅ Email/password authentication
-- ✅ GitHub OAuth integration
-- ✅ Magic link authentication
-- ✅ Two-factor authentication (TOTP)
-- ✅ Email verification flow
-- ✅ Password reset flow
-- ✅ Route protection with middleware
-- ✅ Tier-based access control
-
-### E-Commerce
-- ✅ Product catalog with categories
-- ✅ Real-time inventory management
-- ✅ Shopping cart (guest + authenticated)
-- ✅ Wishlist with guest support
-- ✅ Multi-product checkout
-- ✅ Subscription management (3 tiers: Free, Starter, Premium)
-- ✅ One-time purchases
-- ✅ Order history
-- ✅ Customer billing portal
-
-### Real-Time Features
-- ✅ Live cart updates across tabs
-- ✅ Real-time inventory sync
-- ✅ Live order status updates
-- ✅ No polling required (Convex subscriptions)
-
-### Advanced Features
-- ✅ AI virtual try-on (Google Gemini)
-- ✅ IP-based fraud prevention
-- ✅ Business customer support (tax ID, billing address)
-- ✅ Trial periods for subscriptions
-- ✅ Discount codes
-- ✅ Custom checkout fields (order notes)
-- ✅ Guest cart auto-merge on authentication
-- ✅ Webhook-driven order processing
-
-### Developer Experience
-- ✅ 100% TypeScript with strict mode
-- ✅ Auto-generated types from Convex schema
-- ✅ Unit testing with Vitest and React Testing Library
-- ✅ Code coverage reporting with @vitest/coverage-v8
-- ✅ Enhanced ESLint with security, accessibility, and import plugins
-- ✅ React Compiler-powered lint rules (refs, purity, immutability, set-state-in-render)
-- ✅ Hot module replacement (Turbopack)
-- ✅ File system caching for faster restarts
-- ✅ Comprehensive seeding scripts
-- ✅ Verification tooling with 5 integrity checks
-- ✅ Structured logging (development + production)
-- ✅ Type-safe validation utilities
-- ✅ Development documentation (CONTRIBUTING.md, SECURITY.md)
-
-## Testing Infrastructure
-
-### Vitest Configuration
-
-This project uses Vitest for fast, modern testing:
-
-```typescript
-// vitest.config.ts
-export default defineConfig({
-  plugins: [react()],
-  test: {
-    environment: 'happy-dom',
-    setupFiles: ['./tests/setup.tsx'],
-    coverage: {
-      provider: 'v8',
-      reporter: ['text', 'json', 'html', 'lcov'],
-      exclude: ['node_modules/', 'dist/', '.next/', 'convex/_generated/'],
-    },
-  },
-  resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './'),
-    },
-  },
-});
-```
-
-### Test Suite
-
-- **Unit Tests:** Core utilities and shared logic
-  - `lib/shared/utils.test.ts` - Utility function tests
-  - `app/error.test.tsx` - Error boundary component tests
-- **Testing Library:** React Testing Library for component testing
-- **Coverage:** V8 coverage with HTML reports
-- **Environment:** happy-dom for fast DOM simulation
-
-### Running Tests
-
-```bash
-npm run test           # Interactive watch mode
-npm run test:ui        # Vitest UI (visual test runner)
-npm run test:coverage  # Generate coverage report
-npm run test:ci        # CI mode with coverage output
-```
-
-### ESLint Configuration
-
-Enhanced with security and accessibility:
-
-```javascript
-// eslint.config.js
-export default [
-  // React Compiler rules (stable)
-  reactCompiler.configs.recommended,
-
-  // Security scanning
-  pluginSecurity.configs.recommended,
-
-  // Accessibility checks
-  pluginJsxA11y.flatConfigs.recommended,
-
-  // Import organization
-  pluginImport.flatConfigs.recommended,
-
-  // React Hooks rules (Next.js 16)
-  { plugins: { 'react-hooks': pluginReactHooks } }
-];
-```
-
-## Important Notes
-
-### Multi-Product Checkout Workaround
-
-**The situation:** Polar doesn't natively support shopping carts (multi-product checkout) yet.
-
-**Our implementation:**
-1. Cart state managed in Convex (real-time sync)
-2. On checkout, bundle multiple products into a single Polar product
-3. Store original cart items in checkout metadata
-4. Reconstruct full order from metadata post-payment
-
-**Code reference:** `convex/checkout/checkout.ts` - `createBundleProduct()`
-
-**Status:** Working solution, but not production-ideal. Will be replaced when Polar adds native cart support.
-
-### Experimental APIs
-
-This codebase uses Next.js 16 canary and experimental features:
-
-| API | Status | Stability |
-|-----|--------|-----------|
-| `reactCompiler` | **Stable** | ✅ Promoted from experimental |
-| `experimental.cacheComponents` | **Experimental** | May change before stable |
-| `experimental.turbopackFileSystemCacheForDev` | **Beta** | Nearing stability |
-| `unstable_cacheLife()` | **Unstable** | API subject to change |
-| `unstable_cacheTag()` | **Unstable** | API subject to change |
-| `updateTag()` | **New** | Beta API |
-| `refresh()` | **New** | Beta API |
-
-**Production use:** Test thoroughly. APIs may change before Next.js 16 stable release.
-
-### Breaking Changes from Next.js 15
-
-If migrating from Next.js 15:
-
-1. **Middleware renamed:** `middleware.ts` → `proxy.ts` (deprecation warning)
-2. **Async params required:** All `params` and `searchParams` must be awaited
-3. **Async dynamic APIs:** `cookies()`, `headers()`, `draftMode()` must be awaited
-4. **Image defaults changed:** `minimumCacheTTL` now 4 hours (was 60s)
-5. **`revalidateTag()` signature:** Now requires second argument (cacheLife profile)
-6. **Removed `experimental.ppr`:** Integrated into `experimental.cacheComponents`
-7. **Removed `next lint`:** Use ESLint directly (`npm run lint`)
-
-All changes implemented in this codebase.
-
-## Project Statistics
-
-- **Total files:** 165+ (150+ TypeScript files)
-- **Lines of code:** ~18,500+ TypeScript
-- **Routes:** 35 (24 with Partial Prerendering)
-- **Components:** 34 files, 2,234 lines
-- **Backend functions:** 38 Convex files, 7,848 lines
-- **Scripts:** 7 seeding/verification files, 1,869 lines
-- **Tests:** Unit tests with Vitest + React Testing Library
-- **Test coverage:** V8 coverage reporting configured
-- **Type safety:** 100% (zero `any` types except intentional suppressions)
-- **Next.js 16 compliance:** 100% (zero deprecated APIs)
-- **Build time:** ~3.4 seconds (Turbopack)
-- **Documentation:** README.md, CONTRIBUTING.md, SECURITY.md, .env.example
-
-## Security Headers
-
-Configured in `next.config.ts`:
-
-```typescript
-{
-  'Content-Security-Policy': '...',  // XSS protection
-  'X-Frame-Options': 'DENY',  // Clickjacking protection
-  'X-Content-Type-Options': 'nosniff',  // MIME type sniffing protection
-  'Referrer-Policy': 'strict-origin-when-cross-origin',  // Referrer control
-  'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',  // Feature control
-}
-```
+Fork it, break it, fix it, ship PRs.
 
 ## Credits
 
 - **Original v0 template:** [@estebansuarez](https://github.com/estebansuarez) - [v0 Storefront](https://v0.app/templates/storefront-w-nano-banana-ai-sdk-ai-gateway-XAMOoZPMUO5)
-- **Next.js Team:** For Next.js 16 and experimental features
-- **Convex Team:** For real-time database and component ecosystem
-- **Better Auth Team:** For modern authentication solution
-- **Polar Team:** For developer-friendly payments
+- **Next.js Team** - For Next.js 16 and experimental features
+- **Convex Team** - For real-time database and component ecosystem
+- **Better Auth Team** - For modern authentication solution
+- **Polar Team** - For developer-friendly payments
 
 ## License
 
-[MIT](LICENSE) - Use at your own risk. This is a demonstration codebase showcasing experimental features.
-
----
-
-**Built with Next.js 16 · Convex · Better Auth · Polar**
-*Production-grade e-commerce architecture for modern web applications*
+MIT - Experimental code. Use at your own risk.

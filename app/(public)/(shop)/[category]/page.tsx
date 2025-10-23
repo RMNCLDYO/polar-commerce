@@ -25,41 +25,41 @@ type CategoryConfig = {
 const categoryConfig: Record<string, CategoryConfig> = {
   men: {
     title: "Men's Collection",
-    description: 'Premium athletic items designed for peak performance',
+    description: 'Premium items for men',
     filter: 'MEN',
-    metaTitle: "Men's Collection - BANANA SPORTSWEAR",
-    metaDescription: "Explore our men's premium athletic gear and sportswear",
+    metaTitle: "Men's Collection - Polar Commerce",
+    metaDescription: "Explore our men's collection",
   },
   women: {
     title: "Women's Collection",
-    description: 'Stylish and functional sportswear items for every workout',
+    description: 'Stylish and functional items for women',
     filter: 'WOMEN',
-    metaTitle: "Women's Collection - BANANA SPORTSWEAR",
+    metaTitle: "Women's Collection - Polar Commerce",
     metaDescription:
-      "Discover our women's premium athletic gear and sportswear",
+      "Discover our women's collection",
   },
   kids: {
     title: "Kids' Collection",
-    description: 'Fun and durable sportswear items for young athletes',
+    description: 'Fun and durable items for kids',
     filter: 'KIDS',
-    metaTitle: "Kids' Collection - BANANA SPORTSWEAR",
-    metaDescription: "Shop our kids' premium athletic gear and sportswear",
+    metaTitle: "Kids' Collection - Polar Commerce",
+    metaDescription: "Shop our kids' collection",
   },
   accessories: {
     title: 'Accessories',
-    description: 'Premium accessories to complete your athletic look',
+    description: 'Premium accessories to complete your look',
     filter: 'ACCESSORIES',
-    metaTitle: 'Accessories - BANANA SPORTSWEAR',
-    metaDescription: 'Shop our premium athletic accessories and gear',
+    metaTitle: 'Accessories - Polar Commerce',
+    metaDescription: 'Shop our premium accessories',
   },
   new: {
     title: 'New Arrivals',
-    description: 'Fresh additions to our premium sportswear collection',
+    description: 'Fresh additions to our collection',
     filter: null,
     defaultSort: 'newest',
-    metaTitle: 'New Arrivals - BANANA SPORTSWEAR',
+    metaTitle: 'New Arrivals - Polar Commerce',
     metaDescription:
-      'Discover the latest additions to our premium sportswear collection',
+      'Discover the latest additions to our collection',
   },
 };
 
@@ -115,7 +115,7 @@ async function CachedCategoryContent({
     if (products.length === 0) { return getEmptyMessage(); }
 
     if (category === 'new') {
-      return `${products.length} fresh additions to our premium sportswear collection`;
+      return `${products.length} fresh additions to our collection`;
     }
 
     return `${products.length} ${config.description.toLowerCase()}`;

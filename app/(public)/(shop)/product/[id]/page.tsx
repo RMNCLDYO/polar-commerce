@@ -266,7 +266,7 @@ export async function generateMetadata({
     typeof product.image === 'string' ? product.image : product.image.src;
 
   return {
-    title: `${product.name} - BANANA SPORTSWEAR`,
+    title: `${product.name} - Polar Commerce`,
     description: product.description,
     openGraph: {
       title: product.name,

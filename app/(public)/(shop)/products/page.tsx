@@ -179,8 +179,8 @@ export default async function ProductsPage({
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
-    title: 'All Products - BANANA SPORTSWEAR',
+    title: 'All Products - Polar Commerce',
     description:
-      'Browse our complete collection of premium athletic gear and sportswear',
+      'Browse our complete collection of products',
   };
 }

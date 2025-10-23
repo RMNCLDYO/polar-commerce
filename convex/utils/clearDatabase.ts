@@ -38,14 +38,7 @@ export const clearDatabase = action({
   args: {},
   handler: async (ctx) => {
     const results = {
-      betterAuth: {} as {
-        sessions: number;
-        accounts: number;
-        verifications: number;
-        twoFactor: number;
-        jwks: number;
-        users: number;
-      },
+      betterAuth: {} as Record<string, number>,
       polar: {} as Record<string, number>,
       convex: {} as Record<string, number>,
     };
@@ -103,6 +96,12 @@ export const clearBetterAuthData = internalMutation({
     twoFactor: number;
     jwks: number;
     users: number;
+    passkey: number;
+    oauthAccessToken: number;
+    oauthApplication: number;
+    oauthConsent: number;
+    rateLimit: number;
+    ratelimit: number;
   }> => {
     const results = {
       sessions: 0,
@@ -111,6 +110,12 @@ export const clearBetterAuthData = internalMutation({
       twoFactor: 0,
       jwks: 0,
       users: 0,
+      passkey: 0,
+      oauthAccessToken: 0,
+      oauthApplication: 0,
+      oauthConsent: 0,
+      rateLimit: 0,
+      ratelimit: 0,
     };
 
     try {
@@ -170,6 +175,78 @@ export const clearBetterAuthData = internalMutation({
         },
       ) as BetterAuthDeleteManyResponse | null;
       results.jwks = jwksResult?.deletedCount || 0;
+    } catch {
+    }
+
+    try {
+      const passkeyResult = await ctx.runMutation(
+        components.betterAuth.adapter.deleteMany,
+        {
+          input: { model: 'passkey' },
+          paginationOpts: { cursor: null, numItems: 1000 },
+        },
+      ) as BetterAuthDeleteManyResponse | null;
+      results.passkey = passkeyResult?.deletedCount || 0;
+    } catch {
+    }
+
+    try {
+      const oauthAccessTokenResult = await ctx.runMutation(
+        components.betterAuth.adapter.deleteMany,
+        {
+          input: { model: 'oauthAccessToken' },
+          paginationOpts: { cursor: null, numItems: 1000 },
+        },
+      ) as BetterAuthDeleteManyResponse | null;
+      results.oauthAccessToken = oauthAccessTokenResult?.deletedCount || 0;
+    } catch {
+    }
+
+    try {
+      const oauthApplicationResult = await ctx.runMutation(
+        components.betterAuth.adapter.deleteMany,
+        {
+          input: { model: 'oauthApplication' },
+          paginationOpts: { cursor: null, numItems: 1000 },
+        },
+      ) as BetterAuthDeleteManyResponse | null;
+      results.oauthApplication = oauthApplicationResult?.deletedCount || 0;
+    } catch {
+    }
+
+    try {
+      const oauthConsentResult = await ctx.runMutation(
+        components.betterAuth.adapter.deleteMany,
+        {
+          input: { model: 'oauthConsent' },
+          paginationOpts: { cursor: null, numItems: 1000 },
+        },
+      ) as BetterAuthDeleteManyResponse | null;
+      results.oauthConsent = oauthConsentResult?.deletedCount || 0;
+    } catch {
+    }
+
+    try {
+      const rateLimitResult = await ctx.runMutation(
+        components.betterAuth.adapter.deleteMany,
+        {
+          input: { model: 'rateLimit' },
+          paginationOpts: { cursor: null, numItems: 1000 },
+        },
+      ) as BetterAuthDeleteManyResponse | null;
+      results.rateLimit = rateLimitResult?.deletedCount || 0;
+    } catch {
+    }
+
+    try {
+      const ratelimitResult = await ctx.runMutation(
+        components.betterAuth.adapter.deleteMany,
+        {
+          input: { model: 'ratelimit' },
+          paginationOpts: { cursor: null, numItems: 1000 },
+        },
+      ) as BetterAuthDeleteManyResponse | null;
+      results.ratelimit = ratelimitResult?.deletedCount || 0;
     } catch {
     }
 
@@ -359,11 +436,29 @@ export const clearConvexData = internalMutation({
     }
     results.carts = carts.length;
 
+    const wishlistItems = await ctx.db.query('wishlistItems').collect();
+    for (const item of wishlistItems) {
+      await ctx.db.delete(item._id);
+    }
+    results.wishlistItems = wishlistItems.length;
+
+    const wishlists = await ctx.db.query('wishlists').collect();
+    for (const wishlist of wishlists) {
+      await ctx.db.delete(wishlist._id);
+    }
+    results.wishlists = wishlists.length;
+
     const orders = await ctx.db.query('orders').collect();
     for (const order of orders) {
       await ctx.db.delete(order._id);
     }
     results.orders = orders.length;
+
+    const rateLimits = await ctx.db.query('rateLimits').collect();
+    for (const rateLimit of rateLimits) {
+      await ctx.db.delete(rateLimit._id);
+    }
+    results.rateLimits = rateLimits.length;
 
     return results;
   },

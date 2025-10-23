@@ -20,14 +20,14 @@ export async function Footer() {
         <div className="mb-6 flex justify-center">
           <Image
             src={LogoImage}
-            alt="BANANA SPORTSWEAR"
+            alt="Polar Commerce"
             className="h-8 w-auto opacity-40"
             width={32}
             height={32}
           />
         </div>
         <p className="text-xs font-mono tracking-widest uppercase text-muted-foreground">
-          © {year} BANANA SPORTSWEAR, INC. ALL RIGHTS RESERVED.
+          © {year} Polar Commerce, Inc. All rights reserved.
         </p>
       </div>
     </footer>
