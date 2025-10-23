@@ -1,10 +1,5 @@
 import 'server-only';
 
-/**
- * Product modeling prompts for AI image generation
- * Each prompt ensures consistent facial fidelity and skin tone preservation
- */
-
 const BASE_PROMPT_RULES = `
 ABSOLUTELY CRITICAL - FACIAL FIDELITY: Preserve the EXACT facial features, bone structure, eye shape, nose shape, lip shape, eyebrow shape, and facial proportions from the uploaded person's photo. DO NOT add, remove, or modify any facial features. DO NOT change or add hairstyles, haircuts, or hair textures - keep the exact same hair as in the original photo. DO NOT alter facial hair, makeup, or any other facial characteristics. The face should be an EXACT replica of the uploaded photo with zero modifications or "improvements."
 
@@ -36,9 +31,6 @@ ABSOLUTELY CRITICAL - COMPLETE BODY SKIN TONE UNITY: Every single visible part o
 Make it look like a high-quality Nike advertisement photo with an upper body focus.`,
 };
 
-/**
- * Get the appropriate prompt for product modeling based on product name and category
- */
 export function getProductPrompt(
   productName: string,
   productCategory: string,
@@ -46,7 +38,6 @@ export function getProductPrompt(
   const nameLower = productName.toLowerCase();
   const categoryLower = productCategory.toLowerCase();
 
-  // Check for specific product types
   if (nameLower.includes('vomero')) {
     return productPrompts.vomero || '';
   }
@@ -63,7 +54,6 @@ export function getProductPrompt(
     return productPrompts.hoodie || '';
   }
 
-  // Category-based fallbacks
   if (
     categoryLower.includes('accessories') ||
     categoryLower.includes('cap') ||
@@ -85,15 +75,11 @@ ${BASE_PROMPT_RULES}
 The ${categoryLower} should fit naturally on the person with its original authentic design characteristics preserved. Make it look like a high-quality Nike advertisement photo with an upper body focus.`;
   }
 
-  // Generic fallback
   return `Create a professional product modeling photo showing the person from the first image wearing or using the ${productName} from the second image. ${CLOTHING_FIT_RULE} The person should be posed naturally as a model showcasing the product.
 ${BASE_PROMPT_RULES}
 The ${categoryLower} should fit naturally on the person with its original design characteristics preserved. Make it look like a high-quality Nike advertisement photo.`;
 }
 
-/**
- * Get prompt for product mashup generation
- */
 export function getProductMashupPrompt(): string {
   return `Create a high-quality product mashup image combining elements from both input images. Blend the style, colors, and key features of both products into a new, cohesive design. The result should look like a professional Nike product photo with a studio background. Maintain the quality and aesthetic of premium sportswear photography.
 ${BASE_PROMPT_RULES}`;

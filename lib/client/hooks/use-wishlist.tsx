@@ -24,19 +24,15 @@ export function useWishlist() {
   const [sessionId, setSessionId] = useState<string>('');
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // React 19.2: Use Effect Event for session management
-  // Prevents unnecessary effect re-runs while keeping auth state reactive
   const onAuthChange = useEffectEvent(() => {
     if (!isAuthenticated) {
       setSessionId(getSessionId());
     } else {
-      // For authenticated users, clear any existing sessionId
       setSessionId('');
       localStorage.removeItem('wishlist-session-id');
     }
   });
 
-  // Initialize session ID on client side (only for guests)
   useEffect(() => {
     onAuthChange();
   }, [isAuthenticated]);
@@ -77,7 +73,9 @@ export function useWishlist() {
       });
       toast.success('Added to wishlist');
     } catch (error) {
-      console.error('Error adding to wishlist:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error adding to wishlist:', error);
+      }
       if (
         error instanceof Error &&
         error.message === 'Item already in wishlist'
@@ -134,7 +132,9 @@ export function useWishlist() {
         }
       }
     } catch (error) {
-      console.error('Error removing from wishlist:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error removing from wishlist:', error);
+      }
       toast.error('Failed to remove from wishlist');
     } finally {
       setIsProcessing(false);
@@ -214,7 +214,9 @@ export function useWishlist() {
 
       return result.action;
     } catch (error) {
-      console.error('Error toggling wishlist:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error toggling wishlist:', error);
+      }
       toast.error('Failed to update wishlist');
       return null;
     } finally {
@@ -228,7 +230,9 @@ export function useWishlist() {
       await clearWishlistMutation({ sessionId: sessionId || undefined });
       toast.success('Wishlist cleared');
     } catch (error) {
-      console.error('Error clearing wishlist:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error clearing wishlist:', error);
+      }
       toast.error('Failed to clear wishlist');
     } finally {
       setIsProcessing(false);
@@ -243,7 +247,9 @@ export function useWishlist() {
       localStorage.removeItem('wishlist-session-id');
       setSessionId('');
     } catch (error) {
-      console.error('Error merging wishlist:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error merging wishlist:', error);
+      }
     }
   };
 
@@ -267,7 +273,6 @@ export function useWishlistMerge() {
   const user = useQuery(api.auth.auth.getCurrentUser) as CurrentUser | null | undefined;
   const [hasRunMerge, setHasRunMerge] = useState(false);
 
-  // React 19.2: Use Effect Event for wishlist merge logic
   const onUserLogin = useEffectEvent(() => {
     const sessionId =
       typeof window !== 'undefined'
@@ -283,7 +288,6 @@ export function useWishlistMerge() {
         .catch((err) => console.error('Wishlist merge failed:', err));
     }
 
-    // Reset flag when user signs out
     if (!user) {
       setHasRunMerge(false);
     }
