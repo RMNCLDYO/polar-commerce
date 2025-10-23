@@ -2,11 +2,10 @@ import { unstable_cache } from 'next/cache';
 import Image from 'next/image';
 import LogoImage from '@/public/logo.png';
 
-// Cache the year for 1 day - it only changes once a year anyway
 const getCopyrightYear = unstable_cache(
   async () => new Date().getFullYear(),
   ['copyright-year'],
-  { revalidate: 86400 }, // 24 hours
+  { revalidate: 86400 },
 );
 
 export async function Footer() {

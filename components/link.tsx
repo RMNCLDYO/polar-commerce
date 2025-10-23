@@ -14,7 +14,6 @@ export function Link({
 }: LinkProps) {
   const [hovered, setHovered] = useState(false);
 
-  // Determine prefetch behavior based on strategy
   const prefetchValue =
     prefetchStrategy === 'never'
       ? false
@@ -23,8 +22,8 @@ export function Link({
         : prefetchStrategy === 'hover'
           ? hovered
             ? null
-            : false // null = restore default prefetch on hover
-          : null; // 'visible' uses default behavior
+            : false
+          : null;
 
   const handleMouseEnter = (e: React.MouseEvent<HTMLAnchorElement>) => {
     if (prefetchStrategy === 'hover' && !hovered) {

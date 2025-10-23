@@ -104,7 +104,6 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
           </DrawerDescription>
         </DrawerHeader>
 
-        {/* Cart Items */}
         <div className="flex-1 overflow-y-auto p-4 min-h-0">
           {!cart || cart.items.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center py-8">
@@ -130,7 +129,6 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
                       isUpdating && 'opacity-50',
                     )}
                   >
-                    {/* Product Image */}
                     <Link
                       href={`/product/${item.catalogId}`}
                       onClick={handleProductClick}
@@ -151,7 +149,6 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
                       )}
                     </Link>
 
-                    {/* Product Details */}
                     <div className="flex-1 min-w-0">
                       <Link
                         href={`/product/${item.catalogId}`}
@@ -168,7 +165,6 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
                           ${((item.price * item.quantity) / 100).toFixed(2)}
                         </span>
 
-                        {/* Quantity Controls */}
                         <div className="flex items-center gap-2">
                           <Button
                             variant="ghost"
@@ -219,7 +215,6 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
                         </div>
                       </div>
 
-                      {/* Price change warning */}
                       {item.price !== item.product.price && (
                         <p className="text-xs text-yellow-600 dark:text-yellow-500 mt-1">
                           Price changed from ${(item.price / 100).toFixed(2)}
@@ -230,7 +225,6 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
                 );
               })}
 
-              {/* Clear Cart Button */}
               {cart.items.length > 0 && (
                 <Button
                   variant="ghost"
@@ -245,10 +239,8 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
           )}
         </div>
 
-        {/* Footer with Checkout */}
         {cart && cart.items.length > 0 && (
           <DrawerFooter className="border-t">
-            {/* Validation Errors */}
             {cartValidation && !cartValidation.valid && (
               <Alert variant="destructive" className="mb-4">
                 <AlertCircle className="h-4 w-4" />
@@ -260,13 +252,11 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
               </Alert>
             )}
 
-            {/* Subtotal */}
             <div className="flex justify-between text-lg font-semibold mb-4">
               <span>Subtotal</span>
               <span>{formattedSubtotal}</span>
             </div>
 
-            {/* Action Buttons */}
             <Button
               onClick={handleCheckout}
               className="w-full"

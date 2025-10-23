@@ -11,7 +11,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { AddToWishlistButton } from '@/components/wishlist/add-to-wishlist-button';
 import type { Id } from '@/convex/_generated/dataModel';
 import { useCart } from '@/lib/client/hooks/use-cart';
-import { logger } from '@/lib/shared/logger';
 import type { Product } from '@/lib/shared/types';
 import { cn } from '@/lib/shared/utils';
 
@@ -31,7 +30,6 @@ export function ProductCard({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(false);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
-  // React Compiler: Initialize timestamp in useEffect to avoid impure Date.now() in render
   const loadStartTime = useRef<number>(0);
   const { addToCart } = useCart();
 
@@ -42,30 +40,13 @@ export function ProductCard({
   }, []);
 
   const handleImageLoad = (): void => {
-    const loadTime = Date.now() - loadStartTime.current;
     setIsLoading(false);
     setError(false);
-
-    const srcForLog =
-      personalizedImage ||
-      (typeof product.image === 'string' ? product.image : product.image.src);
-    logger.performance(`Image load: ${product.id}`, loadTime, {
-      productId: product.id,
-      src: srcForLog.substring(0, 50),
-    });
   };
 
   const handleImageError = (): void => {
     setIsLoading(false);
     setError(true);
-
-    const srcForLog =
-      personalizedImage ||
-      (typeof product.image === 'string' ? product.image : product.image.src);
-    logger.error(`Failed to load image for product ${product.id}`, {
-      productId: product.id,
-      src: srcForLog.substring(0, 50),
-    });
   };
 
   const imageSrc = personalizedImage || product.image;
@@ -131,7 +112,6 @@ export function ProductCard({
           </div>
         )}
 
-        {/* Out of Stock Badge */}
         {!product.inStock && (
           <Badge
             variant="destructive"
