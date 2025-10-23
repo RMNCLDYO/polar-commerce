@@ -1,10 +1,8 @@
 import {
   type GenericCtx,
   createClient,
-  getStaticAuth,
 } from '@convex-dev/better-auth';
 import { convex } from '@convex-dev/better-auth/plugins';
-import { requireActionCtx } from '@convex-dev/better-auth/utils';
 import { type BetterAuthOptions, betterAuth } from 'better-auth';
 import {
   anonymous,
@@ -18,17 +16,38 @@ import { v } from 'convex/values';
 import { components, internal } from '../_generated/api';
 import type { DataModel } from '../_generated/dataModel';
 import { type QueryCtx, query } from '../_generated/server';
-import {
-  sendEmailVerification,
-  sendMagicLink,
-  sendOTPVerification,
-  sendResetPassword,
-} from '../emails/email';
 import { polar } from '../polar';
 import type { CurrentUser } from '../types/convex';
 
 const siteUrl = process.env.SITE_URL;
+const isProduction = !!process.env.CONVEX_CLOUD_URL;
 
+if (!siteUrl) {
+  throw new Error('SITE_URL environment variable is required for Better Auth');
+}
+
+if (isProduction && !siteUrl.startsWith('https://')) {
+  throw new Error('SITE_URL must use HTTPS in production');
+}
+
+// OAuth provider configuration with safety checks
+const githubClientId = process.env.GITHUB_CLIENT_ID;
+const githubClientSecret = process.env.GITHUB_CLIENT_SECRET;
+const slackClientId = process.env.SLACK_CLIENT_ID;
+const slackClientSecret = process.env.SLACK_CLIENT_SECRET;
+
+// In production, throw if providers are partially configured
+if (isProduction) {
+  if ((githubClientId && !githubClientSecret) || (!githubClientId && githubClientSecret)) {
+    throw new Error('GitHub OAuth requires both GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET');
+  }
+  if ((slackClientId && !slackClientSecret) || (!slackClientId && slackClientSecret)) {
+    throw new Error('Slack OAuth requires both SLACK_CLIENT_ID and SLACK_CLIENT_SECRET');
+  }
+}
+
+// Feature flags
+const enableAnonymous = process.env.ENABLE_ANONYMOUS_AUTH === 'true' || !isProduction;
 
 export const authComponent = createClient<DataModel>(components.betterAuth, {
   verbose: false,
@@ -42,7 +61,11 @@ export const authComponent = createClient<DataModel>(components.betterAuth, {
             email: authUser.email,
             name: authUser.name,
           });
-        } catch {
+        } catch (error) {
+          console.error('onUserCreated trigger failed', {
+            userId: authUser._id,
+            error: error instanceof Error ? error.message : 'Unknown error',
+          });
         }
       },
       onDelete: async (ctx, authUser) => {
@@ -55,7 +78,11 @@ export const authComponent = createClient<DataModel>(components.betterAuth, {
               userId: authUser._id,
             },
           );
-        } catch {
+        } catch (error) {
+          console.error('onUserDelete trigger failed', {
+            userId: authUser._id,
+            error: error instanceof Error ? error.message : 'Unknown error',
+          });
         }
       },
     },
@@ -75,12 +102,14 @@ export const createAuth = (
     account: {
       accountLinking: {
         enabled: true,
-        allowDifferentEmails: true,
+        allowDifferentEmails: false,
       },
     },
     emailVerification: {
       sendVerificationEmail: async ({ user, url }) => {
-        await sendEmailVerification(requireActionCtx(ctx), {
+        // @ts-ignore - TypeScript deep instantiation issue with Convex
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+        await ctx.scheduler.runAfter(0, internal.emails.email.internal_sendEmailVerification, {
           to: user.email,
           url,
         });
@@ -89,36 +118,80 @@ export const createAuth = (
     emailAndPassword: {
       enabled: true,
       requireEmailVerification: true,
+      minPasswordLength: 12,
+      maxPasswordLength: 128,
       sendResetPassword: async ({ user, url }) => {
-        await sendResetPassword(requireActionCtx(ctx), {
+        // @ts-ignore - TypeScript deep instantiation issue with Convex
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+        await ctx.scheduler.runAfter(0, internal.emails.email.internal_sendResetPassword, {
           to: user.email,
           url,
         });
       },
     },
     socialProviders: {
-      github: {
-        clientId: process.env.GITHUB_CLIENT_ID as string,
-        clientSecret: process.env.GITHUB_CLIENT_SECRET as string,
-      },
+      ...(githubClientId && githubClientSecret
+        ? {
+            github: {
+              clientId: githubClientId,
+              clientSecret: githubClientSecret,
+            },
+          }
+        : {}),
     },
     user: {
-      additionalFields: {
-        foo: {
-          type: 'string',
-          required: false,
-        },
-      },
       deleteUser: {
         enabled: true,
       },
     },
+    session: {
+      expiresIn: 60 * 60 * 24 * 7, // 7 days
+      updateAge: 60 * 60 * 24, // 1 day - refresh session if older than this
+      cookieCache: {
+        enabled: true,
+        maxAge: 60 * 5, // 5 minutes - cache session in cookie for this long
+      },
+    },
+    rateLimit: {
+      enabled: true,
+      window: 60, // 60 seconds
+      max: 100, // 100 requests per window
+      storage: 'database', // Use Convex database for rate limiting
+      customRules: {
+        '/sign-in/email': {
+          window: 10,
+          max: 3, // Only 3 login attempts per 10 seconds
+        },
+        '/sign-up/email': {
+          window: 60,
+          max: 5, // Only 5 signups per minute
+        },
+        '/reset-password': {
+          window: 60,
+          max: 3, // Only 3 password reset requests per minute
+        },
+        '/send-verification-email': {
+          window: 60,
+          max: 3, // Only 3 verification emails per minute
+        },
+      },
+    },
+    advanced: {
+      useSecureCookies: true, // Always use secure cookies since dev runs with HTTPS
+      defaultCookieAttributes: {
+        httpOnly: true,
+        secure: true, // Always secure since dev runs with HTTPS
+        sameSite: 'lax',
+      },
+    },
     plugins: [
-      anonymous(),
+      ...(enableAnonymous ? [anonymous()] : []),
       username(),
       magicLink({
         sendMagicLink: async ({ email, url }) => {
-          await sendMagicLink(requireActionCtx(ctx), {
+          // @ts-ignore - TypeScript deep instantiation issue with Convex
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+          await ctx.scheduler.runAfter(0, internal.emails.email.internal_sendMagicLink, {
             to: email,
             url,
           });
@@ -126,29 +199,34 @@ export const createAuth = (
       }),
       emailOTP({
         async sendVerificationOTP({ email, otp }) {
-          await sendOTPVerification(requireActionCtx(ctx), {
+          // @ts-ignore - TypeScript deep instantiation issue with Convex
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+          await ctx.scheduler.runAfter(0, internal.emails.email.internal_sendOTPVerification, {
             to: email,
             code: otp,
           });
         },
       }),
       twoFactor(),
-      genericOAuth({
-        config: [
-          {
-            providerId: 'slack',
-            clientId: process.env.SLACK_CLIENT_ID as string,
-            clientSecret: process.env.SLACK_CLIENT_SECRET as string,
-            discoveryUrl: 'https://slack.com/.well-known/openid-configuration',
-            scopes: ['openid', 'email', 'profile'],
-          },
-        ],
-      }),
+      ...(slackClientId && slackClientSecret
+        ? [
+            genericOAuth({
+              config: [
+                {
+                  providerId: 'slack',
+                  clientId: slackClientId,
+                  clientSecret: slackClientSecret,
+                  discoveryUrl: 'https://slack.com/.well-known/openid-configuration',
+                  scopes: ['openid', 'email', 'profile'],
+                },
+              ],
+            }),
+          ]
+        : []),
       convex(),
     ],
   } satisfies BetterAuthOptions);
 
-export const auth = getStaticAuth(createAuth);
 
 export const safeGetUser = async (ctx: QueryCtx) => {
   return authComponent.safeGetAuthUser(ctx);
