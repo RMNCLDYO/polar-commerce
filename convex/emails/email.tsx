@@ -1,10 +1,11 @@
 import '../utils/polyfills';
 import { Resend } from '@convex-dev/resend';
 import { render } from '@react-email/components';
+import { v } from 'convex/values';
 // @ts-ignore - React is used implicitly in JSX
 import * as React from 'react';
 import { components } from '../_generated/api';
-import type { ActionCtx } from '../_generated/server';
+import { internalAction, type ActionCtx } from '../_generated/server';
 import MagicLinkEmail from './magicLink';
 import ResetPasswordEmail from './resetPassword';
 import VerifyEmail from './verifyEmail';
@@ -85,3 +86,44 @@ export const sendResetPassword = async (
     html: await render(<ResetPasswordEmail url={url} />),
   });
 };
+
+// Internal actions for scheduling from Better Auth hooks
+export const internal_sendEmailVerification = internalAction({
+  args: {
+    to: v.string(),
+    url: v.string(),
+  },
+  handler: async (ctx, { to, url }) => {
+    await sendEmailVerification(ctx, { to, url });
+  },
+});
+
+export const internal_sendOTPVerification = internalAction({
+  args: {
+    to: v.string(),
+    code: v.string(),
+  },
+  handler: async (ctx, { to, code }) => {
+    await sendOTPVerification(ctx, { to, code });
+  },
+});
+
+export const internal_sendMagicLink = internalAction({
+  args: {
+    to: v.string(),
+    url: v.string(),
+  },
+  handler: async (ctx, { to, url }) => {
+    await sendMagicLink(ctx, { to, url });
+  },
+});
+
+export const internal_sendResetPassword = internalAction({
+  args: {
+    to: v.string(),
+    url: v.string(),
+  },
+  handler: async (ctx, { to, url }) => {
+    await sendResetPassword(ctx, { to, url });
+  },
+});

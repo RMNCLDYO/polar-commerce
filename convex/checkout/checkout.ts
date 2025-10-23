@@ -3,6 +3,7 @@ import { v } from 'convex/values';
 import { components, internal } from '../_generated/api';
 import type { Doc, Id } from '../_generated/dataModel';
 import { action, query, type ActionCtx } from '../_generated/server';
+import { authComponent } from '../auth/auth';
 import * as CheckoutModel from '../model/checkout';
 import type {
   Address,
@@ -601,10 +602,7 @@ export const getUserOrders = query({
       return [];
     }
 
-    const user = await ctx.db
-      .query('betterAuth_user')
-      .withIndex('id', (q) => q.eq('id', userId))
-      .first();
+    const user = await authComponent.getAnyUserById(ctx, userId);
     const userEmail = user?.email;
 
     const orders = [];
