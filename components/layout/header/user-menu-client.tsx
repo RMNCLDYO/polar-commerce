@@ -5,6 +5,7 @@ import type { api } from '@/convex/_generated/api';
 import { UserMenu } from './user-menu';
 
 interface UserMenuClientProps {
+  // @ts-ignore - TypeScript deep instantiation issue with Convex Preloaded types
   preloadedUser: Preloaded<typeof api.auth.auth.getCurrentUserBasic>;
 }
 

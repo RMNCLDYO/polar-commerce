@@ -37,7 +37,7 @@ export function Header() {
           <Link href="/" prefetchStrategy="always">
             <Image
               src={LogoImage}
-              alt="BANANA SPORTSWEAR"
+              alt="Polar Commerce"
               className="h-10 w-auto"
               priority={true}
             />
