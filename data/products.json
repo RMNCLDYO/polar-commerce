@@ -1,38 +1,38 @@
 [
   {
-    "name": "Nike ZoomX Vomero Plus",
-    "price": 18000,
+    "name": "Palace P3 Chain Puff Crew Navy",
+    "price": 15800,
     "category": "MEN",
-    "imageUrl": "/products/nike-vomero.jpeg",
-    "description": "Premium running shoes with ZoomX foam technology",
+    "imageUrl": "/products/product-1.png",
+    "description": "Navy crew neck sweatshirt with puff printed artwork. 400gsm brushback sweat with ribbed cuff and hem. 74% Cotton, 26% Polyester.",
     "inStock": true,
-    "inventory_qty": 100
+    "inventory_qty": 20
   },
   {
-    "name": "Nike Club Cap",
-    "price": 2500,
+    "name": "Aime Leon Dore Unisphere Cap",
+    "price": 6500,
     "category": "ACCESSORIES",
-    "imageUrl": "/products/nike-cap.jpeg",
-    "description": "Classic baseball cap with Nike logo",
+    "imageUrl": "/products/product-2.png",
+    "description": "Botanical green 5-panel cap with embroidered Unisphere logo. Adjustable snapback. 100% Cotton. Hand wash. Made in China.",
     "inStock": true,
-    "inventory_qty": 50
+    "inventory_qty": 25
   },
   {
-    "name": "Nike Tech Woven Pants",
-    "price": 12000,
-    "category": "MEN",
-    "imageUrl": "/products/nike-tech-set.jpeg",
-    "description": "Camo tracksuit with modern tech fabric",
+    "name": "Kith Women Lucy Cropped Long Sleeve II Tee",
+    "price": 7800,
+    "category": "WOMEN",
+    "imageUrl": "/products/product-3.png",
+    "description": "White cropped long sleeve tee with Kith embroidery. 190 GSM cotton jersey fabric with 1x1 ribbed neckline and cuffs. 100% Cotton.",
+    "inStock": true,
+    "inventory_qty": 40
+  },
+  {
+    "name": "Salomon XT-6 Sneakers",
+    "price": 18000,
+    "category": "ACCESSORIES",
+    "imageUrl": "/products/product-4.png",
+    "description": "Unisex ultra-distance running sneakers with quickLACE system, Mud contaGRIP outsole, and EVA cushioning. Originally launched in 2013 for world-class athletes.",
     "inStock": true,
     "inventory_qty": 30
-  },
-  {
-    "name": "Jordan Fleece Hoodie",
-    "price": 8500,
-    "category": "MEN",
-    "imageUrl": "/products/jordan-hoodie.jpeg",
-    "description": "Premium hoodie with signature graphics",
-    "inStock": false,
-    "inventory_qty": 20
   }
 ]
