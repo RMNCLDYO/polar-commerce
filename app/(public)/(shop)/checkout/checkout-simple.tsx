@@ -1,29 +1,17 @@
 'use client';
 
-/**
- * Simple Checkout Page using @convex-dev/polar React Components
- *
- * This is the PREFERRED approach for simple subscription checkouts.
- * Uses the component's <CheckoutLink> which handles everything automatically.
- *
- * For advanced features (discounts, business customers, custom fields),
- * use the advanced checkout page instead.
- */
-
 import { CheckoutLink } from '@convex-dev/polar/react';
 import { useQuery } from 'convex/react';
 import { Card } from '@/components/ui/card';
 import { api } from '@/convex/_generated/api';
 
 export function SimpleCheckout() {
-  // Get products using the component's built-in query
   const products = useQuery(api.polar.listAllProducts);
 
   if (!products) {
     return <div>Loading products...</div>;
   }
 
-  // Filter for subscription products
   const monthlyProducts = products.filter(
     (p: (typeof products)[number]) =>
       p.prices[0]?.recurringInterval === 'month',
@@ -34,7 +22,6 @@ export function SimpleCheckout() {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      {/* Monthly Plan */}
       {monthlyProducts.map((product: (typeof monthlyProducts)[number]) => (
         <Card key={product.id} className="p-6">
           <h3 className="text-2xl font-bold mb-2">{product.name}</h3>
@@ -47,7 +34,6 @@ export function SimpleCheckout() {
             </span>
           </div>
 
-          {/* Using Polar Component's CheckoutLink */}
           <CheckoutLink
             polarApi={api.polar}
             productIds={[product.id]}
@@ -59,7 +45,6 @@ export function SimpleCheckout() {
         </Card>
       ))}
 
-      {/* Yearly Plan */}
       {yearlyProducts.map((product: (typeof yearlyProducts)[number]) => (
         <Card key={product.id} className="p-6 border-primary">
           <div className="text-xs font-semibold text-primary mb-2">
@@ -75,7 +60,6 @@ export function SimpleCheckout() {
             </span>
           </div>
 
-          {/* Using Polar Component's CheckoutLink */}
           <CheckoutLink
             polarApi={api.polar}
             productIds={[product.id]}

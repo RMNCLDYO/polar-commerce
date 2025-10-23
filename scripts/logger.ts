@@ -1,8 +1,3 @@
-/**
- * Structured logging utility for seeding scripts
- * Provides consistent, colored output with proper log levels
- */
-
 const colors = {
   reset: '\x1b[0m',
   bright: '\x1b[1m',
@@ -20,9 +15,6 @@ interface LoggerOptions {
   timestamp?: boolean;
 }
 
-/**
- * Creates a structured logger instance
- */
 export class Logger {
   private options: LoggerOptions;
 
@@ -50,95 +42,123 @@ export class Logger {
   }
 
   info(message: string): void {
-    console.log(this.format(`${colors.cyan}ℹ ${message}${colors.reset}`));
+    if (process.env.NODE_ENV === 'development') {
+      console.log(this.format(`${colors.cyan}ℹ ${message}${colors.reset}`));
+    }
   }
 
   success(message: string): void {
-    console.log(this.format(`${colors.green}✓ ${message}${colors.reset}`));
+    if (process.env.NODE_ENV === 'development') {
+      console.log(this.format(`${colors.green}✓ ${message}${colors.reset}`));
+    }
   }
 
   warning(message: string, error?: Error | unknown): void {
-    const errorMessage =
-      error instanceof Error ? error.message : String(error ?? '');
-    const fullMessage = errorMessage ? `${message}: ${errorMessage}` : message;
-    console.warn(
-      this.format(`${colors.yellow}⚠ ${fullMessage}${colors.reset}`),
-    );
+    if (process.env.NODE_ENV === 'development') {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error ?? '');
+      const fullMessage = errorMessage ? `${message}: ${errorMessage}` : message;
+      console.warn(
+        this.format(`${colors.yellow}⚠ ${fullMessage}${colors.reset}`),
+      );
+    }
   }
 
   error(message: string, error?: Error | unknown): void {
-    const errorMessage =
-      error instanceof Error ? error.message : String(error ?? '');
-    const fullMessage = errorMessage ? `${message}: ${errorMessage}` : message;
-    console.error(this.format(`${colors.red}✗ ${fullMessage}${colors.reset}`));
+    if (process.env.NODE_ENV === 'development') {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error ?? '');
+      const fullMessage = errorMessage ? `${message}: ${errorMessage}` : message;
+      console.error(this.format(`${colors.red}✗ ${fullMessage}${colors.reset}`));
+    }
   }
 
   debug(message: string): void {
-    if (process.env.DEBUG) {
+    if (process.env.DEBUG && process.env.NODE_ENV === 'development') {
       console.log(this.format(`${colors.dim}⊙ ${message}${colors.reset}`));
     }
   }
 
   section(title: string): void {
-    console.log(`\n${colors.bright}${colors.magenta}${title}${colors.reset}`);
-    console.log('='.repeat(70));
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`\n${colors.bright}${colors.magenta}${title}${colors.reset}`);
+      console.log('='.repeat(70));
+    }
   }
 
   subsection(title: string): void {
-    console.log(`\n${colors.yellow}${title}${colors.reset}`);
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`\n${colors.yellow}${title}${colors.reset}`);
+    }
   }
 
   step(stepNumber: number, title: string): void {
-    console.log(`\n${colors.yellow}${stepNumber}️⃣  ${title}${colors.reset}`);
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`\n${colors.yellow}${stepNumber}️⃣  ${title}${colors.reset}`);
+    }
   }
 
   divider(): void {
-    console.log('─'.repeat(70));
+    if (process.env.NODE_ENV === 'development') {
+      console.log('─'.repeat(70));
+    }
   }
 
   separator(): void {
-    console.log('='.repeat(70));
+    if (process.env.NODE_ENV === 'development') {
+      console.log('='.repeat(70));
+    }
   }
 
   blank(): void {
-    console.log();
+    if (process.env.NODE_ENV === 'development') {
+      console.log();
+    }
   }
 
   item(key: string, value: string | number | boolean): void {
-    console.log(`  ${colors.dim}${key}:${colors.reset} ${value}`);
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`  ${colors.dim}${key}:${colors.reset} ${value}`);
+    }
   }
 
   list(items: string[]): void {
-    items.forEach((item) => {
-      console.log(`  • ${item}`);
-    });
+    if (process.env.NODE_ENV === 'development') {
+      items.forEach((item) => {
+        console.log(`  • ${item}`);
+      });
+    }
   }
 
   progress(current: number, total: number, item?: string): void {
-    const percentage = Math.round((current / total) * 100);
-    const itemText = item ? ` - ${item}` : '';
-    console.log(
-      `  ${colors.cyan}[${current}/${total}] ${percentage}%${itemText}${colors.reset}`,
-    );
+    if (process.env.NODE_ENV === 'development') {
+      const percentage = Math.round((current / total) * 100);
+      const itemText = item ? ` - ${item}` : '';
+      console.log(
+        `  ${colors.cyan}[${current}/${total}] ${percentage}%${itemText}${colors.reset}`,
+      );
+    }
   }
 
   table(headers: string[], rows: string[][]): void {
-    const columnWidths = headers.map((header, i) => {
-      const cellWidths = rows.map((row) => (row[i] ?? '').length);
-      return Math.max(header.length, ...cellWidths);
-    });
+    if (process.env.NODE_ENV === 'development') {
+      const columnWidths = headers.map((header, i) => {
+        const cellWidths = rows.map((row) => (row[i] ?? '').length);
+        return Math.max(header.length, ...cellWidths);
+      });
 
-    const formatRow = (cells: string[]) => {
-      return cells
-        .map((cell, i) => cell.padEnd(columnWidths[i] ?? 0))
-        .join(' | ');
-    };
+      const formatRow = (cells: string[]) => {
+        return cells
+          .map((cell, i) => cell.padEnd(columnWidths[i] ?? 0))
+          .join(' | ');
+      };
 
-    console.log(formatRow(headers));
-    console.log(columnWidths.map((w) => '─'.repeat(w)).join('─┼─'));
-    rows.forEach((row) => {
-      console.log(formatRow(row));
-    });
+      console.log(formatRow(headers));
+      console.log(columnWidths.map((w) => '─'.repeat(w)).join('─┼─'));
+      rows.forEach((row) => {
+        console.log(formatRow(row));
+      });
+    }
   }
 }
 

@@ -103,7 +103,6 @@
 }
 
 @layer utilities {
-  /* Consolidated fade animations */
   @keyframes fade-in {
     from {
       opacity: 0;
@@ -113,7 +112,6 @@
     }
   }
 
-  /* Consolidated slide animations with CSS variables */
   @keyframes slide-up {
     from {
       opacity: 0;
@@ -152,7 +150,6 @@
     animation-delay: 100ms;
   }
 
-  /* Use single animation with CSS variables for different distances */
   .animate-slide-up {
     animation: slide-up var(--duration-slide-up, 0.8s) ease-out both;
     opacity: 0;
@@ -178,19 +175,16 @@
     @apply bg-background text-foreground;
   }
 
-  /* React 19.2 View Transitions - Next.js 16 Enhancement */
   @view-transition {
     navigation: auto;
   }
 
-  /* View Transition animations for smooth page transitions */
   ::view-transition-old(root),
   ::view-transition-new(root) {
     animation-duration: 0.3s;
     animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  /* Fade transition for main content - Protected Routes */
   ::view-transition-old(dashboard-content),
   ::view-transition-new(dashboard-content),
   ::view-transition-old(settings-content),
@@ -199,8 +193,7 @@
   ::view-transition-new(portal-content),
   ::view-transition-old(twofa-setup),
   ::view-transition-new(twofa-setup),
-  /* Public Routes */
-    ::view-transition-old(home-content),
+  ::view-transition-old(home-content),
   ::view-transition-new(home-content),
   ::view-transition-old(products-content),
   ::view-transition-new(products-content),
@@ -249,7 +242,6 @@
     animation-name: fade-in-scale;
   }
 
-  /* Slide transition for page titles */
   ::view-transition-old(page-title) {
     animation: slide-out-up 0.3s cubic-bezier(0.4, 0, 1, 1);
   }
@@ -314,7 +306,6 @@
     opacity: 0.8;
   }
 
-  /* Sonner toast styles using CSS variables from theme */
   .toaster [data-sonner-toast] {
     background-color: var(--color-background);
     color: var(--color-foreground);
@@ -361,7 +352,6 @@
     background-color: var(--color-accent);
   }
 
-  /* Remove default Sonner theme colors */
   .toaster {
     --normal-bg: var(--color-background);
     --normal-text: var(--color-foreground);
@@ -370,7 +360,6 @@
 }
 
 @layer utilities {
-  /* Additional animations */
   @keyframes scale-in {
     from {
       opacity: 0;

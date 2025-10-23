@@ -33,7 +33,6 @@ export default function ResetPassword() {
     e.preventDefault();
     if (!token) {return;}
 
-    // Use length comparison first for efficiency, then compare strings
     if (password.length !== confirmPassword.length || password !== confirmPassword) {
       toast.error('Passwords do not match');
       return;

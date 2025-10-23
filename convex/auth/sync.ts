@@ -5,9 +5,7 @@ import { action, internalAction } from '../_generated/server';
 import { ensurePolarCustomerHelper } from '../polarCustomer';
 import { toCountryCode } from '../types/metadata';
 import type { CustomerMetadata } from '../types/metadata';
-import { logger } from '../utils/logger';
 
-// Local type definitions for Polar SDK
 interface PolarCustomer {
   id: string;
   email: string;
@@ -37,16 +35,11 @@ interface CustomersListResponse {
   };
 }
 
-// Type-safe wrapper for Polar SDK iterator response
 type PageIteratorResponse = {
   ok: boolean;
   value?: CustomersListResponse;
 }
 
-/**
- * Auto-sync user to Polar when they sign up
- * This is called automatically via Better Auth hooks
- */
 export const onUserCreated = internalAction({
   args: {
     userId: v.string(),
@@ -62,8 +55,6 @@ export const onUserCreated = internalAction({
     linkedOrders?: number;
     error?: string;
   }> => {
-    logger.info(`New user created: ${email}`);
-
     try {
       const result = await ctx.runAction(
         // @ts-ignore - Type instantiation depth issue with Convex generated types
@@ -75,8 +66,6 @@ export const onUserCreated = internalAction({
         },
       );
 
-      logger.info(`Polar customer ready for ${email} (${result.source})`);
-
       const orderLinkResult = await ctx.runMutation(
         // @ts-ignore - Type instantiation depth issue with Convex generated types
         internal.orders.sync.linkOrdersToUser,
@@ -86,14 +75,6 @@ export const onUserCreated = internalAction({
         },
       );
 
-      if (orderLinkResult.linkedOrders > 0) {
-        logger.info(
-          `Linked ${orderLinkResult.linkedOrders} guest orders to user ${email}`,
-        );
-      }
-
-      logger.info(`User ${email} assigned to FREE tier (default)`);
-
       return {
         success: true,
         customerId: result.customerId,
@@ -102,32 +83,19 @@ export const onUserCreated = internalAction({
     } catch (error: unknown) {
       const errorMessage =
         error instanceof Error ? error.message : 'Unknown error';
-      logger.error(`Failed to sync user ${email}:`, error);
       return { success: false, error: errorMessage };
     }
   },
 });
 
-/**
- * Sync all existing users to Polar
- * Useful for backfilling or fixing orphaned accounts
- */
 export const syncAllUsers = action({
   args: {},
   returns: v.object({ message: v.string() }),
   handler: async (_ctx) => {
-    logger.info('Syncing all users to Polar...');
-
-    logger.warn('This action should be called per-user from the client');
-    logger.info('Use: api.userSync.ensureCurrentUserSynced');
-
     return { message: 'Use ensureCurrentUserSynced for each user' };
   },
 });
 
-/**
- * Ensure user is synced to Polar (called with userId and email)
- */
 export const ensureUserSynced = action({
   args: {
     userId: v.string(),
@@ -148,9 +116,6 @@ export const ensureUserSynced = action({
     customerId: string;
     source: string;
   }> => {
-    logger.debug(`Ensuring user is synced: ${email}`);
-
-    // Call helper directly instead of ctx.runAction to avoid overhead
     const result = await ensurePolarCustomerHelper(ctx, {
       userId,
       email,
@@ -169,19 +134,12 @@ export const ensureUserSynced = action({
   },
 });
 
-/**
- * Cron job: Sync orphaned customers from Polar
- * Finds customers in Polar that aren't linked in Convex
- */
 export const syncOrphanedCustomers = internalAction({
   args: {},
   returns: v.null(),
   handler: async (ctx) => {
-    logger.info('[CRON] Checking for orphaned Polar customers...');
-
     const token = process.env.POLAR_ORGANIZATION_TOKEN;
     if (!token) {
-      logger.error('POLAR_ORGANIZATION_TOKEN not set');
       return null;
     }
 
@@ -196,7 +154,6 @@ export const syncOrphanedCustomers = internalAction({
       const allCustomers: PolarCustomer[] = [];
 
       for await (const response of customersIter) {
-        // Polar SDK returns IteratorResult with nested response structure
         const resp = response as unknown as PageIteratorResponse;
         if (resp.ok && resp.value) {
           const data = resp.value;
@@ -205,16 +162,10 @@ export const syncOrphanedCustomers = internalAction({
         }
       }
 
-      logger.info(`Found ${allCustomers.length} customers in Polar`);
-
-      let synced = 0;
-      let alreadyLinked = 0;
-
       for (const customer of allCustomers) {
         const userIdRaw = customer.metadata?.userId;
 
         if (!userIdRaw || typeof userIdRaw !== 'string') {
-          logger.warn(`Customer ${customer.email} has no userId metadata`);
           continue;
         }
 
@@ -226,52 +177,39 @@ export const syncOrphanedCustomers = internalAction({
         );
 
         if (existing) {
-          alreadyLinked++;
           continue;
         }
 
-        try {
-          await ctx.runMutation(components.polar.lib.insertCustomer, {
-            id: customer.id,
-            userId,
-            email: customer.email,
-            email_verified: customer.emailVerified ?? false,
-            name: customer.name ?? null,
-            external_id: customer.externalId ?? null,
-            avatar_url: customer.avatarUrl ?? null,
-            billing_address: customer.billingAddress
-              ? {
-                  line1: customer.billingAddress.line1 ?? null,
-                  line2: customer.billingAddress.line2 ?? null,
-                  postal_code: customer.billingAddress.postalCode ?? null,
-                  city: customer.billingAddress.city ?? null,
-                  state: customer.billingAddress.state ?? null,
-                  country: toCountryCode(customer.billingAddress.country),
-                }
-              : null,
-            tax_id: customer.taxId
-              ? Array.isArray(customer.taxId)
-                ? customer.taxId
-                : null
-              : null,
-            created_at: customer.createdAt,
-            modified_at: customer.modifiedAt ?? null,
-            deleted_at: customer.deletedAt ?? null,
-            // Convert metadata to plain Record<string, string | number | boolean>
-            metadata: (customer.metadata || { userId }) as Record<string, string | number | boolean>,
-          });
-
-          logger.info(`Synced orphaned customer: ${customer.email}`);
-          synced++;
-        } catch (error) {
-          logger.error(`Failed to sync customer ${customer.email}:`, error);
-        }
+        await ctx.runMutation(components.polar.lib.insertCustomer, {
+          id: customer.id,
+          userId,
+          email: customer.email,
+          email_verified: customer.emailVerified ?? false,
+          name: customer.name ?? null,
+          external_id: customer.externalId ?? null,
+          avatar_url: customer.avatarUrl ?? null,
+          billing_address: customer.billingAddress
+            ? {
+                line1: customer.billingAddress.line1 ?? null,
+                line2: customer.billingAddress.line2 ?? null,
+                postal_code: customer.billingAddress.postalCode ?? null,
+                city: customer.billingAddress.city ?? null,
+                state: customer.billingAddress.state ?? null,
+                country: toCountryCode(customer.billingAddress.country),
+              }
+            : null,
+          tax_id: customer.taxId
+            ? Array.isArray(customer.taxId)
+              ? customer.taxId
+              : null
+            : null,
+          created_at: customer.createdAt,
+          modified_at: customer.modifiedAt ?? null,
+          deleted_at: customer.deletedAt ?? null,
+          metadata: (customer.metadata || { userId }) as Record<string, string | number | boolean>,
+        });
       }
-
-      logger.info('[CRON] Orphaned customer sync complete');
-      logger.info(`Already linked: ${alreadyLinked}, Newly synced: ${synced}`);
-    } catch (error: unknown) {
-      logger.error('[CRON] Orphaned customer sync failed:', error);
+    } catch {
     }
 
     return null;

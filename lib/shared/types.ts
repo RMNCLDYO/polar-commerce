@@ -1,4 +1,3 @@
-// Shared types that can be used in both Server and Client components
 import type { StaticImageData } from 'next/image';
 
 export interface Product {

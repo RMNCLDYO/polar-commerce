@@ -24,7 +24,7 @@ export function QuickAddButton({
   const [isLoading, setIsLoading] = useState(false);
 
   const handleQuickAdd = async (e: React.MouseEvent) => {
-    e.preventDefault(); // Prevent navigation when clicking
+    e.preventDefault();
     if (!inStock) {return;}
     setIsLoading(true);
     await addToCart(catalogId, 1, productInfo);

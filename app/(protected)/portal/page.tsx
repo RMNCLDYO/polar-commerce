@@ -1,12 +1,5 @@
 'use client';
 
-/**
- * Customer Portal Page
- *
- * Uses @convex-dev/polar's <CustomerPortalLink> component
- * to let customers manage their subscriptions and billing
- */
-
 import { CustomerPortalLink } from '@convex-dev/polar/react';
 import { useQuery } from 'convex/react';
 import { Link } from '@/components/link';
@@ -88,7 +81,6 @@ export default function CustomerPortalPage() {
                 )}
             </div>
 
-            {/* Using Polar Component's CustomerPortalLink */}
             <CustomerPortalLink
               polarApi={api.polar}
               className="w-full inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"

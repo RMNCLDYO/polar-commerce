@@ -1,8 +1,3 @@
-/**
- * Shared type definitions for seeding scripts
- * Ensures type safety and consistency across all seeding operations
- */
-
 export interface PolarProduct {
   id: string;
   name: string;

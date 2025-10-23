@@ -33,11 +33,9 @@ export default function CheckoutSuccessPage() {
       }
 
       try {
-        // Process the checkout and create order
         await handleCheckoutSuccess({ checkoutId });
         setIsProcessing(false);
-      } catch (err) {
-        console.error('Failed to process checkout:', err);
+      } catch {
         setError('Failed to process order. Please contact support.');
         setIsProcessing(false);
       }
@@ -92,7 +90,6 @@ export default function CheckoutSuccessPage() {
           Thank you for your purchase. Your order has been successfully placed.
         </p>
 
-        {/* Order Details */}
         {order && (
           <Card className="p-6 mb-8 text-left">
             <h2 className="text-xl font-semibold mb-4">Order Details</h2>

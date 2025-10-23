@@ -1,26 +1,11 @@
-/**
- * Action Retry Wrappers
- *
- * Automatic retry logic for actions that call external APIs (like Polar).
- * Based on convex-helpers retry patterns.
- */
-
-import { logger } from '../utils/logger';
-
-/**
- * Retry configuration
- */
 export interface RetryConfig {
-  maxRetries?: number; // Default: 3
-  initialDelayMs?: number; // Default: 1000
-  maxDelayMs?: number; // Default: 10000
-  backoffMultiplier?: number; // Default: 2
-  retryableErrors?: string[]; // Specific error messages to retry
+  maxRetries?: number;
+  initialDelayMs?: number;
+  maxDelayMs?: number;
+  backoffMultiplier?: number;
+  retryableErrors?: string[];
 }
 
-/**
- * Default retry configuration
- */
 const DEFAULT_RETRY_CONFIG: Required<RetryConfig> = {
   maxRetries: 3,
   initialDelayMs: 1000,
@@ -31,24 +16,18 @@ const DEFAULT_RETRY_CONFIG: Required<RetryConfig> = {
     'ETIMEDOUT',
     'ENOTFOUND',
     'EAI_AGAIN',
-    '429', // Rate limit
-    '500', // Server error
-    '502', // Bad gateway
-    '503', // Service unavailable
-    '504', // Gateway timeout
+    '429',
+    '500',
+    '502',
+    '503',
+    '504',
   ],
 };
 
-/**
- * Sleep helper
- */
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-/**
- * Check if error is retryable
- */
 function isRetryableError(error: any, retryableErrors: string[]): boolean {
   if (!error) {return false;}
 
@@ -63,15 +42,6 @@ function isRetryableError(error: any, retryableErrors: string[]): boolean {
   });
 }
 
-/**
- * Retry wrapper for actions
- *
- * Usage:
- *   const result = await withRetry(
- *     async () => await polarClient.checkouts.create(data),
- *     { maxRetries: 3 }
- *   );
- */
 export async function withRetry<T>(
   fn: () => Promise<T>,
   config: RetryConfig = {},
@@ -86,47 +56,23 @@ export async function withRetry<T>(
     } catch (error: any) {
       lastError = error;
 
-      // Check if we should retry
       const shouldRetry =
         attempt < cfg.maxRetries &&
         isRetryableError(error, cfg.retryableErrors);
 
       if (!shouldRetry) {
-        logger.error(
-          `Action failed after ${attempt + 1} attempts:`,
-          error,
-        );
         throw error;
       }
 
-      // Log retry attempt
-      logger.warn(
-        `Action failed (attempt ${attempt + 1}/${cfg.maxRetries + 1}), retrying in ${delay}ms...`,
-        { error: error.message },
-      );
-
-      // Wait before retrying
       await sleep(delay);
 
-      // Exponential backoff
       delay = Math.min(delay * cfg.backoffMultiplier, cfg.maxDelayMs);
     }
   }
 
-  // All retries exhausted
-  logger.error(
-    `Action failed after ${cfg.maxRetries + 1} attempts`,
-    lastError,
-  );
   throw lastError;
 }
 
-/**
- * Retry wrapper with circuit breaker
- *
- * Stops retrying if too many failures occur in a time window.
- * Useful for external API calls that might be completely down.
- */
 class CircuitBreaker {
   private failures = 0;
   private lastFailureTime = 0;
@@ -134,11 +80,10 @@ class CircuitBreaker {
 
   constructor(
     private threshold: number = 5,
-    private resetTimeMs: number = 60000, // 1 minute
+    private resetTimeMs: number = 60000,
   ) {}
 
   async execute<T>(fn: () => Promise<T>): Promise<T> {
-    // Check if circuit is open
     if (this.isOpen) {
       const timeSinceLastFailure = Date.now() - this.lastFailureTime;
       if (timeSinceLastFailure < this.resetTimeMs) {
@@ -146,14 +91,12 @@ class CircuitBreaker {
           'Circuit breaker is open. Service may be down. Please try again later.',
         );
       }
-      // Reset circuit breaker
       this.isOpen = false;
       this.failures = 0;
     }
 
     try {
       const result = await fn();
-      // Success - reset failures
       this.failures = 0;
       return result;
     } catch (error) {
@@ -162,9 +105,6 @@ class CircuitBreaker {
 
       if (this.failures >= this.threshold) {
         this.isOpen = true;
-        logger.error(
-          `Circuit breaker opened after ${this.failures} failures`,
-        );
       }
 
       throw error;
@@ -172,12 +112,8 @@ class CircuitBreaker {
   }
 }
 
-// Global circuit breaker for Polar API
 export const polarCircuitBreaker = new CircuitBreaker(5, 60000);
 
-/**
- * Retry wrapper specifically for Polar API calls
- */
 export async function withPolarRetry<T>(
   fn: () => Promise<T>,
   config: RetryConfig = {},
@@ -197,9 +133,6 @@ export async function withPolarRetry<T>(
   });
 }
 
-/**
- * Batch retry - retry a batch of operations with individual failure tracking
- */
 export async function batchWithRetry<T, R>(
   items: T[],
   fn: (item: T) => Promise<R>,

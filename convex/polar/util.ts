@@ -43,12 +43,12 @@ export type RunActionCtx = {
 export type OpaqueIds<T> = T extends GenericId<infer _T>
   ? string
   : T extends FunctionHandle<FunctionType>
-    ? string
-    : T extends (infer U)[]
-      ? OpaqueIds<U>[]
-      : T extends object
-        ? { [K in keyof T]: OpaqueIds<T[K]> }
-        : T;
+  ? string
+  : T extends (infer U)[]
+  ? OpaqueIds<U>[]
+  : T extends object
+  ? { [K in keyof T]: OpaqueIds<T[K]> }
+  : T;
 
 export type UseApi<API> = Expand<{
   [mod in keyof API]: API[mod] extends FunctionReference<
@@ -58,14 +58,14 @@ export type UseApi<API> = Expand<{
     infer FReturnType,
     infer FComponentPath
   >
-    ? FunctionReference<
-        FType,
-        'internal',
-        OpaqueIds<FArgs>,
-        OpaqueIds<FReturnType>,
-        FComponentPath
-      >
-    : UseApi<API[mod]>;
+  ? FunctionReference<
+    FType,
+    'internal',
+    OpaqueIds<FArgs>,
+    OpaqueIds<FReturnType>,
+    FComponentPath
+  >
+  : UseApi<API[mod]>;
 }>;
 
 export type ComponentApi = UseApi<typeof api>;
@@ -84,7 +84,7 @@ export const convertToDatabaseSubscription = (
     currency: subscription.currency,
     recurringInterval:
       subscription.recurringInterval === 'day' ||
-      subscription.recurringInterval === 'week'
+        subscription.recurringInterval === 'week'
         ? null
         : subscription.recurringInterval,
     status: subscription.status,
@@ -102,10 +102,6 @@ export const convertToDatabaseSubscription = (
 export const convertToDatabaseProduct = (
   product: Product,
 ): WithoutSystemFields<Doc<'products'>> => {
-  // Detect if this is a subscription product by checking:
-  // 1. If any price is recurring
-  // 2. If the product has a recurring interval
-  // 3. If the product name contains "Monthly" or "Yearly" (fallback for Polar API issues)
   const hasRecurringPrice = product.prices.some(
     (price) => price.type === 'recurring',
   );
@@ -120,7 +116,6 @@ export const convertToDatabaseProduct = (
     organizationId: product.organizationId,
     name: product.name,
     description: product.description,
-    // Mark as recurring if any of our checks indicate it's a subscription
     isRecurring:
       product.isRecurring ||
       hasRecurringPrice ||
@@ -131,7 +126,7 @@ export const convertToDatabaseProduct = (
     modifiedAt: product.modifiedAt?.toISOString() ?? null,
     recurringInterval:
       product.recurringInterval === 'day' ||
-      product.recurringInterval === 'week'
+        product.recurringInterval === 'week'
         ? null
         : product.recurringInterval,
     metadata: product.metadata,

@@ -1,11 +1,3 @@
-/**
- * Subscription Seeding Script for Next.js 16
- * Handles seeding of subscription products from JSON data to Polar API and Convex database
- *
- * @requires Node.js 20.9+
- * @requires TypeScript 5+
- */
-
 import { Polar } from '@polar-sh/sdk';
 import { ConvexHttpClient } from 'convex/browser';
 import * as dotenv from 'dotenv';
@@ -14,7 +6,6 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { api } from '../convex/_generated/api';
 import type { Id } from '../convex/_generated/dataModel';
-import { createLogger } from './logger';
 import type {
   CatalogProduct,
   CreatedSubscription,
@@ -27,12 +18,6 @@ import type {
 
 dotenv.config({ path: '.env.local' });
 
-const logger = createLogger({ prefix: '🔄' });
-
-/**
- * Validates required environment variables
- * @throws {Error} If required environment variables are missing
- */
 function validateEnvironment(): {
   token: string;
   server: 'sandbox' | 'production';
@@ -54,10 +39,6 @@ function validateEnvironment(): {
   return { token, server, convexUrl };
 }
 
-/**
- * Loads subscription data from JSON file and converts to product plans
- * @returns {ProductPlan[]} Array of subscription product plans (excluding free tier)
- */
 function loadSubscriptionPlans(): ProductPlan[] {
   const subscriptionsPath = join(process.cwd(), 'data', 'subscriptions.json');
   const subscriptionsData = JSON.parse(
@@ -98,11 +79,6 @@ function loadSubscriptionPlans(): ProductPlan[] {
   return plans;
 }
 
-/**
- * Fetches existing products from Polar API
- * @param {Polar} polarClient - Polar SDK client instance
- * @returns {Promise<PolarProduct[]>} Array of existing non-archived products
- */
 async function fetchExistingPolarProducts(
   polarClient: Polar,
 ): Promise<PolarProduct[]> {
@@ -129,14 +105,10 @@ async function fetchExistingPolarProducts(
   return existingProducts;
 }
 
-/**
- * Creates a new subscription product in Polar
- */
 async function createPolarSubscriptionProduct(
   polarClient: Polar,
   plan: ProductPlan,
 ): Promise<PolarProduct> {
-  logger.info(`Creating subscription product: ${plan.name}`);
 
   return await polarClient.products.create({
     name: plan.name,
@@ -152,15 +124,11 @@ async function createPolarSubscriptionProduct(
   });
 }
 
-/**
- * Uploads subscription image to Polar S3
- */
 async function uploadSubscriptionImage(
   polarClient: Polar,
   productId: string,
 ): Promise<void> {
   try {
-    logger.info('Uploading subscription image...');
 
     const imagePath = join(
       process.cwd(),
@@ -234,32 +202,22 @@ async function uploadSubscriptionImage(
       },
     });
 
-    logger.success('Image uploaded successfully');
-
     await polarClient.products.update({
       id: productId,
       productUpdate: {
         medias: [uploadedFile.id],
       },
     });
-    logger.success('Image linked to product');
   } catch (error) {
-    logger.warning(`Could not upload image, continuing without it`, error);
   }
 }
 
-/**
- * Syncs subscription products to Convex catalog
- */
 async function syncSubscriptionsToCatalog(
   convexClient: ConvexHttpClient,
   createdProducts: CreatedSubscription[],
   subscriptionPlans: ProductPlan[],
 ): Promise<void> {
-  logger.info('Syncing subscription products to Convex...');
-
   await convexClient.action(api.polar.syncProducts, {});
-  logger.success('Synced to polar.products table');
 
   const polarProducts = (await convexClient.query(
     api.polar.listAllProducts,
@@ -291,7 +249,6 @@ async function syncSubscriptionsToCatalog(
         polarProductId: product.id,
         polarImageUrl,
       });
-      logger.success(`Created ${product.name} in catalog`);
     } else if (
       polarImageUrl &&
       existingProduct.polarImageUrl !== polarImageUrl
@@ -302,71 +259,24 @@ async function syncSubscriptionsToCatalog(
           polarImageUrl,
         },
       });
-      logger.success(`Updated ${product.name} with Polar image`);
-    } else {
-      logger.info(`${product.name} already exists in catalog`);
     }
   }
 }
 
-/**
- * Verifies subscription products in Convex
- */
 async function verifySubscriptionProducts(
   convexClient: ConvexHttpClient,
 ): Promise<void> {
-  const subscriptionProducts = await convexClient.query(
+  await convexClient.query(
     api.polar.getSubscriptionProducts,
   );
 
-  if (subscriptionProducts && Object.keys(subscriptionProducts).length > 0) {
-    logger.success(
-      `Found ${Object.keys(subscriptionProducts).length} subscription products in polar.products`,
-    );
-
-    const expectedProducts = [
-      'starterMonthly',
-      'starterYearly',
-      'premiumMonthly',
-      'premiumYearly',
-    ];
-
-    for (const key of expectedProducts) {
-      const product = subscriptionProducts[key];
-      if (product && 'name' in product) {
-        logger.success(`${product.name}: ${product.id}`);
-      } else {
-        logger.warning(`Missing: ${key}`);
-      }
-    }
-  } else {
-    logger.warning('No subscription products found in polar.products');
-  }
-
-  const allProducts = (await convexClient.query(
+  await convexClient.query(
     api.catalog.sync.listProducts,
     {},
-  )) as CatalogProduct[];
-  const subProducts = allProducts.filter((p) => p.category === 'subscription');
-
-  if (subProducts.length > 0) {
-    logger.success(
-      `Found ${subProducts.length} subscription products in catalog`,
-    );
-    for (const p of subProducts) {
-      logger.success(`${p.name}: ${p.polarProductId}`);
-    }
-  } else {
-    logger.warning('No subscription products found in catalog');
-  }
+  );
 }
 
-/**
- * Main seeding function for subscriptions
- */
 export async function seedSubscriptions(): Promise<void> {
-  logger.section('🚀 SEEDING SUBSCRIPTIONS');
-
   const env = validateEnvironment();
   const polarClient = new Polar({
     accessToken: env.token,
@@ -374,21 +284,9 @@ export async function seedSubscriptions(): Promise<void> {
   });
   const convexClient = new ConvexHttpClient(env.convexUrl);
 
-  logger.item('Environment', env.server);
-  logger.item('Convex URL', env.convexUrl);
-  logger.blank();
-
   try {
     const subscriptionPlans = loadSubscriptionPlans();
-    logger.success(
-      `Found ${subscriptionPlans.length} subscription plans to process`,
-    );
-    logger.blank();
-
-    logger.step(1, 'Creating/Updating Polar subscription products...');
     const existingProducts = await fetchExistingPolarProducts(polarClient);
-    logger.item('Existing products', existingProducts.length);
-    logger.blank();
 
     const createdProducts: CreatedSubscription[] = [];
 
@@ -396,18 +294,11 @@ export async function seedSubscriptions(): Promise<void> {
       const plan = subscriptionPlans[i];
       if (!plan) continue;
 
-      logger.progress(i + 1, subscriptionPlans.length, plan.name);
-      logger.item(
-        'Price',
-        `$${plan.priceAmount / 100}/${plan.recurringInterval}`,
-      );
-
       const existingProduct = existingProducts.find(
         (p) => p.name === plan.name,
       );
 
       if (existingProduct) {
-        logger.info(`Found existing product (ID: ${existingProduct.id})`);
         createdProducts.push({
           name: plan.name,
           id: existingProduct.id,
@@ -421,7 +312,6 @@ export async function seedSubscriptions(): Promise<void> {
         polarClient,
         plan,
       );
-      logger.success(`Created successfully (ID: ${newProduct.id})`);
 
       await uploadSubscriptionImage(polarClient, newProduct.id);
 
@@ -431,64 +321,16 @@ export async function seedSubscriptions(): Promise<void> {
         price: `$${plan.priceAmount / 100}/${plan.recurringInterval}`,
         tier: plan.tierLevel,
       });
-      logger.blank();
     }
 
-    logger.step(2, 'Syncing subscription products to Convex...');
     await syncSubscriptionsToCatalog(
       convexClient,
       createdProducts,
       subscriptionPlans,
     );
-    logger.blank();
 
-    logger.step(3, 'Verifying subscription products...');
     await verifySubscriptionProducts(convexClient);
-
-    logger.separator();
-    logger.section('✅ SUBSCRIPTION SEEDING COMPLETE!');
-    logger.separator();
-    logger.blank();
-
-    logger.subsection('Created/Updated Subscription Products:');
-    logger.divider();
-    createdProducts.forEach((p, i) => {
-      logger.debug(`${i + 1}. ${p.name}`);
-      logger.item('ID', p.id);
-      logger.item('Price', p.price);
-      logger.item('Tier', p.tier);
-      logger.blank();
-    });
-
-    logger.subsection(
-      '📝 Environment Variables (add to .env.local if needed):',
-    );
-    logger.divider();
-    createdProducts.forEach((p) => {
-      const envKey = `POLAR_PRODUCT_${p.tier.toUpperCase()}_${p.name.includes('Monthly') ? 'MONTHLY' : 'YEARLY'}`;
-      logger.debug(`${envKey}=${p.id}`);
-    });
-
-    logger.separator();
-    logger.subsection('Next steps:');
-    logger.list([
-      'Verify subscription products in Polar dashboard',
-      "Test checkout flow with 'npm run dev'",
-      'Monitor webhook events for subscription updates',
-    ]);
-    logger.separator();
   } catch (error) {
-    logger.error('Seeding failed!', error);
-
-    if (error instanceof Error && error.message.includes('401')) {
-      logger.warning('Authentication failed. Please check:');
-      logger.list([
-        'POLAR_ORGANIZATION_TOKEN is correct',
-        'Token has not expired',
-        'Token has required permissions',
-      ]);
-    }
-
     throw error;
   }
 }
@@ -496,11 +338,15 @@ export async function seedSubscriptions(): Promise<void> {
 if (import.meta.url === `file://${process.argv[1]}`) {
   seedSubscriptions()
     .then(() => {
-      logger.success('✨ Subscription seeding completed successfully!');
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Subscription seeding completed successfully!');
+      }
       process.exit(0);
     })
     .catch((error) => {
-      logger.error('Unexpected error occurred', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Unexpected error occurred', error);
+      }
       process.exit(1);
     });
 }

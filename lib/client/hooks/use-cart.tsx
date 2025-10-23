@@ -8,7 +8,6 @@ import { api } from '@/convex/_generated/api';
 import type { Id } from '@/convex/_generated/dataModel';
 import type { CurrentUser, CartWithItems, CartValidation } from '@/types/convex';
 
-// Generate or get session ID for guest users
 function getSessionId(): string {
   if (typeof window === 'undefined') {return '';}
 
@@ -25,26 +24,19 @@ export function useCart() {
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const { isAuthenticated } = useConvexAuth();
 
-  // React 19.2: Use Effect Event for session management
-  // Prevents unnecessary effect re-runs while keeping auth state reactive
   const onAuthChange = useEffectEvent(() => {
     if (!isAuthenticated) {
       setSessionId(getSessionId());
     } else {
-      // For authenticated users, clear any existing sessionId
       setSessionId('');
       localStorage.removeItem('cart-session-id');
     }
   });
 
-  // Initialize session ID on client side (only for guests)
   useEffect(() => {
     onAuthChange();
   }, [isAuthenticated]);
 
-  // Queries
-  // For authenticated users (sessionId = ''), pass empty object to use userId from auth context
-  // For guest users, pass sessionId
   const cart = useQuery(api.cart.cart.getCart, sessionId ? { sessionId } : {}) as CartWithItems | null | undefined;
 
   const cartCount = useQuery(
@@ -57,20 +49,17 @@ export function useCart() {
     sessionId ? { sessionId } : {},
   ) as CartValidation | null | undefined;
 
-  // Mutations
   const addToCartMutation = useMutation(api.cart.cart.addToCart);
   const updateCartItemMutation = useMutation(api.cart.cart.updateCartItem);
   const removeFromCartMutation = useMutation(api.cart.cart.removeFromCart);
   const clearCartMutation = useMutation(api.cart.cart.clearCart);
   const mergeCartMutation = useMutation(api.cart.cart.mergeCart);
 
-  // Add to cart with optimistic UI feedback
   const addToCart = async (
     catalogId: Id<'catalog'>,
     quantity: number = 1,
     productInfo?: { name: string; image: string; price: string },
   ) => {
-    // For authenticated users, sessionId will be empty but mutation still works via userId from auth
     setIsAddingToCart(true);
     try {
       await addToCartMutation({
@@ -79,7 +68,6 @@ export function useCart() {
         sessionId: sessionId || undefined,
       });
 
-      // Dispatch event for Activity preloading
       if (typeof window !== 'undefined') {
         window.dispatchEvent(
           new CustomEvent('cart:changed', { detail: { hasItems: true } }),
@@ -117,14 +105,15 @@ export function useCart() {
         });
       }
     } catch (error) {
-      console.error('Error adding to cart:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error adding to cart:', error);
+      }
       toast.error('Failed to add to cart');
     } finally {
       setIsAddingToCart(false);
     }
   };
 
-  // Update cart item quantity
   const updateQuantity = async (catalogId: Id<'catalog'>, quantity: number) => {
     try {
       await updateCartItemMutation({
@@ -133,12 +122,13 @@ export function useCart() {
         sessionId: sessionId || undefined,
       });
     } catch (error) {
-      console.error('Error updating cart:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error updating cart:', error);
+      }
       toast.error('Failed to update cart');
     }
   };
 
-  // Remove from cart
   const removeFromCart = async (
     catalogId: Id<'catalog'>,
     productInfo?: { name: string; image: string; price: string },
@@ -178,37 +168,39 @@ export function useCart() {
         toast.success('Removed from cart');
       }
     } catch (error) {
-      console.error('Error removing from cart:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error removing from cart:', error);
+      }
       toast.error('Failed to remove from cart');
     }
   };
 
-  // Clear entire cart
   const clearCart = async () => {
     try {
       await clearCartMutation({ sessionId: sessionId || undefined });
       toast.success('Cart cleared');
     } catch (error) {
-      console.error('Error clearing cart:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error clearing cart:', error);
+      }
       toast.error('Failed to clear cart');
     }
   };
 
-  // Merge guest cart with user cart after login
   const mergeCart = async () => {
     if (!sessionId) {return;}
 
     try {
       await mergeCartMutation({ sessionId });
-      // Clear session ID after merge - authenticated users use userId for cart lookups
       localStorage.removeItem('cart-session-id');
-      setSessionId(''); // Don't generate new sessionId for authenticated users
+      setSessionId('');
     } catch (error) {
-      console.error('Error merging cart:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error merging cart:', error);
+      }
     }
   };
 
-  // Calculate formatted prices
   const formattedSubtotal = cart?.subtotal
     ? `$${(cart.subtotal / 100).toFixed(2)}`
     : '$0.00';
@@ -228,22 +220,17 @@ export function useCart() {
   };
 }
 
-// Hook for auth state changes to merge carts
-// Independent of useCart to avoid unnecessary queries in root layout
 export function useCartMerge() {
   const mergeCartMutation = useMutation(api.cart.cart.mergeCart);
   const user = useQuery(api.auth.auth.getCurrentUser) as CurrentUser | null | undefined;
   const [hasRunMerge, setHasRunMerge] = useState(false);
 
-  // React 19.2: Use Effect Event for cart merge logic
-  // Prevents mergeCartMutation from being a dependency (which could cause loops)
   const onUserLogin = useEffectEvent(() => {
     const sessionId =
       typeof window !== 'undefined'
         ? localStorage.getItem('cart-session-id')
         : null;
 
-    // Only merge once when user logs in with a guest cart
     if (user?.email && !hasRunMerge && sessionId) {
       mergeCartMutation({ sessionId })
         .then(() => {
@@ -253,7 +240,6 @@ export function useCartMerge() {
         .catch((err) => console.error('Cart merge failed:', err));
     }
 
-    // Reset flag when user signs out
     if (!user) {
       setHasRunMerge(false);
     }

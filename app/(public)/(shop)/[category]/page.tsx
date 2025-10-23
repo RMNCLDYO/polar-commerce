@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import {
-  unstable_cacheLife as cacheLife,
-  unstable_cacheTag as cacheTag,
+  cacheLife,
+  cacheTag,
 } from 'next/cache';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
@@ -87,7 +87,6 @@ async function CachedCategoryContent({
   cacheLife('hours');
   cacheTag('products', `category-${category}`);
 
-  // Use safe property access
   const config = Object.prototype.hasOwnProperty.call(categoryConfig, category)
     ? categoryConfig[category as CategorySlug]
     : undefined;
@@ -113,7 +112,7 @@ async function CachedCategoryContent({
   };
 
   const getProductCount = () => {
-    if (products.length === 0) {return getEmptyMessage();}
+    if (products.length === 0) { return getEmptyMessage(); }
 
     if (category === 'new') {
       return `${products.length} fresh additions to our premium sportswear collection`;
@@ -157,7 +156,7 @@ async function CachedCategoryContent({
                     className={cn(
                       'absolute inset-0 transition-all duration-300',
                       !product.inStock &&
-                        'grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100',
+                      'grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100',
                     )}
                   >
                     <Image
@@ -169,7 +168,6 @@ async function CachedCategoryContent({
                     />
                   </div>
 
-                  {/* Out of Stock Badge */}
                   {!product.inStock && (
                     <Badge
                       variant="destructive"
@@ -261,7 +259,6 @@ export async function generateMetadata({
 }: CategoryPageProps): Promise<Metadata> {
   const { category } = await params;
 
-  // Use safe property access
   const config = Object.prototype.hasOwnProperty.call(categoryConfig, category)
     ? categoryConfig[category as CategorySlug]
     : undefined;

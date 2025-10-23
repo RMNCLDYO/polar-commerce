@@ -14,16 +14,16 @@ import { api } from '@/convex/_generated/api';
 import LogoImage from '@/public/logo.png';
 
 const NAV_ITEMS = [
-  { label: 'NEW', hideBelow: '' }, // Always visible when nav is visible
+  { label: 'NEW', hideBelow: '' },
   { label: 'MEN', hideBelow: 'max-[820px]:hidden' },
   { label: 'WOMEN', hideBelow: 'max-[900px]:hidden' },
   { label: 'KIDS', hideBelow: 'max-[980px]:hidden' },
   { label: 'ACCESSORIES', hideBelow: 'max-[1080px]:hidden' },
-  { label: 'PRICING', hideBelow: 'max-[1180px]:hidden' }, // First to hide
+  { label: 'PRICING', hideBelow: 'max-[1180px]:hidden' },
 ] as const;
 
 async function UserMenuWrapper() {
-  await headers(); // Opt into dynamic rendering
+  await headers();
   const preloadedUser = await preloadQuery(api.auth.auth.getCurrentUserBasic);
 
   return <UserMenuClient preloadedUser={preloadedUser} />;

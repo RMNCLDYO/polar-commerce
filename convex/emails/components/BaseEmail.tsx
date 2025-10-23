@@ -8,7 +8,6 @@ import {
   Preview,
   Text,
 } from '@react-email/components';
-// React is needed for JSX runtime
 import React, { Fragment } from 'react';
 
 export interface BaseEmailProps {

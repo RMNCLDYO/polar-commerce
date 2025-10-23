@@ -7,7 +7,6 @@ import {
   mutation,
   query,
 } from '../_generated/server';
-import { trackCartOperation } from '../lib/metrics';
 import { checkRateLimit } from '../lib/rateLimit';
 import {
   validateQuantity,
@@ -19,7 +18,6 @@ import {
   vCartItemWithProduct,
 } from '../utils/validation';
 
-// Helper to get or create cart for a user/session
 async function getOrCreateCart(
   ctx: MutationCtx,
   userId?: string | null,
@@ -27,7 +25,6 @@ async function getOrCreateCart(
 ) {
   let cart: Doc<'carts'> | null = null;
 
-  // Try to find existing cart
   if (userId) {
     cart = await ctx.db
       .query('carts')
@@ -40,14 +37,13 @@ async function getOrCreateCart(
       .first();
   }
 
-  // Create new cart if not found
   if (!cart) {
     const cartId = await ctx.db.insert('carts', {
       userId: userId || undefined,
       sessionId: sessionId || undefined,
       createdAt: Date.now(),
       updatedAt: Date.now(),
-      expiresAt: sessionId ? Date.now() + 30 * 24 * 60 * 60 * 1000 : undefined, // 30 days for guest carts
+      expiresAt: sessionId ? Date.now() + 30 * 24 * 60 * 60 * 1000 : undefined,
     });
     cart = await ctx.db.get(cartId);
   }
@@ -55,7 +51,6 @@ async function getOrCreateCart(
   return cart;
 }
 
-// Add item to cart
 export const addToCart = mutation({
   args: {
     catalogId: v.id('catalog'),
@@ -64,86 +59,66 @@ export const addToCart = mutation({
   },
   returns: vSuccessResponse,
   handler: async (ctx, args) => {
-    return await trackCartOperation(
-      ctx,
-      'addToCart',
-      async () => {
-        // Get current user from auth
-        const identity = await ctx.auth.getUserIdentity();
-        const userId = identity?.subject;
+    const identity = await ctx.auth.getUserIdentity();
+    const userId = identity?.subject;
 
-        if (!userId && !args.sessionId) {
-          throw new Error('User must be authenticated or provide a session ID');
-        }
+    if (!userId && !args.sessionId) {
+      throw new Error('User must be authenticated or provide a session ID');
+    }
 
-        // Rate limiting
-        await checkRateLimit(ctx, 'cart', userId, args.sessionId);
+    await checkRateLimit(ctx, 'cart', userId, args.sessionId);
 
-        // Get or create cart
-        const cart = await getOrCreateCart(ctx, userId, args.sessionId);
-        if (!cart) {
-          throw new Error('Failed to create cart');
-        }
+    const cart = await getOrCreateCart(ctx, userId, args.sessionId);
+    if (!cart) {
+      throw new Error('Failed to create cart');
+    }
 
-        // Get product to verify it exists and get current price
-        const product = await ctx.db.get(args.catalogId);
-        if (!product || !product.isActive) {
-          throw new Error('Product not found or inactive');
-        }
+    const product = await ctx.db.get(args.catalogId);
+    if (!product || !product.isActive) {
+      throw new Error('Product not found or inactive');
+    }
 
-        // Check inventory
-        if (!product.inStock || product.inventory_qty <= 0) {
-          throw new Error('Product is out of stock');
-        }
+    if (!product.inStock || product.inventory_qty <= 0) {
+      throw new Error('Product is out of stock');
+    }
 
-        // Check if item already in cart
-        const existingItem = await ctx.db
-          .query('cartItems')
-          .withIndex('cartId_catalogId', (q) =>
-            q.eq('cartId', cart._id).eq('catalogId', args.catalogId),
-          )
-          .first();
+    const existingItem = await ctx.db
+      .query('cartItems')
+      .withIndex('cartId_catalogId', (q) =>
+        q.eq('cartId', cart._id).eq('catalogId', args.catalogId),
+      )
+      .first();
 
-        const newQuantity = existingItem
-          ? existingItem.quantity + args.quantity
-          : args.quantity;
+    const newQuantity = existingItem
+      ? existingItem.quantity + args.quantity
+      : args.quantity;
 
-        validateQuantity(newQuantity, product.inventory_qty, product.name);
+    validateQuantity(newQuantity, product.inventory_qty, product.name);
 
-        if (existingItem) {
-          // Update quantity
-          await ctx.db.patch(existingItem._id, {
-            quantity: newQuantity,
-            updatedAt: Date.now(),
-          });
-        } else {
-          // Add new item
-          await ctx.db.insert('cartItems', {
-            cartId: cart._id,
-            catalogId: args.catalogId,
-            quantity: args.quantity,
-            price: product.price,
-            addedAt: Date.now(),
-            updatedAt: Date.now(),
-          });
-        }
-
-        // Update cart timestamp
-        await ctx.db.patch(cart._id, {
-          updatedAt: Date.now(),
-        });
-
-        return { success: true };
-      },
-      {
+    if (existingItem) {
+      await ctx.db.patch(existingItem._id, {
+        quantity: newQuantity,
+        updatedAt: Date.now(),
+      });
+    } else {
+      await ctx.db.insert('cartItems', {
+        cartId: cart._id,
         catalogId: args.catalogId,
         quantity: args.quantity,
-      },
-    );
+        price: product.price,
+        addedAt: Date.now(),
+        updatedAt: Date.now(),
+      });
+    }
+
+    await ctx.db.patch(cart._id, {
+      updatedAt: Date.now(),
+    });
+
+    return { success: true };
   },
 });
 
-// Update cart item quantity
 export const updateCartItem = mutation({
   args: {
     catalogId: v.id('catalog'),
@@ -152,74 +127,58 @@ export const updateCartItem = mutation({
   },
   returns: vSuccessResponse,
   handler: async (ctx, args) => {
-    return await trackCartOperation(
-      ctx,
-      'updateCartItem',
-      async () => {
-        const identity = await ctx.auth.getUserIdentity();
-        const userId = identity?.subject;
+    const identity = await ctx.auth.getUserIdentity();
+    const userId = identity?.subject;
 
-        if (!userId && !args.sessionId) {
-          throw new Error('User must be authenticated or provide a session ID');
-        }
+    if (!userId && !args.sessionId) {
+      throw new Error('User must be authenticated or provide a session ID');
+    }
 
-        // Find cart
-        let cart: Doc<'carts'> | null = null;
-        if (userId) {
-          cart = await ctx.db
-            .query('carts')
-            .withIndex('userId', (q) => q.eq('userId', userId))
-            .first();
-        } else if (args.sessionId) {
-          cart = await ctx.db
-            .query('carts')
-            .withIndex('sessionId', (q) => q.eq('sessionId', args.sessionId))
-            .first();
-        }
+    let cart: Doc<'carts'> | null = null;
+    if (userId) {
+      cart = await ctx.db
+        .query('carts')
+        .withIndex('userId', (q) => q.eq('userId', userId))
+        .first();
+    } else if (args.sessionId) {
+      cart = await ctx.db
+        .query('carts')
+        .withIndex('sessionId', (q) => q.eq('sessionId', args.sessionId))
+        .first();
+    }
 
-        if (!cart) {
-          throw new Error('Cart not found');
-        }
+    if (!cart) {
+      throw new Error('Cart not found');
+    }
 
-        // Find cart item
-        const cartItem = await ctx.db
-          .query('cartItems')
-          .withIndex('cartId_catalogId', (q) =>
-            q.eq('cartId', cart._id).eq('catalogId', args.catalogId),
-          )
-          .first();
+    const cartItem = await ctx.db
+      .query('cartItems')
+      .withIndex('cartId_catalogId', (q) =>
+        q.eq('cartId', cart._id).eq('catalogId', args.catalogId),
+      )
+      .first();
 
-        if (!cartItem) {
-          throw new Error('Item not in cart');
-        }
+    if (!cartItem) {
+      throw new Error('Item not in cart');
+    }
 
-        if (args.quantity <= 0) {
-          // Remove item if quantity is 0 or less
-          await ctx.db.delete(cartItem._id);
-        } else {
-          // Update quantity
-          await ctx.db.patch(cartItem._id, {
-            quantity: args.quantity,
-            updatedAt: Date.now(),
-          });
-        }
-
-        // Update cart timestamp
-        await ctx.db.patch(cart._id, {
-          updatedAt: Date.now(),
-        });
-
-        return { success: true };
-      },
-      {
-        catalogId: args.catalogId,
+    if (args.quantity <= 0) {
+      await ctx.db.delete(cartItem._id);
+    } else {
+      await ctx.db.patch(cartItem._id, {
         quantity: args.quantity,
-      },
-    );
+        updatedAt: Date.now(),
+      });
+    }
+
+    await ctx.db.patch(cart._id, {
+      updatedAt: Date.now(),
+    });
+
+    return { success: true };
   },
 });
 
-// Remove item from cart
 export const removeFromCart = mutation({
   args: {
     catalogId: v.id('catalog'),
@@ -227,120 +186,96 @@ export const removeFromCart = mutation({
   },
   returns: vSuccessResponse,
   handler: async (ctx, args) => {
-    return await trackCartOperation(
-      ctx,
-      'removeFromCart',
-      async () => {
-        const identity = await ctx.auth.getUserIdentity();
-        const userId = identity?.subject;
+    const identity = await ctx.auth.getUserIdentity();
+    const userId = identity?.subject;
 
-        if (!userId && !args.sessionId) {
-          throw new Error('User must be authenticated or provide a session ID');
-        }
+    if (!userId && !args.sessionId) {
+      throw new Error('User must be authenticated or provide a session ID');
+    }
 
-        // Find cart
-        let cart: Doc<'carts'> | null = null;
-        if (userId) {
-          cart = await ctx.db
-            .query('carts')
-            .withIndex('userId', (q) => q.eq('userId', userId))
-            .first();
-        } else if (args.sessionId) {
-          cart = await ctx.db
-            .query('carts')
-            .withIndex('sessionId', (q) => q.eq('sessionId', args.sessionId))
-            .first();
-        }
+    let cart: Doc<'carts'> | null = null;
+    if (userId) {
+      cart = await ctx.db
+        .query('carts')
+        .withIndex('userId', (q) => q.eq('userId', userId))
+        .first();
+    } else if (args.sessionId) {
+      cart = await ctx.db
+        .query('carts')
+        .withIndex('sessionId', (q) => q.eq('sessionId', args.sessionId))
+        .first();
+    }
 
-        if (!cart) {
-          throw new Error('Cart not found');
-        }
+    if (!cart) {
+      throw new Error('Cart not found');
+    }
 
-        // Find and delete cart item
-        const cartItem = await ctx.db
-          .query('cartItems')
-          .withIndex('cartId_catalogId', (q) =>
-            q.eq('cartId', cart._id).eq('catalogId', args.catalogId),
-          )
-          .first();
+    const cartItem = await ctx.db
+      .query('cartItems')
+      .withIndex('cartId_catalogId', (q) =>
+        q.eq('cartId', cart._id).eq('catalogId', args.catalogId),
+      )
+      .first();
 
-        if (cartItem) {
-          await ctx.db.delete(cartItem._id);
+    if (cartItem) {
+      await ctx.db.delete(cartItem._id);
 
-          // Update cart timestamp
-          await ctx.db.patch(cart._id, {
-            updatedAt: Date.now(),
-          });
-        }
+      await ctx.db.patch(cart._id, {
+        updatedAt: Date.now(),
+      });
+    }
 
-        return { success: true };
-      },
-      {
-        catalogId: args.catalogId,
-      },
-    );
+    return { success: true };
   },
 });
 
-// Clear entire cart
 export const clearCart = mutation({
   args: {
     sessionId: v.optional(v.string()),
   },
   returns: vSuccessResponse,
   handler: async (ctx, args) => {
-    return await trackCartOperation(
-      ctx,
-      'clearCart',
-      async () => {
-        const identity = await ctx.auth.getUserIdentity();
-        const userId = identity?.subject;
+    const identity = await ctx.auth.getUserIdentity();
+    const userId = identity?.subject;
 
-        if (!userId && !args.sessionId) {
-          throw new Error('User must be authenticated or provide a session ID');
-        }
+    if (!userId && !args.sessionId) {
+      throw new Error('User must be authenticated or provide a session ID');
+    }
 
-        // Find cart
-        let cart: Doc<'carts'> | null = null;
-        if (userId) {
-          cart = await ctx.db
-            .query('carts')
-            .withIndex('userId', (q) => q.eq('userId', userId))
-            .first();
-        } else if (args.sessionId) {
-          cart = await ctx.db
-            .query('carts')
-            .withIndex('sessionId', (q) => q.eq('sessionId', args.sessionId))
-            .first();
-        }
+    let cart: Doc<'carts'> | null = null;
+    if (userId) {
+      cart = await ctx.db
+        .query('carts')
+        .withIndex('userId', (q) => q.eq('userId', userId))
+        .first();
+    } else if (args.sessionId) {
+      cart = await ctx.db
+        .query('carts')
+        .withIndex('sessionId', (q) => q.eq('sessionId', args.sessionId))
+        .first();
+    }
 
-        if (!cart) {
-          return { success: true }; // No cart to clear
-        }
+    if (!cart) {
+      return { success: true };
+    }
 
-        // Delete all cart items
-        const cartItems = await ctx.db
-          .query('cartItems')
-          .withIndex('cartId_catalogId', (q) => q.eq('cartId', cart._id))
-          .collect();
+    const cartItems = await ctx.db
+      .query('cartItems')
+      .withIndex('cartId_catalogId', (q) => q.eq('cartId', cart._id))
+      .collect();
 
-        for (const item of cartItems) {
-          await ctx.db.delete(item._id);
-        }
+    for (const item of cartItems) {
+      await ctx.db.delete(item._id);
+    }
 
-        // Update cart timestamp
-        await ctx.db.patch(cart._id, {
-          updatedAt: Date.now(),
-        });
+    await ctx.db.patch(cart._id, {
+      updatedAt: Date.now(),
+    });
 
-        return { success: true };
-      },
-      {},
-    );
+    return { success: true };
   },
 });
 
-// Get cart with items
 export const getCart = query({
   args: {
     sessionId: v.optional(v.string()),
@@ -354,7 +289,6 @@ export const getCart = query({
       return null;
     }
 
-    // Find cart
     let cart: Doc<'carts'> | null = null;
     if (userId) {
       cart = await ctx.db
@@ -372,7 +306,6 @@ export const getCart = query({
       return null;
     }
 
-    // Get cart items with product details
     const cartItems = await ctx.db
       .query('cartItems')
       .withIndex('cartId_catalogId', (q) => q.eq('cartId', cart._id))
@@ -413,12 +346,10 @@ export const getCart = query({
       }),
     );
 
-    // Filter out null items (deleted products)
     const validItems = itemsWithProducts.filter(
       (item): item is NonNullable<typeof item> => item !== null,
     );
 
-    // Calculate totals
     const subtotal = validItems.reduce(
       (sum, item) => sum + (item.price ?? 0) * (item.quantity ?? 0),
       0,
@@ -440,7 +371,6 @@ export const getCart = query({
   },
 });
 
-// Get cart item count (for header badge)
 export const getCartCount = query({
   args: {
     sessionId: v.optional(v.string()),
@@ -454,7 +384,6 @@ export const getCartCount = query({
       return 0;
     }
 
-    // Find cart
     let cart: Doc<'carts'> | null = null;
     if (userId) {
       cart = await ctx.db
@@ -472,7 +401,6 @@ export const getCartCount = query({
       return 0;
     }
 
-    // Get cart items and sum quantities
     const cartItems = await ctx.db
       .query('cartItems')
       .withIndex('cartId_catalogId', (q) => q.eq('cartId', cart._id))
@@ -482,7 +410,6 @@ export const getCartCount = query({
   },
 });
 
-// Merge guest cart with user cart on login
 export const mergeCart = mutation({
   args: {
     sessionId: v.string(),
@@ -496,23 +423,20 @@ export const mergeCart = mutation({
       throw new Error('User must be authenticated');
     }
 
-    // Find guest cart
     const guestCart = await ctx.db
       .query('carts')
       .withIndex('sessionId', (q) => q.eq('sessionId', args.sessionId))
       .first();
 
     if (!guestCart) {
-      return { success: true }; // No guest cart to merge
+      return { success: true };
     }
 
-    // Get or create user cart
     const userCart = await getOrCreateCart(ctx, userId, null);
     if (!userCart) {
       throw new Error('Failed to create user cart');
     }
 
-    // If they're the same cart, just update the userId
     if (guestCart._id === userCart._id) {
       await ctx.db.patch(guestCart._id, {
         userId,
@@ -522,13 +446,11 @@ export const mergeCart = mutation({
       return { success: true };
     }
 
-    // Get items from guest cart
     const guestItems = await ctx.db
       .query('cartItems')
       .withIndex('cartId_catalogId', (q) => q.eq('cartId', guestCart._id))
       .collect();
 
-    // Merge items into user cart
     for (const guestItem of guestItems) {
       const existingItem = await ctx.db
         .query('cartItems')
@@ -538,13 +460,11 @@ export const mergeCart = mutation({
         .first();
 
       if (existingItem) {
-        // Combine quantities
         await ctx.db.patch(existingItem._id, {
           quantity: existingItem.quantity + guestItem.quantity,
           updatedAt: Date.now(),
         });
       } else {
-        // Move item to user cart
         await ctx.db.insert('cartItems', {
           cartId: userCart._id,
           catalogId: guestItem.catalogId,
@@ -555,14 +475,11 @@ export const mergeCart = mutation({
         });
       }
 
-      // Delete guest cart item
       await ctx.db.delete(guestItem._id);
     }
 
-    // Delete guest cart
     await ctx.db.delete(guestCart._id);
 
-    // Update user cart timestamp
     await ctx.db.patch(userCart._id, {
       updatedAt: Date.now(),
     });
@@ -571,7 +488,6 @@ export const mergeCart = mutation({
   },
 });
 
-// Validate cart before checkout
 export const validateCart = query({
   args: {
     sessionId: v.optional(v.string()),
@@ -588,7 +504,6 @@ export const validateCart = query({
       };
     }
 
-    // Find cart
     let cart: Doc<'carts'> | null = null;
     if (userId) {
       cart = await ctx.db
@@ -609,7 +524,6 @@ export const validateCart = query({
       };
     }
 
-    // Get cart items with product details
     const cartItems = await ctx.db
       .query('cartItems')
       .withIndex('cartId_catalogId', (q) => q.eq('cartId', cart._id))
@@ -626,7 +540,6 @@ export const validateCart = query({
     const validItems: Array<Doc<'cartItems'> & { product: Doc<'catalog'> }> =
       [];
 
-    // Check each item
     for (const item of cartItems) {
       const product = await ctx.db.get(item.catalogId);
       if (!product) {
@@ -638,7 +551,6 @@ export const validateCart = query({
         errors.push(`${product.name} is no longer available`);
       }
 
-      // Check if price has changed
       if (item.price !== product.price) {
         errors.push(
           `Price for ${product.name} has changed from $${(item.price / 100).toFixed(2)} to $${(product.price / 100).toFixed(2)}`,
@@ -658,11 +570,6 @@ export const validateCart = query({
     };
   },
 });
-
-// ============================================
-// INTERNAL QUERIES/MUTATIONS FOR CHECKOUT
-// ============================================
-// These are used by the checkout actions to access cart data
 
 export const internal_getCartByUserId = internalQuery({
   args: {
@@ -723,7 +630,6 @@ export const internal_getAuthUser = internalQuery({
   },
   returns: vAuthUser,
   handler: async (ctx, { userId }) => {
-    // Query the Better Auth user table directly using index
     const user = await ctx.db
       .query('betterAuth_user')
       .withIndex('id', (q) => q.eq('id', userId))
@@ -804,14 +710,12 @@ export const internal_createOrder = internalMutation({
     customerId: v.optional(v.string()),
     status: v.string(),
 
-    // Amounts
     amount: v.number(),
     discountAmount: v.optional(v.number()),
     taxAmount: v.optional(v.number()),
     totalAmount: v.optional(v.number()),
     currency: v.string(),
 
-    // Products
     products: v.array(
       v.object({
         id: v.string(),
@@ -821,7 +725,6 @@ export const internal_createOrder = internalMutation({
       }),
     ),
 
-    // Customer details
     customerName: v.optional(v.string()),
     customerIpAddress: v.optional(v.string()),
     isBusinessCustomer: v.optional(v.boolean()),
@@ -837,25 +740,20 @@ export const internal_createOrder = internalMutation({
       }),
     ),
 
-    // Discount
     discountId: v.optional(v.string()),
     discountCode: v.optional(v.string()),
 
-    // Trial info
     trialInterval: v.optional(v.string()),
     trialIntervalCount: v.optional(v.number()),
     trialEnd: v.optional(v.number()),
 
-    // Subscription
     subscriptionId: v.optional(v.string()),
 
-    // Metadata
     metadata: v.optional(v.record(v.string(), v.any())),
     customFieldData: v.optional(v.record(v.string(), v.any())),
   },
   returns: v.id('orders'),
   handler: async (ctx, args) => {
-    // Check if order already exists
     const existingOrder = await ctx.db
       .query('orders')
       .withIndex('checkoutId', (q) => q.eq('checkoutId', args.checkoutId))
@@ -888,44 +786,36 @@ export const internal_createOrder = internalMutation({
       email: args.email,
       completedAt: args.status === 'succeeded' ? Date.now() : undefined,
 
-      // Amounts
       amount: args.amount,
       discountAmount: args.discountAmount,
       taxAmount: args.taxAmount,
       totalAmount: args.totalAmount || args.amount,
       currency: args.currency,
 
-      // Customer details
       customerName: args.customerName,
       customerIpAddress: args.customerIpAddress,
       isBusinessCustomer: args.isBusinessCustomer,
       customerTaxId: args.customerTaxId,
       billingAddress: args.billingAddress,
 
-      // Discount
       discountId: args.discountId,
       discountCode: args.discountCode,
 
-      // Trial
       trialInterval: args.trialInterval,
       trialIntervalCount: args.trialIntervalCount,
       trialEnd: args.trialEnd,
 
-      // Subscription
       subscriptionId: args.subscriptionId,
 
-      // Metadata
       metadata: args.metadata,
       customFieldData: args.customFieldData,
     };
 
     if (existingOrder) {
-      // Update existing order
       await ctx.db.patch(existingOrder._id, orderData);
       return existingOrder._id;
     }
 
-    // Create new order
     return await ctx.db.insert('orders', {
       checkoutId: args.checkoutId,
       userId: args.userId,

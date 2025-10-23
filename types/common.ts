@@ -1,10 +1,4 @@
-/**
- * Common type definitions used across the application
- */
-
 import type { CheckoutCustomFieldData } from '@/convex/types/metadata';
-
-// User and Authentication Types
 export interface User {
   _id: string;
   email: string;
@@ -24,7 +18,6 @@ export interface Subscription {
   currentPeriodEnd?: string;
 }
 
-// Catalog Types
 export interface CatalogItem {
   _id: string;
   name: string;
@@ -42,7 +35,6 @@ export interface CatalogItem {
   updatedAt: number;
 }
 
-// Cart Types
 export interface Cart {
   _id: string;
   userId?: string;
@@ -68,7 +60,6 @@ export interface CartItem {
   updatedAt: number;
 }
 
-// Order Types
 export interface Order {
   _id: string;
   userId?: string;
@@ -79,7 +70,6 @@ export interface Order {
   createdAt: number;
 }
 
-// Polar Types
 export interface PolarProduct {
   _id: string;
   polarProductId: string;
@@ -95,7 +85,6 @@ export interface PolarCustomer {
   polarCustomerId: string;
 }
 
-// Context Types
 export interface ConvexContext {
   db: unknown;
   auth?: unknown;

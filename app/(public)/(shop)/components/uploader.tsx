@@ -39,19 +39,16 @@ export function Uploader() {
   };
 
   const handlePhotoUpload = (file: File) => {
-    // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
       toast.error('File size must be less than 5MB');
       return;
     }
 
-    // Validate file type
     if (!file.type.startsWith('image/')) {
       toast.error('Please upload an image file');
       return;
     }
 
-    // Additional validation for specific image types
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
     if (!allowedTypes.includes(file.type)) {
       toast.error('Please upload a JPEG, PNG, WebP, or GIF file');

@@ -2,7 +2,6 @@ import { Polar } from '@polar-sh/sdk';
 import { v } from 'convex/values';
 import { action, query } from '../_generated/server';
 
-// Local type definitions for Polar SDK
 interface PolarCustomer {
   id: string;
   email: string;
@@ -33,16 +32,12 @@ interface PageIteratorResponse {
   value?: CustomersListResponse | ProductsListResponse;
 }
 
-/**
- * Inspect what data exists in the main Convex database
- */
 export const inspectAllData = query({
   args: {},
   returns: v.record(v.string(), v.number()),
   handler: async (ctx) => {
     const results: Record<string, number> = {};
 
-    // Check Convex app tables
     results.catalog = (await ctx.db.query('catalog').collect()).length;
     results.demoTodos = (await ctx.db.query('demoTodos').collect()).length;
 
@@ -50,9 +45,6 @@ export const inspectAllData = query({
   },
 });
 
-/**
- * Inspect Polar data via API
- */
 export const inspectPolarData = action({
   args: {},
   returns: v.union(
@@ -74,7 +66,6 @@ export const inspectPolarData = action({
 
     const results: Record<string, number> = {};
 
-    // Check customers
     try {
       const customersIter = await polarClient.customers.list({ limit: 100 });
       const customers: PolarCustomer[] = [];
@@ -91,7 +82,6 @@ export const inspectPolarData = action({
       results.customers = -1;
     }
 
-    // Check products
     try {
       const productsIter = await polarClient.products.list({ limit: 100 });
       const products: PolarProduct[] = [];

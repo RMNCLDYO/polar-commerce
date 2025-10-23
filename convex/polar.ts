@@ -3,12 +3,9 @@ import { Polar as PolarSDK } from '@polar-sh/sdk';
 import { v } from 'convex/values';
 import { api, components } from './_generated/api';
 import { action, internalAction, query } from './_generated/server';
-import { logger } from './utils/logger';
 
 export const polar = new Polar(components.polar, {
-  // Required: provide a function the component can use to get the current user's ID and email
   getUserInfo: async (ctx): Promise<{ userId: string; email: string }> => {
-    // Use getCurrentUserBasic to avoid type instantiation depth issue
     // @ts-ignore - TypeScript deep instantiation issue with Convex
     const user = await ctx.runQuery(api.auth.auth.getCurrentUserBasic);
     if (!user) {
@@ -19,34 +16,20 @@ export const polar = new Polar(components.polar, {
       email: user.email,
     };
   },
-  // Polar configuration from environment variables
   organizationToken: process.env.POLAR_ORGANIZATION_TOKEN,
   webhookSecret: process.env.POLAR_WEBHOOK_SECRET,
   server: (process.env.POLAR_SERVER as 'sandbox' | 'production') || 'sandbox',
 });
 
-// Export API functions from the Polar client component
 export const {
-  // Subscription management
   changeCurrentSubscription,
   cancelCurrentSubscription,
-
-  // Product management
   getConfiguredProducts,
   listAllProducts,
-
-  // Checkout and portal
   generateCheckoutLink,
   generateCustomerPortalUrl,
 } = polar.api();
 
-// Note: getCurrentSubscription and listUserSubscriptions are available via the component's lib
-// Use them like: await ctx.runQuery(components.polar.lib.getCurrentSubscription, { userId })
-// Or: await ctx.runQuery(components.polar.lib.listUserSubscriptions, { userId })
-
-// Sync products from Polar to Convex
-// This should be run after creating products in Polar dashboard
-// to sync them to your Convex database
 export const syncProducts = action({
   args: {},
   returns: v.null(),
@@ -56,19 +39,100 @@ export const syncProducts = action({
   },
 });
 
-// Dynamically fetch subscription products from Polar
-// Matches products by name to subscription tiers
+type PolarProduct = {
+  id: string;
+  name: string;
+  description?: string | null;
+  createdAt?: string;
+  modifiedAt?: string;
+  isArchived?: boolean;
+  isRecurring?: boolean;
+  organizationId?: string;
+  recurringInterval?: 'month' | 'year' | 'week' | 'day';
+  metadata?: Record<string, unknown>;
+  prices?: Array<{
+    id: string;
+    type: string;
+    priceAmount: number;
+    priceCurrency: string;
+    recurringInterval?: string;
+    amountType?: string;
+    createdAt?: string;
+    modifiedAt?: string;
+    productId?: string;
+    isArchived?: boolean;
+  }>;
+  medias?: Array<{
+    id: string;
+    name: string;
+    publicUrl?: string;
+    mimeType?: string;
+    size?: number;
+    sizeReadable?: string;
+    createdAt?: string;
+    checksumEtag?: string;
+    checksumSha256Base64?: string;
+    checksumSha256Hex?: string;
+    isUploaded?: boolean;
+    lastModifiedAt?: string;
+    organizationId?: string;
+    path?: string;
+    storageVersion?: string | null;
+    version?: string | null;
+  }>;
+};
+
 export const getSubscriptionProducts = query({
   args: {},
-  returns: v.any(),
-  handler: async (
-    ctx,
-  ): Promise<Record<string, { id: string; [key: string]: unknown }>> => {
-    const allProducts = await ctx.runQuery(api.polar.listAllProducts, {});
+  returns: v.record(
+    v.string(),
+    v.object({
+      id: v.string(),
+      name: v.string(),
+      description: v.optional(v.union(v.string(), v.null())),
+      createdAt: v.optional(v.string()),
+      modifiedAt: v.optional(v.string()),
+      isArchived: v.optional(v.boolean()),
+      isRecurring: v.optional(v.boolean()),
+      organizationId: v.optional(v.string()),
+      recurringInterval: v.optional(v.union(v.literal('month'), v.literal('year'), v.literal('week'), v.literal('day'))),
+      metadata: v.optional(v.record(v.string(), v.any())),
+      prices: v.optional(v.array(v.object({
+        id: v.string(),
+        type: v.string(),
+        priceAmount: v.number(),
+        priceCurrency: v.string(),
+        recurringInterval: v.optional(v.string()),
+        amountType: v.optional(v.string()),
+        createdAt: v.optional(v.string()),
+        modifiedAt: v.optional(v.string()),
+        productId: v.optional(v.string()),
+        isArchived: v.optional(v.boolean()),
+      }))),
+      medias: v.optional(v.array(v.object({
+        id: v.string(),
+        name: v.string(),
+        publicUrl: v.optional(v.string()),
+        mimeType: v.optional(v.string()),
+        size: v.optional(v.number()),
+        sizeReadable: v.optional(v.string()),
+        createdAt: v.optional(v.string()),
+        checksumEtag: v.optional(v.string()),
+        checksumSha256Base64: v.optional(v.string()),
+        checksumSha256Hex: v.optional(v.string()),
+        isUploaded: v.optional(v.boolean()),
+        lastModifiedAt: v.optional(v.string()),
+        organizationId: v.optional(v.string()),
+        path: v.optional(v.string()),
+        storageVersion: v.optional(v.union(v.string(), v.null())),
+        version: v.optional(v.union(v.string(), v.null())),
+      }))),
+    }),
+  ),
+  handler: async (ctx): Promise<Record<string, PolarProduct>> => {
+    const allProducts = await ctx.runQuery(api.polar.listAllProducts, {}) as unknown as PolarProduct[];
 
-    // Filter for subscription products and map them by tier and billing cycle
-    const subscriptionProducts: Record<string, (typeof allProducts)[number]> =
-      {};
+    const subscriptionProducts: Record<string, PolarProduct> = {};
 
     for (const product of allProducts) {
       const name = product.name.toLowerCase();
@@ -88,21 +152,14 @@ export const getSubscriptionProducts = query({
   },
 });
 
-/**
- * Archive a bundle product after successful checkout
- * Internal action called by order webhook
- */
 export const archiveBundleProduct = internalAction({
   args: {
     productId: v.string(),
   },
   returns: v.null(),
   handler: async (_ctx, args) => {
-    logger.info('[Polar] Archiving bundle product:', args.productId);
-
     const token = process.env.POLAR_ORGANIZATION_TOKEN;
     if (!token) {
-      logger.error('[Polar] POLAR_ORGANIZATION_TOKEN not set');
       return null;
     }
 
@@ -119,12 +176,7 @@ export const archiveBundleProduct = internalAction({
           isArchived: true,
         },
       });
-
-      logger.info('[Polar] Bundle product archived');
-    } catch (error: unknown) {
-      const errorMessage =
-        error instanceof Error ? error.message : 'Unknown error';
-      logger.error('[Polar] Failed to archive bundle product:', errorMessage);
+    } catch {
     }
 
     return null;

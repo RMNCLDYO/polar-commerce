@@ -52,8 +52,6 @@ export default function EnableTwoFactor() {
   const [backupCodes, setBackupCodes] = useState<string[]>();
   const [copied, setCopied] = useState(false);
 
-  // React 19.2: Use Effect Event for one-time account check
-  // This prevents unnecessary re-renders and keeps the effect dependencies clean
   const onMount = useEffectEvent(async () => {
     const accounts = await authClient.listAccounts();
     if ('data' in accounts && accounts.data) {

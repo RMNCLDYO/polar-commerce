@@ -44,8 +44,7 @@ export default function TwoFactorVerification() {
           },
         },
       });
-    } catch (error) {
-      console.error('TOTP verification error:', error);
+    } catch {
       toast.error('Failed to verify code. Please try again.');
     } finally {
       setLoading(false);
@@ -57,8 +56,7 @@ export default function TwoFactorVerification() {
       setLoading(true);
       await authClient.twoFactor.sendOtp();
       setOtpSent(true);
-    } catch (error) {
-      console.error('OTP send error:', error);
+    } catch {
       toast.error('Failed to send verification code. Please try again.');
     } finally {
       setLoading(false);
@@ -72,9 +70,7 @@ export default function TwoFactorVerification() {
         code,
         trustDevice,
       });
-      // Redirect will happen automatically on success
-    } catch (error) {
-      console.error('OTP verification error:', error);
+    } catch {
       toast.error('Failed to verify code. Please try again.');
     } finally {
       setLoading(false);
@@ -87,9 +83,7 @@ export default function TwoFactorVerification() {
       await authClient.twoFactor.verifyBackupCode({
         code,
       });
-      // Redirect will happen automatically on success
-    } catch (error) {
-      console.error('Backup code verification error:', error);
+    } catch {
       toast.error('Failed to verify backup code. Please try again.');
     } finally {
       setLoading(false);

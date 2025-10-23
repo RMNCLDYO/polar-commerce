@@ -1,14 +1,6 @@
-/**
- * Strongly typed metadata schemas for all entities
- * NO MORE Record<string, unknown> laziness!
- */
-
-// ============================================
-// Checkout Metadata Schema
-// ============================================
 export interface CheckoutMetadata {
   cartId?: string;
-  cartItems?: string; // JSON stringified cart items
+  cartItems?: string;
   itemCount?: number;
   sessionId?: string;
   userId?: string;
@@ -22,14 +14,9 @@ export interface CheckoutMetadata {
   utmTerm?: string;
   bundleProductId?: string;
 
-  // Allow dynamic properties for item data
-  // Supports patterns like item_0_id, item_1_quantity, etc.
   [key: string]: string | number | boolean | undefined;
 }
 
-// ============================================
-// Product Metadata Schema
-// ============================================
 export interface ProductMetadata {
   sku?: string;
   brand?: string;
@@ -48,9 +35,6 @@ export interface ProductMetadata {
   salePercentage?: number;
 }
 
-// ============================================
-// Customer Metadata Schema
-// ============================================
 export interface CustomerMetadata {
   preferredLanguage?: string;
   marketingOptIn?: boolean;
@@ -64,9 +48,6 @@ export interface CustomerMetadata {
   notes?: string;
 }
 
-// ============================================
-// Order Metadata Schema
-// ============================================
 export interface OrderMetadata extends CheckoutMetadata {
   shippingMethod?: 'standard' | 'express' | 'overnight';
   giftMessage?: string;
@@ -78,9 +59,6 @@ export interface OrderMetadata extends CheckoutMetadata {
   estimatedDelivery?: string;
 }
 
-// ============================================
-// Custom Field Data Schema (Checkout)
-// ============================================
 export interface CheckoutCustomFieldData {
   organizationName?: string;
   taxExemptId?: string;
@@ -92,9 +70,6 @@ export interface CheckoutCustomFieldData {
   orderNotes?: string;
 }
 
-// ============================================
-// Country Code Types
-// ============================================
 export type ISO3166CountryCode =
   | "AD" | "AE" | "AF" | "AG" | "AI" | "AL" | "AM" | "AO" | "AQ" | "AR"
   | "AS" | "AT" | "AU" | "AW" | "AX" | "AZ" | "BA" | "BB" | "BD" | "BE"
@@ -122,9 +97,7 @@ export type ISO3166CountryCode =
   | "UG" | "UM" | "US" | "UY" | "UZ" | "VA" | "VC" | "VE" | "VG" | "VI"
   | "VN" | "VU" | "WF" | "WS" | "YE" | "YT" | "ZA" | "ZM" | "ZW";
 
-// Helper to validate and cast country code
 export function toCountryCode(country: string): ISO3166CountryCode {
-  // Validate it's a valid ISO 3166 code (2-letter uppercase)
   if (!/^[A-Z]{2}$/.test(country)) {
     throw new Error(`Invalid country code: ${country}`);
   }
@@ -135,14 +108,10 @@ export function isValidCountryCode(country: string): country is ISO3166CountryCo
   return /^[A-Z]{2}$/.test(country);
 }
 
-// ============================================
-// Type Guards
-// ============================================
 export function isCheckoutMetadata(obj: unknown): obj is CheckoutMetadata {
   if (typeof obj !== 'object' || obj === null) {return false;}
   const meta = obj as Record<string, unknown>;
 
-  // Validate known fields
   if (meta.cartId !== undefined && typeof meta.cartId !== 'string') {return false;}
   if (meta.itemCount !== undefined && typeof meta.itemCount !== 'number') {return false;}
   if (meta.sessionId !== undefined && typeof meta.sessionId !== 'string') {return false;}

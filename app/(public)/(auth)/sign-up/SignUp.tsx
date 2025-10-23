@@ -61,8 +61,10 @@ export default function SignUp() {
         },
         onError: async (ctx: AuthErrorContext) => {
           setLoading(false);
-          console.error(ctx.error);
-          console.error('response', ctx.response);
+          if (process.env.NODE_ENV === 'development') {
+            console.error(ctx.error);
+            console.error('response', ctx.response);
+          }
           toast.error(ctx.error.message);
         },
       },

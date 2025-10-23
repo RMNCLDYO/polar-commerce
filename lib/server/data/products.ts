@@ -2,8 +2,8 @@ import 'server-only';
 
 import { fetchQuery } from 'convex/nextjs';
 import {
-  unstable_cacheLife as cacheLife,
-  unstable_cacheTag as cacheTag,
+  cacheLife,
+  cacheTag,
 } from 'next/cache';
 import { api } from '@/convex/_generated/api';
 import type { Id } from '@/convex/_generated/dataModel';
@@ -48,7 +48,9 @@ export async function getProduct(id: string): Promise<Product | null> {
     );
     return product;
   } catch (error) {
-    console.error('Error fetching product:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Error fetching product:', error);
+    }
     return null;
   }
 }

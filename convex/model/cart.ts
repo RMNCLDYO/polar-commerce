@@ -1,20 +1,7 @@
-/**
- * Cart Model - Business logic for cart operations
- *
- * This file contains the core business logic for cart management.
- * The API functions in cart/cart.ts are thin wrappers that call these functions.
- *
- * Best Practice: "Most logic should be in convex/model/, while API should be thin wrappers"
- * Source: https://docs.convex.dev/understanding/best-practices/
- */
-
 import type { Doc, Id } from '../_generated/dataModel';
 import type { MutationCtx, QueryCtx } from '../_generated/server';
 import { validateQuantity } from '../utils/validation';
 
-/**
- * Get or create a cart for a user or session
- */
 export async function getOrCreateCart(
   ctx: MutationCtx,
   userId?: string | null,
@@ -22,7 +9,6 @@ export async function getOrCreateCart(
 ): Promise<Doc<'carts'> | null> {
   let cart: Doc<'carts'> | null = null;
 
-  // Try to find existing cart
   if (userId) {
     cart = await ctx.db
       .query('carts')
@@ -35,14 +21,13 @@ export async function getOrCreateCart(
       .first();
   }
 
-  // Create new cart if not found
   if (!cart) {
     const cartId = await ctx.db.insert('carts', {
       userId: userId || undefined,
       sessionId: sessionId || undefined,
       createdAt: Date.now(),
       updatedAt: Date.now(),
-      expiresAt: sessionId ? Date.now() + 30 * 24 * 60 * 60 * 1000 : undefined, // 30 days for guest carts
+      expiresAt: sessionId ? Date.now() + 30 * 24 * 60 * 60 * 1000 : undefined,
     });
     cart = await ctx.db.get(cartId);
   }
@@ -50,27 +35,21 @@ export async function getOrCreateCart(
   return cart;
 }
 
-/**
- * Add an item to a cart
- */
 export async function addItemToCart(
   ctx: MutationCtx,
   cartId: Id<'carts'>,
   catalogId: Id<'catalog'>,
   quantity: number,
 ): Promise<void> {
-  // Get product to verify it exists and get current price
   const product = await ctx.db.get(catalogId);
   if (!product || !product.isActive) {
     throw new Error('Product not found or inactive');
   }
 
-  // Check inventory
   if (!product.inStock || product.inventory_qty <= 0) {
     throw new Error('Product is out of stock');
   }
 
-  // Check if item already in cart
   const existingItem = await ctx.db
     .query('cartItems')
     .withIndex('cartId_catalogId', (q) =>
@@ -85,13 +64,11 @@ export async function addItemToCart(
   validateQuantity(newQuantity, product.inventory_qty, product.name);
 
   if (existingItem) {
-    // Update quantity
     await ctx.db.patch(existingItem._id, {
       quantity: newQuantity,
       updatedAt: Date.now(),
     });
   } else {
-    // Add new item
     await ctx.db.insert('cartItems', {
       cartId,
       catalogId,
@@ -102,15 +79,11 @@ export async function addItemToCart(
     });
   }
 
-  // Update cart timestamp
   await ctx.db.patch(cartId, {
     updatedAt: Date.now(),
   });
 }
 
-/**
- * Get cart by user ID or session ID
- */
 export async function findCart(
   ctx: QueryCtx,
   userId?: string | null,
@@ -130,9 +103,6 @@ export async function findCart(
   return null;
 }
 
-/**
- * Get all items in a cart with product details
- */
 export async function getCartItems(
   ctx: QueryCtx,
   cartId: Id<'carts'>,
@@ -157,9 +127,6 @@ export async function getCartItems(
   return itemsWithProducts.filter(Boolean);
 }
 
-/**
- * Calculate cart totals
- */
 export function calculateCartTotals(
   items: Array<{
     quantity: number;
@@ -182,9 +149,6 @@ export function calculateCartTotals(
   return { subtotal, itemCount };
 }
 
-/**
- * Remove an item from a cart
- */
 export async function removeItemFromCart(
   ctx: MutationCtx,
   cartId: Id<'carts'>,
@@ -200,16 +164,12 @@ export async function removeItemFromCart(
   if (cartItem) {
     await ctx.db.delete(cartItem._id);
 
-    // Update cart timestamp
     await ctx.db.patch(cartId, {
       updatedAt: Date.now(),
     });
   }
 }
 
-/**
- * Clear all items from a cart
- */
 export async function clearCartItems(
   ctx: MutationCtx,
   cartId: Id<'carts'>,
