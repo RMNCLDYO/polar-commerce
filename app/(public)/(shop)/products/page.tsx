@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import {
-  unstable_cacheLife as cacheLife,
-  unstable_cacheTag as cacheTag,
+  cacheLife,
+  cacheTag,
 } from 'next/cache';
 import Image from 'next/image';
 import { QuickAddButton } from '@/components/cart/quick-add-button';
@@ -64,9 +64,8 @@ async function CachedProductsContent({
           <p className="text-muted-foreground">
             {products.length === 0
               ? 'No products found matching your criteria'
-              : `Showing ${products.length} product${products.length !== 1 ? 's' : ''}${
-                  sort ? ` (sorted by ${sort.replace('-', ' ')})` : ''
-                }`}
+              : `Showing ${products.length} product${products.length !== 1 ? 's' : ''}${sort ? ` (sorted by ${sort.replace('-', ' ')})` : ''
+              }`}
           </p>
         </div>
 
@@ -86,7 +85,7 @@ async function CachedProductsContent({
                   className={cn(
                     'absolute inset-0 transition-all duration-300',
                     !product.inStock &&
-                      'grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100',
+                    'grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100',
                   )}
                 >
                   <Image
@@ -99,7 +98,6 @@ async function CachedProductsContent({
                   />
                 </div>
 
-                {/* Out of Stock Badge */}
                 {!product.inStock && (
                   <Badge
                     variant="destructive"

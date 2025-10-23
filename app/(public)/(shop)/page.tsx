@@ -1,6 +1,6 @@
 import {
-  unstable_cacheLife as cacheLife,
-  unstable_cacheTag as cacheTag,
+  cacheLife,
+  cacheTag,
 } from 'next/cache';
 import { Uploader } from '@/app/(public)/(shop)/components/uploader';
 import { ProductGrid } from '@/components/products/product-grid';

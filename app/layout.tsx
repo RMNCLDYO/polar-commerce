@@ -8,8 +8,6 @@ import { geistMono, geistSans } from '@/lib/shared/fonts';
 import './globals.css';
 
 export const metadata: Metadata = {
-  // NEXT_PUBLIC_BASE_URL is used for absolute URL generation in metadata
-  // Must be configured in production environment
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000',
   ),

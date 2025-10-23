@@ -38,7 +38,6 @@ export default function PricingPage() {
 
   const { subscriptions } = subscriptionsData;
 
-  // Get current user's tier
   const userTier = user?.tier || 'free';
 
   const handlePlanSelect = async (
@@ -47,26 +46,20 @@ export default function PricingPage() {
     productId?: string,
   ) => {
     if (!user) {
-      // Not logged in - redirect to sign-in with plan selection
       const returnUrl = `/pricing?plan=${tier}&cycle=${cycle}`;
       router.push(`/sign-in?callbackUrl=${encodeURIComponent(returnUrl)}`);
       return;
     }
 
-    // User is logged in
     if (tier === 'free') {
-      // Free tier - no checkout needed, just stay on pricing page
       router.push('/pricing');
       return;
     }
 
-    // Generate checkout link for paid tier
     if (productId) {
       try {
         setLoading(productId);
 
-        // Ensure customer exists in Polar before checkout
-        // This handles the case where customer already exists from previous attempts
         await ensureCustomer({
           userId: user._id,
           email: user.email,
@@ -78,10 +71,8 @@ export default function PricingPage() {
           origin: window.location.origin,
           successUrl: `${window.location.origin}/pricing?success=true`,
         });
-        // Navigate to checkout URL
         router.push(checkout.url);
-      } catch (error) {
-        console.error('Failed to generate checkout link:', error);
+      } catch {
         setLoading(null);
       }
     }
@@ -97,27 +88,24 @@ export default function PricingPage() {
           Unlock premium features and exclusive benefits
         </p>
 
-        {/* Billing Cycle Toggle */}
         <div className="inline-flex items-center gap-4 bg-muted p-1 rounded-lg">
           <button
             type="button"
             onClick={() => setBillingCycle('monthly')}
-            className={`px-6 py-2 rounded-md font-medium transition-all ${
-              billingCycle === 'monthly'
-                ? 'bg-background shadow-sm'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
+            className={`px-6 py-2 rounded-md font-medium transition-all ${billingCycle === 'monthly'
+              ? 'bg-background shadow-sm'
+              : 'text-muted-foreground hover:text-foreground'
+              }`}
           >
             Monthly
           </button>
           <button
             type="button"
             onClick={() => setBillingCycle('yearly')}
-            className={`px-6 py-2 rounded-md font-medium transition-all ${
-              billingCycle === 'yearly'
-                ? 'bg-background shadow-sm'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
+            className={`px-6 py-2 rounded-md font-medium transition-all ${billingCycle === 'yearly'
+              ? 'bg-background shadow-sm'
+              : 'text-muted-foreground hover:text-foreground'
+              }`}
           >
             Yearly
             <span className="ml-2 text-xs text-green-600 dark:text-green-500 font-semibold">
@@ -142,14 +130,11 @@ export default function PricingPage() {
           const isCurrentPlan = userTier === subscription.tier;
           const isFree = subscription.id === 'free';
 
-          // Get Polar product ID for non-free tiers
           let polarProductId: string | null = null;
           if (!isFree && products) {
-            // Construct product key and safely access
             const productKey = billingCycle === 'monthly'
               ? `${subscription.id}Monthly`
               : `${subscription.id}Yearly`;
-            // Validate productKey to prevent object injection
             const product = Object.prototype.hasOwnProperty.call(products, productKey)
               ? products[productKey as keyof typeof products]
               : undefined;
@@ -159,11 +144,10 @@ export default function PricingPage() {
           return (
             <Card
               key={subscription.id}
-              className={`p-8 flex flex-col ${
-                subscription.highlighted
-                  ? 'border-2 border-primary relative'
-                  : ''
-              }`}
+              className={`p-8 flex flex-col ${subscription.highlighted
+                ? 'border-2 border-primary relative'
+                : ''
+                }`}
             >
               {subscription.badge && subscription.highlighted && (
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground px-4 py-1 rounded-full text-sm font-semibold">

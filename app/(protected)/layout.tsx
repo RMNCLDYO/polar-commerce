@@ -12,10 +12,8 @@ export default async function ProtectedLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // Opt into dynamic rendering before accessing auth
   await headers();
 
-  // Server-side auth check using Better Auth token
   const token = await getToken();
   const user: CurrentUser | null = token
     ? await fetchQuery(api.auth.auth.getCurrentUser, {}, { token })

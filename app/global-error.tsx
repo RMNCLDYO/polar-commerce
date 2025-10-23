@@ -2,7 +2,6 @@
 
 import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { logger } from '@/lib/shared/logger';
 
 export default function GlobalError({
   error,
@@ -12,15 +11,6 @@ export default function GlobalError({
   reset: () => void;
 }) {
   useEffect(() => {
-    // Use the logger which handles production vs development
-    logger.error('Global error boundary triggered', {
-      error: error.message,
-      stack: error.stack,
-      digest: error.digest,
-    });
-
-    // In production, you would send to an external service
-    // For now, the logger handles environment-specific behavior
   }, [error]);
 
   return (
