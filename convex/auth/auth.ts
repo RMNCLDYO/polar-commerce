@@ -26,7 +26,6 @@ import {
 } from '../emails/email';
 import { polar } from '../polar';
 import type { CurrentUser } from '../types/convex';
-import { logger } from '../utils/logger';
 
 const siteUrl = process.env.SITE_URL;
 
@@ -36,8 +35,6 @@ export const authComponent = createClient<DataModel>(components.betterAuth, {
   triggers: {
     user: {
       onCreate: async (ctx, authUser) => {
-        logger.info(`[TRIGGER] User created: ${authUser.email}`);
-
         try {
           // @ts-ignore - TypeScript deep instantiation issue with Convex
           await ctx.scheduler.runAfter(0, internal.auth.sync.onUserCreated, {
@@ -45,20 +42,12 @@ export const authComponent = createClient<DataModel>(components.betterAuth, {
             email: authUser.email,
             name: authUser.name,
           });
-          logger.info(
-            `[TRIGGER] Scheduled Polar customer creation for ${authUser.email}`,
-          );
-        } catch (error) {
-          logger.error(
-            `[TRIGGER] Failed to schedule Polar customer creation:`,
-            error,
-          );
+        } catch {
         }
       },
       onDelete: async (ctx, authUser) => {
-        logger.info(`[TRIGGER] User deleted: ${authUser.email}`);
-
         try {
+          // @ts-ignore - TypeScript deep instantiation issue with Convex
           await ctx.scheduler.runAfter(
             0,
             components.polar.lib.deleteCustomer,
@@ -66,21 +55,13 @@ export const authComponent = createClient<DataModel>(components.betterAuth, {
               userId: authUser._id,
             },
           );
-          logger.info(
-            `[TRIGGER] Scheduled Polar customer deletion for ${authUser.email}`,
-          );
-        } catch (error) {
-          logger.error(
-            `[TRIGGER] Failed to schedule Polar customer deletion:`,
-            error,
-          );
+        } catch {
         }
       },
     },
   },
 });
 
-// Create auth instance with proper types
 export const createAuth = (
   ctx: GenericCtx<DataModel>,
   { optionsOnly } = { optionsOnly: false },
@@ -167,11 +148,8 @@ export const createAuth = (
     ],
   } satisfies BetterAuthOptions);
 
-// Export a static instance for Better Auth schema generation and type inference
 export const auth = getStaticAuth(createAuth);
 
-// Below are example helpers and functions for getting the current user
-// Feel free to edit, omit, etc.
 export const safeGetUser = async (ctx: QueryCtx) => {
   return authComponent.safeGetAuthUser(ctx);
 };
@@ -180,7 +158,6 @@ export const getUser = async (ctx: QueryCtx) => {
   return authComponent.getAuthUser(ctx);
 };
 
-// Fast query for header - just returns basic user info without subscription
 export const getCurrentUserBasic = query({
   args: {},
   returns: v.any(),
@@ -189,7 +166,6 @@ export const getCurrentUserBasic = query({
   },
 });
 
-// Full query with subscription data - use this on pages that need tier info
 export const getCurrentUser = query({
   args: {},
   returns: v.any(),
@@ -197,13 +173,11 @@ export const getCurrentUser = query({
     const user = await safeGetUser(ctx);
     if (!user) { return null; }
 
-    // Get subscription data from Polar
     try {
       const subscription = await polar.getCurrentSubscription(ctx, {
         userId: user._id,
       });
 
-      // Determine user tier based on subscription
       let tier: 'free' | 'starter' | 'premium' = 'free';
       const productKey = subscription?.productKey;
 
@@ -227,7 +201,6 @@ export const getCurrentUser = query({
         isPremium: tier === 'premium',
       };
     } catch {
-      // If subscription check fails, return user without subscription data
       return {
         ...user,
         subscription: null,
@@ -240,7 +213,6 @@ export const getCurrentUser = query({
   },
 });
 
-// Admin check helper
 export const isAdmin = async (ctx: QueryCtx): Promise<boolean> => {
   const user = await safeGetUser(ctx);
   if (!user?.email) {
@@ -251,5 +223,4 @@ export const isAdmin = async (ctx: QueryCtx): Promise<boolean> => {
   return adminEmails.includes(user.email);
 };
 
-// Export trigger API functions
 export const { onCreate, onUpdate, onDelete } = authComponent.triggersApi();

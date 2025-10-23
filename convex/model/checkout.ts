@@ -1,15 +1,8 @@
-/**
- * Checkout Model - Business logic for checkout operations
- */
-
 import { components } from '../_generated/api';
 import type { Doc, Id } from '../_generated/dataModel';
 import type { ActionCtx, MutationCtx } from '../_generated/server';
 import type { CartItemForCheckout } from '../checkout/types';
 
-/**
- * Create an order from checkout data
- */
 export async function createOrder(
   ctx: MutationCtx,
   data: {
@@ -51,14 +44,12 @@ export async function createOrder(
     customFieldData?: Record<string, string | number | boolean>;
   },
 ): Promise<Id<'orders'>> {
-  // Check if order already exists
   const existingOrder = await ctx.db
     .query('orders')
     .withIndex('checkoutId', (q) => q.eq('checkoutId', data.checkoutId))
     .first();
 
   if (existingOrder) {
-    // Update existing order
     await ctx.db.patch(existingOrder._id, {
       status: data.status,
       email: data.email,
@@ -85,7 +76,6 @@ export async function createOrder(
     return existingOrder._id;
   }
 
-  // Create new order
   return await ctx.db.insert('orders', {
     checkoutId: data.checkoutId,
     userId: data.userId,
@@ -116,9 +106,6 @@ export async function createOrder(
   });
 }
 
-/**
- * Update cart with checkout session info
- */
 export async function updateCartCheckout(
   ctx: MutationCtx,
   cartId: Id<'carts'>,
@@ -143,18 +130,13 @@ export async function updateCartCheckout(
     updatedAt: Date.now(),
   };
 
-  if (checkoutData.discountId) {updateData.discountId = checkoutData.discountId;}
-  if (checkoutData.discountCode)
-    {updateData.discountCode = checkoutData.discountCode;}
-  if (checkoutData.customFieldData)
-    {updateData.customFieldData = checkoutData.customFieldData;}
+  if (checkoutData.discountId) { updateData.discountId = checkoutData.discountId; }
+  if (checkoutData.discountCode) { updateData.discountCode = checkoutData.discountCode; }
+  if (checkoutData.customFieldData) { updateData.customFieldData = checkoutData.customFieldData; }
 
   await ctx.db.patch(cartId, updateData);
 }
 
-/**
- * Get user orders with optional email matching
- */
 export async function getUserOrders(
   ctx: MutationCtx,
   userId: string,
@@ -162,7 +144,6 @@ export async function getUserOrders(
 ): Promise<Doc<'orders'>[]> {
   const orders: Doc<'orders'>[] = [];
 
-  // Get orders linked to userId
   const userOrders = await ctx.db
     .query('orders')
     .withIndex('userId', (q) => q.eq('userId', userId))
@@ -170,7 +151,6 @@ export async function getUserOrders(
     .collect();
   orders.push(...userOrders);
 
-  // Also get any guest orders with the same email that haven't been linked yet
   if (userEmail) {
     const guestOrders = await ctx.db
       .query('orders')
@@ -181,21 +161,9 @@ export async function getUserOrders(
     orders.push(...guestOrders);
   }
 
-  // Sort all orders by creation date
   return orders.sort((a, b) => b.createdAt - a.createdAt);
 }
 
-/**
- * Batch fetch Polar products for checkout
- *
- * This eliminates the N+1 query pattern by fetching all Polar products
- * in parallel instead of sequentially in a loop.
- *
- * Performance impact:
- * - Before: N sequential queries (~500ms per item)
- * - After: N parallel queries (~500ms total)
- * - Savings: (N-1) * 500ms for N items
- */
 export async function batchFetchPolarProducts(
   ctx: ActionCtx,
   cartItems: Array<{
@@ -207,7 +175,6 @@ export async function batchFetchPolarProducts(
     price: number;
   }>,
 ): Promise<CartItemForCheckout[]> {
-  // Validate all products have Polar product IDs
   for (const item of cartItems) {
     if (!item.product.polarProductId) {
       throw new Error(
@@ -216,9 +183,7 @@ export async function batchFetchPolarProducts(
     }
   }
 
-  // Fetch all Polar products in parallel using Promise.all
   const polarProductPromises = cartItems.map(async (item) => {
-    // TypeScript knows polarProductId exists due to validation loop above
     const polarProductId = item.product.polarProductId;
     if (!polarProductId) {
       throw new Error(
@@ -234,7 +199,6 @@ export async function batchFetchPolarProducts(
       throw new Error(`Polar product not found for "${item.product.name}"`);
     }
 
-    // Find the active price
     const activePrice = polarProduct.prices.find(
       (p: (typeof polarProduct.prices)[number]) => !p.isArchived,
     );
@@ -248,6 +212,5 @@ export async function batchFetchPolarProducts(
     };
   });
 
-  // Wait for all product fetches to complete in parallel
   return await Promise.all(polarProductPromises);
 }

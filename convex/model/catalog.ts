@@ -1,16 +1,6 @@
-/**
- * Catalog Model - Business logic for product management
- *
- * This file contains the core business logic for catalog operations.
- * The API functions in catalog/catalog.ts are thin wrappers that call these functions.
- */
-
 import type { Doc, Id } from '../_generated/dataModel';
 import type { QueryCtx, MutationCtx } from '../_generated/server';
 
-/**
- * Get active products with filtering and sorting
- */
 export async function getActiveProducts(
   ctx: QueryCtx,
   options: {
@@ -26,12 +16,10 @@ export async function getActiveProducts(
     .withIndex('isActive', (q) => q.eq('isActive', true))
     .collect();
 
-  // Exclude subscriptions if requested
   if (options.excludeSubscriptions) {
     products = products.filter((p) => p.category !== 'subscription');
   }
 
-  // Category filter
   if (options.category) {
     const categoryFilter = options.category.toUpperCase();
     products = products.filter((p) =>
@@ -39,7 +27,6 @@ export async function getActiveProducts(
     );
   }
 
-  // Search filter
   if (options.search) {
     const searchTerm = options.search.toLowerCase();
     products = products.filter(
@@ -50,7 +37,6 @@ export async function getActiveProducts(
     );
   }
 
-  // Price range filter
   if (options.minPrice !== undefined || options.maxPrice !== undefined) {
     products = products.filter((p) => {
       if (options.minPrice !== undefined && p.price < options.minPrice * 100)
@@ -64,9 +50,6 @@ export async function getActiveProducts(
   return products;
 }
 
-/**
- * Sort products with stock priority
- */
 export function sortProducts(
   products: Doc<'catalog'>[],
   sortOption?:
@@ -77,12 +60,10 @@ export function sortProducts(
     | 'newest',
 ): Doc<'catalog'>[] {
   return products.sort((a, b) => {
-    // First sort by stock status (in stock first)
     if (a.inStock !== b.inStock) {
       return a.inStock ? -1 : 1;
     }
 
-    // Then apply the user's chosen sort option
     if (sortOption) {
       switch (sortOption) {
         case 'price-asc':
@@ -103,9 +84,6 @@ export function sortProducts(
   });
 }
 
-/**
- * Format product for API response
- */
 export function formatProduct(product: Doc<'catalog'>) {
   return {
     id: product._id,
@@ -120,9 +98,6 @@ export function formatProduct(product: Doc<'catalog'>) {
   };
 }
 
-/**
- * Create a new product
- */
 export async function createProduct(
   ctx: MutationCtx,
   data: {
@@ -148,9 +123,6 @@ export async function createProduct(
   });
 }
 
-/**
- * Update product inventory
- */
 export async function updateInventory(
   ctx: MutationCtx,
   productId: Id<'catalog'>,
@@ -180,9 +152,6 @@ export async function updateInventory(
   };
 }
 
-/**
- * Link product to Polar
- */
 export async function linkProductToPolar(
   ctx: MutationCtx,
   productId: Id<'catalog'>,
@@ -194,9 +163,6 @@ export async function linkProductToPolar(
   });
 }
 
-/**
- * Update product fields
- */
 export async function updateProduct(
   ctx: MutationCtx,
   productId: Id<'catalog'>,

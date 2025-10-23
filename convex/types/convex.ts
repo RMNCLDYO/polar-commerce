@@ -1,14 +1,5 @@
-/**
- * Complete type definitions for all Convex API responses
- * This file provides comprehensive schemas for every query and mutation
- */
-
 import type { Id } from '../_generated/dataModel';
-import type { CheckoutCustomFieldData, ProductMetadata, CheckoutMetadata } from './metadata';
-
-// ============================================
-// Auth Types
-// ============================================
+import type { CheckoutCustomFieldData, CheckoutMetadata, ProductMetadata } from './metadata';
 
 export interface AuthUser {
   _id: string;
@@ -21,7 +12,6 @@ export interface AuthUser {
   updatedAt: number;
   username?: string | null;
   foo?: string;
-  // Additional fields from Better Auth
   userId?: string | null;
   twoFactorEnabled?: boolean | null;
   isAnonymous?: boolean | null;
@@ -49,17 +39,12 @@ export interface AuthAccount {
 }
 
 export interface CurrentUser extends AuthUser {
-  // The subscription from Polar component can be any shape
   subscription?: Record<string, unknown> | null;
   tier: 'free' | 'starter' | 'premium';
   isFree: boolean;
   isStarter: boolean;
   isPremium: boolean;
 }
-
-// ============================================
-// Polar Types
-// ============================================
 
 export interface PolarProduct {
   id: string;
@@ -139,7 +124,6 @@ export interface PolarOrder {
   metadata?: Record<string, string>;
 }
 
-// Component response types
 export interface PolarComponentProduct {
   _id: string;
   _creationTime: number;
@@ -175,7 +159,6 @@ export interface PolarComponentSubscription {
   userId: string;
 }
 
-// Polar API response types
 export interface PolarProductsResponse {
   starterMonthly?: PolarComponentProduct;
   starterYearly?: PolarComponentProduct;
@@ -188,10 +171,6 @@ export interface CheckoutSessionResponse {
   checkoutUrl?: string;
   error?: string;
 }
-
-// ============================================
-// Cart Types
-// ============================================
 
 export interface Cart {
   _id: Id<'carts'>;
@@ -239,10 +218,6 @@ export interface CartValidation {
   }>;
 }
 
-// ============================================
-// Catalog Types
-// ============================================
-
 export interface CatalogProduct {
   _id: Id<'catalog'>;
   _creationTime: number;
@@ -271,10 +246,6 @@ export interface ProductImage {
   polarImageId?: string;
 }
 
-// ============================================
-// Wishlist Types
-// ============================================
-
 export interface Wishlist {
   _id: Id<'wishlists'>;
   _creationTime: number;
@@ -299,10 +270,6 @@ export interface WishlistWithItems extends Wishlist {
   }>;
   itemCount: number;
 }
-
-// ============================================
-// Order Types
-// ============================================
 
 export interface Order {
   _id: Id<'orders'>;
@@ -343,10 +310,6 @@ export interface Order {
   canceledAt?: number;
 }
 
-// ============================================
-// Demo/Todo Types
-// ============================================
-
 export interface DemoTodo {
   _id: Id<'demoTodos'>;
   _creationTime: number;
@@ -357,10 +320,6 @@ export interface DemoTodo {
   createdAt: number;
   updatedAt: number;
 }
-
-// ============================================
-// Better Auth Component Types
-// ============================================
 
 export interface BetterAuthUser {
   _id: string;
@@ -409,10 +368,6 @@ export interface BetterAuthTwoFactor {
   updatedAt: string;
 }
 
-// ============================================
-// API Response Types
-// ============================================
-
 export interface ApiResponse<T> {
   success: boolean;
   data?: T;
@@ -435,10 +390,6 @@ export interface MutationResponse {
   error?: string;
 }
 
-// ============================================
-// Query Response Types for specific endpoints
-// ============================================
-
 export type GetCurrentUserResponse = CurrentUser | null;
 export type GetCurrentUserBasicResponse = AuthUser | null;
 export type GetCartResponse = CartWithItems | null | undefined;
@@ -447,10 +398,6 @@ export type GetCatalogResponse = CatalogProduct[];
 export type GetProductResponse = CatalogProduct | null;
 export type GetOrdersResponse = Order[];
 export type GetDemoTodosResponse = DemoTodo[];
-
-// ============================================
-// Mutation Response Types
-// ============================================
 
 export interface AddToCartResponse {
   success: boolean;
@@ -475,15 +422,10 @@ export interface ToggleWishlistResponse {
   item?: WishlistItem;
 }
 
-// ============================================
-// Utility Types
-// ============================================
-
 export type ConvexQueryResult<T> = T | null | undefined;
 export type ConvexMutationResult<T> = Promise<T>;
 export type ConvexActionResult<T> = Promise<T>;
 
-// Type guard functions
 export function isAuthUser(obj: unknown): obj is AuthUser {
   return obj !== null &&
     typeof obj === 'object' &&

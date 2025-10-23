@@ -1,18 +1,7 @@
-/**
- * Relationship Helpers
- *
- * Utilities for working with document relationships in Convex.
- * Based on convex-helpers relationship patterns.
- */
-
 import type { GenericQueryCtx, GenericDataModel } from 'convex/server';
 import type { GenericId } from 'convex/values';
 import { getAll } from 'convex-helpers/server/relationships';
 
-/**
- * Get multiple documents by IDs efficiently
- * Uses getAll from convex-helpers
- */
 export async function getDocuments<
   Ctx extends GenericQueryCtx<GenericDataModel>,
   TableName extends string,
@@ -23,37 +12,27 @@ export async function getDocuments<
   return await getAll(ctx.db, ids);
 }
 
-/**
- * Get cart with all items and product details
- *
- * Example of using relationship helpers to efficiently fetch related data
- */
 export async function getCartWithItems(
   ctx: any,
   cartId: any,
 ) {
-  // Get cart
   const cart = await ctx.db.get(cartId);
   if (!cart) {return null;}
 
-  // Get all cart items
   const cartItems = await ctx.db
     .query('cartItems')
     .withIndex('cartId_catalogId', (q: any) => q.eq('cartId', cartId))
     .collect();
 
-  // Get all products in one efficient batch
   const productIds = cartItems.map((item: any) => item.catalogId);
   const products = await getAll(ctx.db, productIds);
 
-  // Create a map for quick lookup
   const productMap = new Map(products.map((p: any) => [p._id, p]));
 
-  // Combine cart items with products
   const itemsWithProducts = cartItems.map((item: any) => ({
     ...item,
     product: productMap.get(item.catalogId),
-  })).filter((item: any) => item.product); // Filter out items with deleted products
+  })).filter((item: any) => item.product);
 
   return {
     cart,
@@ -61,9 +40,6 @@ export async function getCartWithItems(
   };
 }
 
-/**
- * Get wishlist with all items and product details
- */
 export async function getWishlistWithItems(
   ctx: any,
   wishlistId: any,
@@ -92,9 +68,6 @@ export async function getWishlistWithItems(
   };
 }
 
-/**
- * Get user's orders with product details
- */
 export async function getUserOrdersWithProducts(
   ctx: any,
   userId: string,
@@ -105,14 +78,9 @@ export async function getUserOrdersWithProducts(
     .order('desc')
     .collect();
 
-  // Orders already contain product snapshots in the products array
-  // No need for additional lookups
   return orders;
 }
 
-/**
- * Get products by category efficiently
- */
 export async function getProductsByCategory(
   ctx: any,
   category: string,
@@ -123,11 +91,6 @@ export async function getProductsByCategory(
     .collect();
 }
 
-/**
- * Batch get products by multiple IDs
- *
- * More efficient than multiple individual gets
- */
 export async function batchGetProducts(
   ctx: any,
   productIds: Array<any>,
@@ -135,9 +98,6 @@ export async function batchGetProducts(
   return await getAll(ctx.db, productIds);
 }
 
-/**
- * Get all carts for a user (handles both authenticated and session-based)
- */
 export async function getUserCarts(
   ctx: any,
   userId?: string,
@@ -164,11 +124,6 @@ export async function getUserCarts(
   return carts;
 }
 
-/**
- * Get related items (other products in the same category)
- *
- * Useful for "You might also like" features
- */
 export async function getRelatedProducts(
   ctx: any,
   productId: any,
@@ -187,16 +142,12 @@ export async function getRelatedProducts(
   return relatedProducts;
 }
 
-/**
- * Check if product is in user's cart
- */
 export async function isInCart(
   ctx: any,
   userId: string | undefined,
   sessionId: string | undefined,
   productId: any,
 ): Promise<boolean> {
-  // Find cart
   let cart = null;
   if (userId) {
     cart = await ctx.db
@@ -212,7 +163,6 @@ export async function isInCart(
 
   if (!cart) {return false;}
 
-  // Check if item exists in cart
   const item = await ctx.db
     .query('cartItems')
     .withIndex('cartId_catalogId', (q: any) =>
@@ -223,9 +173,6 @@ export async function isInCart(
   return !!item;
 }
 
-/**
- * Check if product is in user's wishlist
- */
 export async function isInWishlist(
   ctx: any,
   userId: string | undefined,

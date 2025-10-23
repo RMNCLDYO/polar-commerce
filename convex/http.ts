@@ -2,66 +2,52 @@ import { httpRouter } from 'convex/server';
 import { authComponent, createAuth } from './auth/auth';
 import { checkoutOptions, createCheckout } from './checkout/http';
 import { polar } from './polar';
-import { logger } from './utils/logger';
 import './utils/polyfills';
 
 const http = httpRouter();
 
 authComponent.registerRoutes(http, createAuth);
 
-// ============================================
-// POLAR COMPONENT WEBHOOK HANDLER
-// ============================================
-// The @convex-dev/polar component handles ALL webhook routing automatically
-// This includes signature validation using the Standard Webhooks spec
-//
-// Configure in Polar dashboard: Settings > Webhooks > Webhook #1
-// URL: https://your-deployment.convex.site/polar/events
-// Secret: Set via POLAR_WEBHOOK_SECRET env var
-//
-// Events to enable:
-// - customer.created, customer.updated, customer.deleted
-// - product.created, product.updated
-// - subscription.created, subscription.updated
-//
-// The component automatically syncs:
-// - Customers (created, updated, deleted)
-// - Products (created, updated)
-// - Subscriptions (created, updated, active, canceled, uncanceled, revoked)
 polar.registerRoutes(http, {
-  // Optional: Custom path (defaults to "/polar/events")
-  // path: "/polar/events",
-
-  // Optional: Custom webhook event handlers
-  // Note: Component auto-syncs customers, products, subscriptions
-  // These callbacks are for custom business logic only
-
   onSubscriptionUpdated: async (_ctx, event) => {
-    logger.info('[Polar Component] Subscription updated:', event.data.id);
-
-    if (event.data.customerCancellationReason) {
-      logger.info(
-        `[Polar Component] Customer cancelled: ${event.data.customerCancellationReason}`,
-      );
+    if (process.env.ENVIRONMENT === 'development') {
+      console.info('Subscription updated:', {
+        subscriptionId: event.data.id,
+        status: event.data.status,
+        cancelledAt: event.data.customerCancellationReason,
+      });
     }
   },
 
   onSubscriptionCreated: async (_ctx, event) => {
-    logger.info('[Polar Component] New subscription:', event.data.id);
+    if (process.env.ENVIRONMENT === 'development') {
+      console.info('Subscription created:', {
+        subscriptionId: event.data.id,
+        productId: event.data.productId,
+        customerId: event.data.customerId,
+      });
+    }
   },
 
   onProductCreated: async (_ctx, event) => {
-    logger.info('[Polar Component] New product:', event.data.name);
+    if (process.env.ENVIRONMENT === 'development') {
+      console.info('Product created:', {
+        productId: event.data.id,
+        name: event.data.name,
+      });
+    }
   },
 
   onProductUpdated: async (_ctx, event) => {
-    logger.info('[Polar Component] Product updated:', event.data.name);
+    if (process.env.ENVIRONMENT === 'development') {
+      console.info('Product updated:', {
+        productId: event.data.id,
+        name: event.data.name,
+      });
+    }
   },
 });
 
-// Checkout API with IP address tracking
-// POST /api/checkout/create
-// Captures customer IP from headers for fraud prevention and tax calculation
 http.route({
   path: '/api/checkout/create',
   method: 'POST',

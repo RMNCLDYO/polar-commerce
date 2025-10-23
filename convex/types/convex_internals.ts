@@ -1,13 +1,4 @@
-/**
- * Type definitions for Convex internal components and adapters
- * These types define the shape of responses from Convex components
- */
-
 import type { Id } from '../_generated/dataModel';
-
-// ============================================
-// Better Auth Adapter Types
-// ============================================
 
 export interface BetterAuthDeleteManyResponse {
   deletedCount: number;
@@ -27,11 +18,6 @@ export interface BetterAuthDeleteManyArgs {
   input: BetterAuthAdapterInput;
   paginationOpts: BetterAuthPaginationOpts;
 }
-
-
-// ============================================
-// Polar Component Internal Types
-// ============================================
 
 export interface PolarComponentInternals {
   auth: {
@@ -54,8 +40,6 @@ export interface PolarComponentInternals {
   };
 }
 
-
-// Polar Product Types
 export interface CreateProductArgs {
   name: string;
   description?: string;
@@ -89,7 +73,6 @@ export interface PolarProductListResponse {
   };
 }
 
-// Polar Subscription Types
 export interface PolarSubscriptionResponse {
   id: string;
   status: string;
@@ -107,7 +90,6 @@ export interface PolarSubscriptionListResponse {
   };
 }
 
-// Polar Customer Types
 export interface PolarCustomerResponse {
   id: string;
   email: string;
@@ -124,7 +106,6 @@ export interface PolarCustomerListResponse {
   };
 }
 
-// Catalog Types
 export interface CatalogItem {
   _id: Id<'catalog'>;
   _creationTime: number;
@@ -142,10 +123,6 @@ export interface UpdateCatalogArgs {
   id: Id<'catalog'>;
   updates: Partial<CatalogItem>;
 }
-
-// ============================================
-// HTTP Request/Response Types
-// ============================================
 
 export interface ConvexHttpRequest {
   body: string | null;
@@ -174,7 +151,6 @@ export interface PolarWebhookBody {
   };
 }
 
-// Convex function types
 export type ConvexFunction<TArgs = Record<string, unknown>, TReturn = unknown> = {
   _args: TArgs;
   _return: TReturn;
@@ -202,10 +178,6 @@ export interface ConvexActionContext {
   };
 }
 
-// ============================================
-// Component Response Types
-// ============================================
-
 export interface ComponentListResponse<T> {
   items: T[];
   nextCursor?: string;
@@ -222,10 +194,6 @@ export interface ComponentDeleteResponse {
   deletedCount: number;
   success: boolean;
 }
-
-// ============================================
-// Type Guards
-// ============================================
 
 export function isBetterAuthDeleteResponse(
   obj: unknown
@@ -275,20 +243,12 @@ export function isConvexHttpRequest(
   );
 }
 
-// ============================================
-// Utility Types for Strict Typing
-// ============================================
-
-// Strictly typed component calls
 export type TypedComponentCall<TArgs, TReturn> = (
   args: TArgs
 ) => Promise<TReturn>;
 
-// Strictly typed mutation
 export type TypedMutation<TArgs, TReturn> = TypedComponentCall<TArgs, TReturn>;
 
-// Strictly typed query
 export type TypedQuery<TArgs, TReturn> = TypedComponentCall<TArgs, TReturn>;
 
-// Strictly typed action
 export type TypedAction<TArgs, TReturn> = TypedComponentCall<TArgs, TReturn>;

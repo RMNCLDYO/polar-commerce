@@ -124,7 +124,6 @@ export const getProduct = query({
   },
 });
 
-// For apps that have 0 or 1 active subscription per user.
 export const getCurrentSubscription = query({
   args: {
     userId: v.string(),
@@ -199,9 +198,9 @@ export const listUserSubscriptions = query({
         }
         const product = subscription.productId
           ? (await ctx.db
-              .query('products')
-              .withIndex('id', (q) => q.eq('id', subscription.productId))
-              .unique()) || null
+            .query('products')
+            .withIndex('id', (q) => q.eq('id', subscription.productId))
+            .unique()) || null
           : null;
         return {
           ...omitSystemFields(subscription),
@@ -230,8 +229,8 @@ export const listProducts = query({
     const products = args.includeArchived
       ? await q.collect()
       : await q
-          .withIndex('isArchived', (q) => q.lt('isArchived', true))
-          .collect();
+        .withIndex('isArchived', (q) => q.lt('isArchived', true))
+        .collect();
     return products.map((product) => omitSystemFields(product));
   },
 });
@@ -255,8 +254,8 @@ export const listSubscriptions = query({
     const filtered = args.includeEnded
       ? subscriptions
       : subscriptions.filter(
-          (sub) => !sub.endedAt || sub.endedAt > new Date().toISOString(),
-        );
+        (sub) => !sub.endedAt || sub.endedAt > new Date().toISOString(),
+      );
     return filtered.map((sub) => omitSystemFields(sub));
   },
 });

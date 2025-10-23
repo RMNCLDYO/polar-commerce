@@ -1,75 +1,19 @@
 import { defineSchema, defineTable } from 'convex/server';
 import { v } from 'convex/values';
 
-/**
- * AISDK STOREFRONT SCHEMA
- *
- * ARCHITECTURE OVERVIEW:
- * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- *
- * COMPONENTS (External Dependencies - Isolated Schemas):
- * • betterAuth     → User authentication (tables: betterAuth_*)
- * • resend         → Email service (tables: resend_*)
- * • polar          → Payment & billing (tables: components.polar.*)
- *
- * APP TABLES (Core Business Logic):
- * • catalog        → Product/subscription catalog (synced FROM Polar)
- * • carts/cartItems → Shopping cart system
- * • orders         → Order history and fulfillment
- * • demoTodos      → Example todo feature for demonstrations
- *
- * DATA FLOW:
- * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- *
- * Seeding:
- *   data/products.json + data/subscriptions.json
- *            ↓
- *      scripts/seedAll.ts
- *            ↓
- *       Polar API (source of truth)
- *            ↓
- *    Polar webhooks sync
- *            ↓
- *   components.polar.products
- *            ↓
- *   Augment with e-commerce fields
- *            ↓
- *       catalog table (app)
- *
- * Runtime:
- *   Store pages → query catalog
- *   Cart → references catalog
- *   Checkout → uses catalog.polarProductId for Polar API
- */
-
 export default defineSchema({
-  // ==========================================
-  // CATALOG (Product & Subscription Catalog)
-  // ==========================================
-  /**
-   * Product and subscription catalog synced FROM Polar.
-   *
-   * Why this exists:
-   * - Polar's schema lacks e-commerce fields (inventory, categories)
-   * - We augment Polar products with store-specific data
-   * - Single catalog for both products AND subscriptions
-   *
-   * Contains:
-   * - Physical products (Nike shoes, caps, etc.) with inventory
-   * - Subscription plans (Starter, Premium) without inventory
-   */
   catalog: defineTable({
     name: v.string(),
-    price: v.number(), // Store as cents for precision
+    price: v.number(),
     category: v.string(),
     imageUrl: v.string(),
-    polarImageUrl: v.optional(v.string()), // Polar's public S3 image URL
-    polarImageId: v.optional(v.string()), // Polar's file ID for the image
+    polarImageUrl: v.optional(v.string()),
+    polarImageId: v.optional(v.string()),
     description: v.string(),
-    polarProductId: v.optional(v.string()), // Link to Polar product
+    polarProductId: v.optional(v.string()),
     isActive: v.boolean(),
-    inStock: v.boolean(), // Whether product is in stock
-    inventory_qty: v.number(), // Current inventory quantity
+    inStock: v.boolean(),
+    inventory_qty: v.number(),
     createdAt: v.number(),
     updatedAt: v.number(),
   })
@@ -78,20 +22,17 @@ export default defineSchema({
     .index('isActive', ['isActive'])
     .index('inStock', ['inStock']),
 
-  // ==========================================
-  // SHOPPING CART
-  // ==========================================
   carts: defineTable({
-    userId: v.optional(v.string()), // Optional for guest users
-    sessionId: v.optional(v.string()), // For anonymous users
-    lastCheckoutId: v.optional(v.string()), // Last Polar checkout session ID
-    lastCheckoutUrl: v.optional(v.string()), // Last Polar checkout URL
-    discountId: v.optional(v.string()), // Applied discount ID
-    discountCode: v.optional(v.string()), // Applied discount code
-    customFieldData: v.optional(v.record(v.string(), v.any())), // Custom checkout form data
+    userId: v.optional(v.string()),
+    sessionId: v.optional(v.string()),
+    lastCheckoutId: v.optional(v.string()),
+    lastCheckoutUrl: v.optional(v.string()),
+    discountId: v.optional(v.string()),
+    discountCode: v.optional(v.string()),
+    customFieldData: v.optional(v.record(v.string(), v.any())),
     createdAt: v.number(),
     updatedAt: v.number(),
-    expiresAt: v.optional(v.number()), // For cleanup of abandoned carts
+    expiresAt: v.optional(v.number()),
   })
     .index('userId', ['userId'])
     .index('sessionId', ['sessionId'])
@@ -99,18 +40,14 @@ export default defineSchema({
 
   cartItems: defineTable({
     cartId: v.id('carts'),
-    catalogId: v.id('catalog'), // References catalog table
+    catalogId: v.id('catalog'),
     quantity: v.number(),
-    price: v.number(), // Snapshot price at time of adding
+    price: v.number(),
     addedAt: v.number(),
     updatedAt: v.number(),
   })
-    // cartId_catalogId index covers queries filtering by cartId alone
     .index('cartId_catalogId', ['cartId', 'catalogId']),
 
-  // ==========================================
-  // WISHLIST
-  // ==========================================
   wishlists: defineTable({
     userId: v.optional(v.string()),
     sessionId: v.optional(v.string()),
@@ -128,27 +65,21 @@ export default defineSchema({
     addedAt: v.number(),
     notes: v.optional(v.string()),
   })
-    // wishlistId_catalogId index covers queries filtering by wishlistId alone
     .index('wishlistId_catalogId', ['wishlistId', 'catalogId']),
 
-  // ==========================================
-  // ORDER MANAGEMENT
-  // ==========================================
   orders: defineTable({
     userId: v.optional(v.string()),
-    email: v.optional(v.string()), // Customer email for guest orders and user linking
-    checkoutId: v.string(), // Polar checkout session ID
-    customerId: v.optional(v.string()), // Polar customer ID
+    email: v.optional(v.string()),
+    checkoutId: v.string(),
+    customerId: v.optional(v.string()),
 
-    // Status and amounts
-    status: v.string(), // succeeded, failed, pending, confirmed, expired
-    amount: v.number(), // Total amount in cents before discounts
-    discountAmount: v.optional(v.number()), // Discount amount in cents
-    taxAmount: v.optional(v.number()), // Tax amount in cents
-    totalAmount: v.optional(v.number()), // Final total after discounts and tax
+    status: v.string(),
+    amount: v.number(),
+    discountAmount: v.optional(v.number()),
+    taxAmount: v.optional(v.number()),
+    totalAmount: v.optional(v.number()),
     currency: v.string(),
 
-    // Products
     products: v.array(
       v.object({
         id: v.string(),
@@ -158,7 +89,6 @@ export default defineSchema({
       }),
     ),
 
-    // Customer details
     customerName: v.optional(v.string()),
     customerIpAddress: v.optional(v.string()),
     isBusinessCustomer: v.optional(v.boolean()),
@@ -174,21 +104,17 @@ export default defineSchema({
       }),
     ),
 
-    // Discount info
     discountId: v.optional(v.string()),
     discountCode: v.optional(v.string()),
 
-    // Trial and subscription info
-    trialInterval: v.optional(v.string()), // day, week, month, year
+    trialInterval: v.optional(v.string()),
     trialIntervalCount: v.optional(v.number()),
-    trialEnd: v.optional(v.number()), // timestamp
-    subscriptionId: v.optional(v.string()), // For subscription upgrades
+    trialEnd: v.optional(v.number()),
+    subscriptionId: v.optional(v.string()),
 
-    // Metadata
     metadata: v.optional(v.record(v.string(), v.any())),
     customFieldData: v.optional(v.record(v.string(), v.any())),
 
-    // Timestamps
     createdAt: v.number(),
     completedAt: v.optional(v.number()),
   })
@@ -200,13 +126,6 @@ export default defineSchema({
     .index('createdAt', ['createdAt'])
     .index('subscriptionId', ['subscriptionId']),
 
-  // ==========================================
-  // DEMO FEATURES
-  // ==========================================
-  /**
-   * Demo todos feature for showcasing CRUD operations.
-   * Safe to remove in production if not needed.
-   */
   demoTodos: defineTable({
     text: v.string(),
     completed: v.boolean(),
@@ -215,14 +134,6 @@ export default defineSchema({
     updatedAt: v.number(),
   }).index('userId', ['userId']),
 
-  // ==========================================
-  // BETTER AUTH TABLES
-  // ==========================================
-  /**
-   * Better Auth user table for authentication.
-   * These tables are managed by the Better Auth component but we define
-   * them here to enable type-safe queries without using 'any' types.
-   */
   betterAuth_user: defineTable({
     id: v.string(),
     email: v.string(),
@@ -287,19 +198,12 @@ export default defineSchema({
   })
     .index('userId', ['userId']),
 
-  // ==========================================
-  // RATE LIMITING
-  // ==========================================
-  /**
-   * Rate limit tracking for API protection
-   * Uses sliding window algorithm to prevent abuse
-   */
   rateLimits: defineTable({
-    key: v.string(), // Format: "rateLimit:{type}:{userId|sessionId}"
-    requests: v.array(v.number()), // Array of request timestamps
+    key: v.string(),
+    requests: v.array(v.number()),
     createdAt: v.number(),
     updatedAt: v.number(),
-    expiresAt: v.number(), // For automatic cleanup
+    expiresAt: v.number(),
   })
     .index('key', ['key'])
     .index('expiresAt', ['expiresAt']),

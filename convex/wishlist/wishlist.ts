@@ -4,8 +4,8 @@ import { mutation, query } from '../_generated/server';
 import * as WishlistModel from '../model/wishlist';
 import {
   vSuccessResponse,
-  vWishlistResponse,
   vToggleWishlistResponse,
+  vWishlistResponse,
 } from '../utils/validation';
 
 export const addToWishlist = mutation({
@@ -162,7 +162,7 @@ export const getWishlist = query({
     const itemsWithProducts = await Promise.all(
       wishlistItems.map(async (item) => {
         const product = await ctx.db.get(item.catalogId);
-        if (!product) {return null;}
+        if (!product) { return null; }
 
         return {
           _id: item._id,
@@ -296,19 +296,16 @@ export const mergeWishlist = mutation({
       throw new Error('User must be authenticated');
     }
 
-    // Find guest wishlist
     const guestWishlist = await WishlistModel.findWishlist(ctx, null, args.sessionId);
     if (!guestWishlist) {
       return { success: true };
     }
 
-    // Get or create user wishlist
     const userWishlist = await WishlistModel.getOrCreateWishlist(ctx, userId, null);
     if (!userWishlist) {
       throw new Error('Failed to create user wishlist');
     }
 
-    // If they're the same, just update ownership
     if (guestWishlist._id === userWishlist._id) {
       await ctx.db.patch(guestWishlist._id, {
         userId,
@@ -318,7 +315,6 @@ export const mergeWishlist = mutation({
       return { success: true };
     }
 
-    // Merge the two wishlists
     await WishlistModel.mergeWishlists(ctx, guestWishlist._id, userWishlist._id);
 
     return { success: true };

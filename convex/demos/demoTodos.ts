@@ -1,7 +1,6 @@
 import { v } from 'convex/values';
 import { mutation, query } from '../_generated/server';
 
-// Return type validator for a demo todo
 const vDemoTodo = v.object({
   _id: v.id('demoTodos'),
   _creationTime: v.number(),

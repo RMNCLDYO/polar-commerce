@@ -14,7 +14,6 @@ import {
   vInventoryUpdateResponse,
 } from '../utils/validation';
 
-// Local type definitions for Polar SDK
 interface PolarProduct {
   id: string;
   name: string;
@@ -35,7 +34,6 @@ interface PageIteratorResponse {
   value?: ProductsListResponse;
 }
 
-// Sync result type
 interface SyncResult {
   convexId: Id<'catalog'>;
   name: string;
@@ -43,7 +41,6 @@ interface SyncResult {
   polarProductId: string;
 }
 
-// Get all products with filters
 export const getProducts = query({
   args: {
     category: v.optional(v.string()),
@@ -69,12 +66,10 @@ export const getProducts = query({
       .withIndex('isActive', (q) => q.eq('isActive', true))
       .collect();
 
-    // Exclude subscriptions if requested
     if (args.excludeSubscriptions) {
       products = products.filter((p) => p.category !== 'subscription');
     }
 
-    // Category filter
     if (args.category) {
       const categoryFilter = args.category.toUpperCase();
       products = products.filter((p) =>
@@ -82,7 +77,6 @@ export const getProducts = query({
       );
     }
 
-    // Search filter
     if (args.search) {
       const searchTerm = args.search.toLowerCase();
       products = products.filter(
@@ -93,7 +87,6 @@ export const getProducts = query({
       );
     }
 
-    // Price range filter
     if (args.minPrice !== undefined || args.maxPrice !== undefined) {
       products = products.filter((p) => {
         if (args.minPrice !== undefined && p.price < args.minPrice * 100)
@@ -104,14 +97,11 @@ export const getProducts = query({
       });
     }
 
-    // Sorting - always put out of stock items at the end
     products.sort((a, b) => {
-      // First sort by stock status (in stock first)
       if (a.inStock !== b.inStock) {
         return a.inStock ? -1 : 1;
       }
 
-      // Then apply the user's chosen sort option
       if (args.sort) {
         switch (args.sort) {
           case 'price-asc':
@@ -131,12 +121,10 @@ export const getProducts = query({
       return 0;
     });
 
-    // Apply limit if specified
     if (args.limit !== undefined) {
       products = products.slice(0, args.limit);
     }
 
-    // Transform to match the expected format
     return products.map((p) => ({
       id: p._id,
       name: p.name,
@@ -151,7 +139,6 @@ export const getProducts = query({
   },
 });
 
-// Get single product by ID
 export const getProduct = query({
   args: { id: v.id('catalog') },
   returns: v.union(vProductListItem, v.null()),
@@ -175,11 +162,10 @@ export const getProduct = query({
   },
 });
 
-// Create a new product
 export const createProduct = mutation({
   args: {
     name: v.string(),
-    price: v.number(), // in cents
+    price: v.number(),
     category: v.string(),
     imageUrl: v.string(),
     description: v.string(),
@@ -208,7 +194,6 @@ export const createProduct = mutation({
   },
 });
 
-// Update product with Polar product ID
 export const linkPolarProduct = mutation({
   args: {
     productId: v.id('catalog'),
@@ -227,7 +212,6 @@ export const linkPolarProduct = mutation({
   },
 });
 
-// Internal query to get all products (for syncing)
 export const getAllProducts = internalQuery({
   args: {},
   returns: v.array(
@@ -254,7 +238,6 @@ export const getAllProducts = internalQuery({
   },
 });
 
-// Internal query to get all raw products (for scripts and internal use)
 export const getAllProductsRaw = internalQuery({
   args: {},
   returns: v.array(
@@ -281,7 +264,6 @@ export const getAllProductsRaw = internalQuery({
   },
 });
 
-// Internal query - Simple list query (alias for getAllProductsRaw)
 export const list = internalQuery({
   args: {},
   returns: v.array(
@@ -308,7 +290,6 @@ export const list = internalQuery({
   },
 });
 
-// Sync all Convex products to Polar and link them
 export const syncProductsToPolar = action({
   args: {},
   handler: async (ctx): Promise<SyncResult[]> => {
@@ -320,16 +301,13 @@ export const syncProductsToPolar = action({
         (process.env.POLAR_SERVER as 'sandbox' | 'production') || 'sandbox',
     });
 
-    // Get all Convex products
     const convexProducts = await ctx.runQuery(
       internal.catalog.catalog.getAllProducts,
     );
 
-    // Get all Polar products - Polar API returns paginated response
     const polarProductsIter = await polarClient.products.list({ limit: 100 });
     const polarProducts: PolarProduct[] = [];
     for await (const response of polarProductsIter) {
-      // Polar SDK returns IteratorResult with nested response structure
       const resp = response as unknown as PageIteratorResponse;
       if (resp.ok && resp.value) {
         const data = resp.value;
@@ -341,7 +319,6 @@ export const syncProductsToPolar = action({
     const results: SyncResult[] = [];
 
     for (const convexProduct of convexProducts) {
-      // Check if product already linked
       if (convexProduct.polarProductId) {
         results.push({
           convexId: convexProduct._id,
@@ -352,7 +329,6 @@ export const syncProductsToPolar = action({
         continue;
       }
 
-      // Check if product exists in Polar by name
       const existingPolarProduct = polarProducts.find(
         (p) => p.name === convexProduct.name,
       );
@@ -368,8 +344,6 @@ export const syncProductsToPolar = action({
           polarProductId,
         });
       } else {
-        // Create new product in Polar with fixed pricing
-        // Note: organizationId is omitted when using organization token
         const newPolarProduct = await polarClient.products.create({
           name: convexProduct.name,
           description: convexProduct.description,
@@ -391,7 +365,6 @@ export const syncProductsToPolar = action({
         });
       }
 
-      // Link the products
       await ctx.runMutation(internal.catalog.catalog.linkProductInternal, {
         productId: convexProduct._id,
         polarProductId,
@@ -402,7 +375,6 @@ export const syncProductsToPolar = action({
   },
 });
 
-// Internal mutation to link products
 export const linkProductInternal = internalMutation({
   args: {
     productId: v.id('catalog'),
@@ -418,7 +390,6 @@ export const linkProductInternal = internalMutation({
   },
 });
 
-// Update product with partial data
 export const updateProduct = mutation({
   args: {
     productId: v.id('catalog'),
@@ -454,7 +425,6 @@ export const updateProduct = mutation({
   },
 });
 
-// Public mutation to update Polar product ID (for external scripts)
 export const updatePolarProductId = mutation({
   args: {
     productId: v.id('catalog'),
@@ -483,7 +453,6 @@ export const updatePolarProductId = mutation({
   },
 });
 
-// Delete a product (for testing/cleanup)
 export const deleteProduct = mutation({
   args: {
     productId: v.id('catalog'),
@@ -500,7 +469,6 @@ export const deleteProduct = mutation({
   },
 });
 
-// Update product image URL with Polar S3 URL
 export const updateProductImageUrl = mutation({
   args: {
     productId: v.id('catalog'),
@@ -523,7 +491,6 @@ export const updateProductImageUrl = mutation({
   },
 });
 
-// Internal mutation for decrementing inventory (called from checkout)
 export const decrementInventoryInternal = internalMutation({
   args: {
     productId: v.id('catalog'),
@@ -544,21 +511,6 @@ export const decrementInventoryInternal = internalMutation({
       updatedAt: Date.now(),
     });
 
-    // Audit log: Inventory decremented
-    await ctx.runMutation(internal.lib.audit.logEvent, {
-      eventType: 'inventory.decremented',
-      resourceType: 'product',
-      resourceId: args.productId,
-      action: `Decremented inventory by ${args.quantity}`,
-      details: {
-        productName: product.name,
-        quantity: args.quantity,
-        oldInventory: product.inventory_qty,
-        newInventory: Math.max(0, newInventory),
-      },
-      success: true,
-    });
-
     return {
       success: true,
       newInventory: Math.max(0, newInventory),
@@ -567,8 +519,6 @@ export const decrementInventoryInternal = internalMutation({
   },
 });
 
-// Batched internal mutation for decrementing multiple products' inventory
-// This runs in a single transaction, ensuring consistency
 export const batchDecrementInventory = internalMutation({
   args: {
     updates: v.array(
@@ -595,7 +545,6 @@ export const batchDecrementInventory = internalMutation({
     const errors: Array<{ productId: string; name: string; error: string }> =
       [];
 
-    // Process all updates in single transaction
     for (const update of args.updates) {
       try {
         const product = await ctx.db.get(update.productId);
@@ -614,21 +563,6 @@ export const batchDecrementInventory = internalMutation({
           inventory_qty: Math.max(0, newInventory),
           inStock: newInventory > 0,
           updatedAt: Date.now(),
-        });
-
-        // Audit log: Inventory decremented
-        await ctx.runMutation(internal.lib.audit.logEvent, {
-          eventType: 'inventory.decremented',
-          resourceType: 'product',
-          resourceId: update.productId,
-          action: `Decremented inventory by ${update.quantity}`,
-          details: {
-            productName: product.name,
-            quantity: update.quantity,
-            oldInventory: product.inventory_qty,
-            newInventory: Math.max(0, newInventory),
-          },
-          success: true,
         });
 
         updatedCount++;

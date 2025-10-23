@@ -54,7 +54,6 @@ export function validatePositiveNumber(value: number, fieldName: string): void {
   }
 }
 
-// Base address validator - all fields required
 const vAddressBase = v.object({
   line1: v.string(),
   line2: v.string(),
@@ -64,7 +63,6 @@ const vAddressBase = v.object({
   country: v.string(),
 });
 
-// Address validator with optional fields (using convex-helpers)
 export const vAddress = v.object({
   line1: v.optional(v.string()),
   line2: v.optional(v.string()),
@@ -74,7 +72,6 @@ export const vAddress = v.object({
   country: v.string(),
 });
 
-// Partial address (all fields optional except country)
 export const vAddressPartial = partial(vAddressBase);
 
 export const vPositiveInteger = v.number();
@@ -129,7 +126,6 @@ export const vSortOption = v.union(
   v.literal('newest'),
 );
 
-// Return value validators
 export const vSuccessResponse = v.object({
   success: v.boolean(),
 });
@@ -189,7 +185,6 @@ export const vCartValidationResponse = v.object({
   itemCount: v.optional(v.number()),
 });
 
-// Wishlist validators
 export const vWishlistItemWithProduct = v.object({
   _id: v.id('wishlistItems'),
   catalogId: v.id('catalog'),
@@ -227,7 +222,6 @@ export const vToggleWishlistResponse = v.object({
   action: v.union(v.literal('added'), v.literal('removed')),
 });
 
-// Internal mutation return validators
 export const vCartDoc = v.union(
   v.object({
     _id: v.id('carts'),
@@ -260,14 +254,11 @@ export const vInventoryUpdateResponse = v.object({
   inStock: v.boolean(),
 });
 
-// Orders validators
 export const vLinkOrdersResponse = v.object({
   success: v.boolean(),
   linkedOrders: v.number(),
 });
 
-// Example using convex-helpers for product updates
-// Use partial() to make all fields optional for update operations
 export const vProductUpdate = partial(
   v.object({
     name: v.string(),
@@ -284,7 +275,6 @@ export const vProductUpdate = partial(
   }),
 );
 
-// Full catalog product validator
 export const vCatalogProduct = v.object({
   _id: v.id('catalog'),
   _creationTime: v.number(),
@@ -303,7 +293,6 @@ export const vCatalogProduct = v.object({
   updatedAt: v.number(),
 });
 
-// Auth user validators
 export const vBetterAuthUser = v.object({
   _id: v.string(),
   _creationTime: v.number(),
@@ -317,7 +306,6 @@ export const vBetterAuthUser = v.object({
 
 export const vCurrentUser = v.union(vBetterAuthUser, v.null());
 
-// Polar product validator (from Polar component)
 export const vPolarProduct = v.object({
   id: v.string(),
   name: v.string(),
@@ -329,7 +317,6 @@ export const vPolarProduct = v.object({
   medias: v.optional(v.array(v.any())),
 });
 
-// Polar checkout validator
 export const vPolarCheckout = v.union(
   v.object({
     id: v.string(),
@@ -349,10 +336,8 @@ export const vPolarCheckout = v.union(
   v.null(),
 );
 
-// Inspect data response validators
 export const vInspectDataResponse = v.record(v.string(), v.number());
 
-// Subscription products validator
 export const vSubscriptionProducts = v.record(
   v.string(),
   v.object({
@@ -362,7 +347,6 @@ export const vSubscriptionProducts = v.record(
   }),
 );
 
-// Sync result validator
 export const vSyncResult = v.object({
   convexId: v.id('catalog'),
   name: v.string(),
@@ -374,7 +358,6 @@ export const vSyncResult = v.object({
   polarProductId: v.string(),
 });
 
-// User sync result validator
 export const vUserSyncResult = v.object({
   success: v.boolean(),
   userId: v.string(),
@@ -382,7 +365,6 @@ export const vUserSyncResult = v.object({
   source: v.string(),
 });
 
-// Simple message response validator
 export const vMessageResponse = v.object({
   message: v.string(),
 });
