@@ -6,6 +6,7 @@ import {
   internalMutation,
   internalQuery,
   mutation,
+  query,
 } from '../_generated/server';
 
 interface PolarPriceInput {
@@ -214,7 +215,7 @@ export const updatePolarId = internalMutation({
   },
 });
 
-export const listProducts = internalQuery({
+export const listProducts = query({
   args: {},
   returns: v.array(
     v.object({
