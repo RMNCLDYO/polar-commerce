@@ -25,13 +25,16 @@ So I built workarounds.
 
 ## Setup
 
+#### Install and Configure
 ```bash
 git clone https://github.com/RMNCLDYO/polar-commerce.git
 cd polar-commerce
 npm install
 cp .env.example .env.local
-# Configure your environment variables
-npm run db:reset
+```
+
+#### Seed & Run
+```bash
 npm run polar:seed
 npm run dev
 ```
@@ -45,6 +48,10 @@ npm run dev
 - Order reconstruction from webhooks
 - Subscription and one-time payments
 
+## Known Issues
+
+- **Account menu positioning bug:** The user menu dropdown renders in the top-left corner when navigating to protected pages. Working on a fix ASAP.
+
 ## What's Missing
 
 Still figuring out:
@@ -56,20 +63,6 @@ Still figuring out:
 ## Why Build This
 
 I was curious if I could make e-commerce work with tools designed for different purposes. Convex's real-time subscriptions turned out to be perfect for cart sync. Polar's payment processing is solid even without native cart support. The bundling workaround isn't elegant, but it works.
-
-This is a side project - 450+ commits in and still learning. Not looking for contributions right now, but feel free to use it as a reference if you're building something similar.
-
-## Performance
-
-On M-series Mac:
-
-| Command | Time |
-|---------|------|
-| `npm run dev` | ~10s |
-| `npm run build` | ~10s |
-| `npm run lint` | ~7s |
-
-The codebase is around 18.5K lines of TypeScript across 165+ files. No `any` types except where absolutely necessary.
 
 ## Credits
 
