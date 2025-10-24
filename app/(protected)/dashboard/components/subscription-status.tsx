@@ -33,11 +33,11 @@ interface SubscriptionStatusProps {
   subscription: {
     status: string;
     product: { name: string };
-    amount?: number;
-    currency?: string;
-    recurringInterval?: string;
-    currentPeriodEnd?: string;
-    cancelAtPeriodEnd?: boolean;
+    amount?: number | null;
+    currency?: string | null;
+    recurringInterval?: string | null;
+    currentPeriodEnd?: string | null;
+    cancelAtPeriodEnd?: boolean | null;
   } | null;
 }
 

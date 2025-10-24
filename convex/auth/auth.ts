@@ -8,7 +8,6 @@ import { type BetterAuthOptions, betterAuth } from 'better-auth';
 import {
   anonymous,
   emailOTP,
-  genericOAuth,
   magicLink,
   twoFactor,
   username,
@@ -31,23 +30,14 @@ if (isProduction && !siteUrl.startsWith('https://')) {
   throw new Error('SITE_URL must use HTTPS in production');
 }
 
-// OAuth provider configuration with safety checks
 const githubClientId = process.env.GITHUB_CLIENT_ID;
 const githubClientSecret = process.env.GITHUB_CLIENT_SECRET;
-const slackClientId = process.env.SLACK_CLIENT_ID;
-const slackClientSecret = process.env.SLACK_CLIENT_SECRET;
-
-// In production, throw if providers are partially configured
 if (isProduction) {
   if ((githubClientId && !githubClientSecret) || (!githubClientId && githubClientSecret)) {
     throw new Error('GitHub OAuth requires both GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET');
   }
-  if ((slackClientId && !slackClientSecret) || (!slackClientId && slackClientSecret)) {
-    throw new Error('Slack OAuth requires both SLACK_CLIENT_ID and SLACK_CLIENT_SECRET');
-  }
 }
 
-// Feature flags
 const enableAnonymous = process.env.ENABLE_ANONYMOUS_AUTH === 'true' || !isProduction;
 
 export const authComponent = createClient<DataModel>(components.betterAuth, {
@@ -144,42 +134,42 @@ export const createAuth = (
       },
     },
     session: {
-      expiresIn: 60 * 60 * 24 * 7, // 7 days
-      updateAge: 60 * 60 * 24, // 1 day - refresh session if older than this
+      expiresIn: 60 * 60 * 24 * 7,
+      updateAge: 60 * 60 * 24,
       cookieCache: {
         enabled: true,
-        maxAge: 60 * 5, // 5 minutes - cache session in cookie for this long
+        maxAge: 60 * 5,
       },
     },
     rateLimit: {
       enabled: true,
-      window: 60, // 60 seconds
-      max: 100, // 100 requests per window
-      storage: 'database', // Use Convex database for rate limiting
+      window: 60,
+      max: 100,
+      storage: 'database',
       customRules: {
         '/sign-in/email': {
           window: 10,
-          max: 3, // Only 3 login attempts per 10 seconds
+          max: 3,
         },
         '/sign-up/email': {
           window: 60,
-          max: 5, // Only 5 signups per minute
+          max: 5,
         },
         '/reset-password': {
           window: 60,
-          max: 3, // Only 3 password reset requests per minute
+          max: 3,
         },
         '/send-verification-email': {
           window: 60,
-          max: 3, // Only 3 verification emails per minute
+          max: 3,
         },
       },
     },
     advanced: {
-      useSecureCookies: true, // Always use secure cookies since dev runs with HTTPS
+      useSecureCookies: true,
       defaultCookieAttributes: {
         httpOnly: true,
-        secure: true, // Always secure since dev runs with HTTPS
+        secure: true,
         sameSite: 'lax',
       },
     },
@@ -205,21 +195,6 @@ export const createAuth = (
         },
       }),
       twoFactor(),
-      ...(slackClientId && slackClientSecret
-        ? [
-            genericOAuth({
-              config: [
-                {
-                  providerId: 'slack',
-                  clientId: slackClientId,
-                  clientSecret: slackClientSecret,
-                  discoveryUrl: 'https://slack.com/.well-known/openid-configuration',
-                  scopes: ['openid', 'email', 'profile'],
-                },
-              ],
-            }),
-          ]
-        : []),
       convex(),
     ],
   } satisfies BetterAuthOptions);

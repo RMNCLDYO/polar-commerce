@@ -177,12 +177,6 @@ export const createProduct = mutation({
   },
   returns: v.id('catalog'),
   handler: async (ctx, args) => {
-    // TODO: Add back admin check when seeding is done via actions
-    // const { isAdmin } = await import('../auth/auth');
-    // if (!(await isAdmin(ctx))) {
-    //   throw new Error('Unauthorized: Admin access required');
-    // }
-
     const productId = await ctx.db.insert('catalog', {
       ...args,
       isActive: true,
@@ -410,12 +404,6 @@ export const updateProduct = mutation({
   },
   returns: vSuccessResponse,
   handler: async (ctx, args) => {
-    // TODO: Add back admin check when seeding is done via actions
-    // const { isAdmin } = await import('../auth/auth');
-    // if (!(await isAdmin(ctx))) {
-    //   throw new Error('Unauthorized: Admin access required');
-    // }
-
     const { productId, updates } = args;
 
     await ctx.db.patch(productId, {

@@ -15,7 +15,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import type { api } from '@/convex/_generated/api';
+import { api } from '@/convex/_generated/api';
 import { authClient } from '@/lib/client/auth';
 import EnableTwoFactor from './EnableTwoFactor';
 

@@ -1,19 +1,19 @@
 {
   "name": "polar-commerce",
-  "version": "0.9.0",
+  "version": "0.11.0-alpha.1",
   "type": "module",
-  "description": "Experimental e-commerce platform combining Next.js 16 canary, Convex for real-time data, Better Auth for authentication, and Polar for payments. Includes custom product bundling to work around Polar's lack of multi-product checkout support.",
+  "description": "Experimental e-commerce platform combining Next.js 16, Convex for real-time data, Better Auth for authentication, and Polar for payments. Includes custom product bundling to work around Polar's lack of multi-product checkout support.",
   "author": "Ray <hi@rmncldyo.com> (https://github.com/RMNCLDYO)",
   "license": "MIT",
   "private": false,
   "repository": {
     "type": "git",
-    "url": "https://github.com/RMNCLDYO/aisdk-storefront"
+    "url": "https://github.com/RMNCLDYO/polar-commerce"
   },
   "bugs": {
-    "url": "https://github.com/RMNCLDYO/aisdk-storefront/issues"
+    "url": "https://github.com/RMNCLDYO/polar-commerce/issues"
   },
-  "homepage": "https://github.com/RMNCLDYO/aisdk-storefront#readme",
+  "homepage": "https://github.com/RMNCLDYO/polar-commerce#readme",
   "scripts": {
     "dev": "./scripts/time-script.sh dev npm-run-all --parallel dev:frontend dev:backend",
     "dev:backend": "convex dev --typecheck-components --live-component-sources",

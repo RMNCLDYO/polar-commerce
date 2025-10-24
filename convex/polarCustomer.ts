@@ -249,7 +249,8 @@ export async function ensurePolarCustomerHelper(
             };
           }
         }
-      } catch {
+      } catch (recoveryError) {
+        console.error('Customer recovery failed:', recoveryError);
       }
     }
 

@@ -1,96 +1,73 @@
 # Polar Commerce
 
-Polar doesn't have a cart system. Convex isn't designed for e-commerce. This repo hacks around both limitations.
+An experiment combining Convex (real-time database), Polar (payments), and Better Auth into an e-commerce platform. These tools weren't designed for this, but that's what made it interesting.
 
-**The workaround:** Cart state lives in Convex with real-time sync. At checkout, multiple cart items bundle into a single ephemeral Polar product. Original cart composition stored in checkout metadata. Post-payment webhook reconstructs the full order.
+## The Problem
 
-Also testing Next.js 16 canary (Cache Components, Turbopack, React Compiler) + React 19 (View Transitions).
+I wanted to build an e-commerce platform but:
+- Polar handles payments beautifully but has no cart system
+- Convex is built for SaaS apps, not e-commerce
+- Better Auth works great but needed to integrate with both
 
-## Quick Start
+So I built workarounds.
 
+## The Solution
+
+**Cart bundling:** Built a custom system where multiple cart items bundle into a single ephemeral Polar product at checkout. The full cart composition gets stored in checkout metadata, then reconstructed server-side after payment confirmation via webhook. This workaround lets Polar handle payments for multi-item carts without native support.
+
+**Guest/auth cart merging:** Implemented seamless cart and wishlist migration when guests sign in. Items added while browsing anonymously automatically merge with their account data on login - no lost items, no duplicates.
+
+**Tech stack:**
+- Next.js 16 + React 19
+- Convex (real-time database with type-safe schema)
+- Better Auth with Convex adapter
+- Polar (payments for subscriptions and one-time purchases)
+
+## Setup
+
+#### Install and Configure
 ```bash
 git clone https://github.com/RMNCLDYO/polar-commerce.git
 cd polar-commerce
 npm install
 cp .env.example .env.local
-# Add CONVEX_DEPLOYMENT, POLAR_ORGANIZATION_TOKEN, etc. (see .env.example)
-npm run db:reset        # Clear database (18s)
-npm run polar:seed      # Seed products (29s)
-npm run dev             # Start dev server
-# Open https://localhost:3000
 ```
 
-## How It Works
+#### Seed & Run
+```bash
+npm run polar:seed
+npm run dev
+```
 
-**Cart → Bundle → Payment:**
-1. Cart items stored in Convex with real-time sync across devices
-2. At checkout, [`createBundleProduct()`](convex/checkout/checkout.ts#L123) bundles N items into one Polar product
-3. Original cart composition stored in checkout metadata
-4. Polar processes payment for bundle
-5. Webhook receives payment confirmation, reconstructs order from metadata
+## What Works
 
-**Stack:**
-- Next.js 16 canary (Cache Components, Turbopack, React Compiler)
-- Convex (real-time database + Better Auth/Polar components)
-- Better Auth (email/OAuth/2FA via Convex adapter)
-- Polar (subscriptions + one-time payments)
-- React 19 (View Transitions, useEffectEvent)
+- Cart with real-time sync across devices/tabs
+- Wishlist functionality
+- Full auth flow (email/OAuth/2FA)
+- Checkout with item bundling
+- Order reconstruction from webhooks
+- Subscription and one-time payments
 
-**What's implemented:**
-Cart/wishlist with real-time sync, user authentication (Better Auth), checkout flow with bundling, webhook-based order reconstruction, subscription + one-time payment support.
+## Known Issues
 
-**What's not (yet):**
-Cart expiration crons, bundle cleanup strategy, per-item tax calculation. See [DOCS.md](DOCS.md) for implementation details.
+- **Account menu positioning bug:** The user menu dropdown renders in the top-left corner when navigating to protected pages. Working on a fix ASAP.
 
-## Why
+## What's Missing
 
-Wanted to see if Convex's real-time subscriptions + type-safe schema would work for e-commerce despite being designed for SaaS. Turns out live cart sync across devices is trivial with Convex subscriptions. Inventory updates propagate instantly. Type generation catches schema mismatches at compile time.
+Still figuring out:
+- Cart expiration and cleanup
+- Bundle lifecycle management
+- Per-item tax calculations
+- Partial refund logic
 
-Polar's payment infrastructure handles subscriptions well, but no native multi-product checkout meant building the bundling workaround. Side benefit: the same codebase demonstrates both SaaS patterns (recurring billing, tiered access) and e-commerce primitives (cart, checkout, inventory) using identical backend infrastructure.
+## Why Build This
 
-This is an experiment - someone may have built cart/wishlist/checkout with Convex before, but I haven't seen it documented. The bundling hack for Polar's checkout limitation is definitely unique to this repo.
-
-## Benchmarks
-
-Apple Silicon M-series:
-
-| Command | Time | Description |
-|---------|------|-------------|
-| `npm run lint` | 7s | ESLint + Convex TypeScript |
-| `npm run format` | 4s | ESLint auto-fix |
-| `npm run build` | 10s | Next.js production build (3.9s compile + 2.8s TS + 1.0s static gen) |
-| `npm run dev` | 10s | Frontend (451ms) + Convex backend (9.3s) |
-
-**Build output:**
-- 35 routes (24 with Partial Prerendering)
-- 165+ files, ~18.5K lines TypeScript
-- Zero `any` types (except intentional suppressions)
-- Zero deprecated Next.js 16 APIs
-
-## Contributing
-
-Open experiment. Contributions welcome on:
-
-**Core challenges:**
-- Bundle lifecycle management (when to delete bundled Polar products?)
-- Cart expiration + cleanup crons
-- Partial refund logic (unbundling individual items)
-- Per-product tax calculation before bundling
-- Better concurrent checkout handling
-
-**Missing features:**
-Multi-currency, shipping integrations, integration tests, deployment guides.
-
-Fork it, break it, fix it, ship PRs.
+I was curious if I could make e-commerce work with tools designed for different purposes. Convex's real-time subscriptions turned out to be perfect for cart sync. Polar's payment processing is solid even without native cart support. The bundling workaround isn't elegant, but it works.
 
 ## Credits
 
-- **Original v0 template:** [@estebansuarez](https://github.com/estebansuarez) - [v0 Storefront](https://v0.app/templates/storefront-w-nano-banana-ai-sdk-ai-gateway-XAMOoZPMUO5)
-- **Next.js Team** - For Next.js 16 and experimental features
-- **Convex Team** - For real-time database and component ecosystem
-- **Better Auth Team** - For modern authentication solution
-- **Polar Team** - For developer-friendly payments
+Started from [@estebansuarez](https://github.com/estebansuarez)'s [v0 template](https://v0.app/templates/storefront-w-nano-banana-ai-sdk-ai-gateway-XAMOoZPMUO5). Built with Next.js 16, Convex, Better Auth, and Polar.
 
 ## License
 
-MIT - Experimental code. Use at your own risk.
+MIT

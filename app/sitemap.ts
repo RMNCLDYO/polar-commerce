@@ -1,9 +1,9 @@
-import type { MetadataRoute } from 'next';
 import { getProducts } from '@/lib/server/data/products';
+import type { MetadataRoute } from 'next';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl =
-    process.env.NEXT_PUBLIC_BASE_URL || 'https://aisdk-storefront.vercel.app';
+    process.env.NEXT_PUBLIC_BASE_URL || 'https://polar-commerce.vercel.app';
 
   const products = await getProducts();
 

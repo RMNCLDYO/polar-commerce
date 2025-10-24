@@ -11,7 +11,6 @@ export interface AuthUser {
   createdAt: number;
   updatedAt: number;
   username?: string | null;
-  foo?: string;
   userId?: string | null;
   twoFactorEnabled?: boolean | null;
   isAnonymous?: boolean | null;

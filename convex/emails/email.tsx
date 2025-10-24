@@ -1,10 +1,10 @@
-import '../utils/polyfills';
 import { Resend } from '@convex-dev/resend';
 import { render } from '@react-email/components';
 import { v } from 'convex/values';
 import * as React from 'react';
 import { components } from '../_generated/api';
 import { internalAction, type ActionCtx } from '../_generated/server';
+import '../utils/polyfills';
 import MagicLinkEmail from './magicLink';
 import ResetPasswordEmail from './resetPassword';
 import VerifyEmail from './verifyEmail';
@@ -86,7 +86,6 @@ export const sendResetPassword = async (
   });
 };
 
-// Internal actions for scheduling from Better Auth hooks
 export const internal_sendEmailVerification = internalAction({
   args: {
     to: v.string(),

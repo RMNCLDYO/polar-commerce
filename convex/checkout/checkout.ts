@@ -16,6 +16,13 @@ import {
   vCheckoutSuccessResponse,
 } from './types';
 
+const vMetadataValue = v.union(
+  v.string(),
+  v.number(),
+  v.boolean(),
+  v.null()
+);
+
 async function createBundleProduct(
   polarClient: PolarSDK,
   polarProducts: CartItemForCheckout[],
@@ -323,7 +330,7 @@ export async function createCheckoutSessionHelper(
       checkoutUrl: checkout.url,
       discountId: args.discountId,
       discountCode: args.discountCode,
-      customFieldData: args.customFieldData,
+      customFieldData: args.customFieldData as Record<string, string | number | boolean | null> | undefined,
     });
 
     const response: CheckoutSessionResponse = {
@@ -351,7 +358,7 @@ export const createCheckoutSession = action({
   args: {
     sessionId: v.optional(v.string()),
     successUrl: v.string(),
-    metadata: v.optional(v.record(v.string(), v.any())),
+    metadata: v.optional(v.record(v.string(), vMetadataValue)),
 
     customerIpAddress: v.optional(v.string()),
     customerEmail: v.optional(v.string()),
@@ -360,7 +367,7 @@ export const createCheckoutSession = action({
     discountCode: v.optional(v.string()),
     allowDiscountCodes: v.optional(v.boolean()),
     requireBillingAddress: v.optional(v.boolean()),
-    customFieldData: v.optional(v.record(v.string(), v.any())),
+    customFieldData: v.optional(v.record(v.string(), vMetadataValue)),
 
     trialInterval: v.optional(
       v.union(
