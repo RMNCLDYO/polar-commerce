@@ -2,6 +2,7 @@
 
 import { useConvexAuth } from 'convex/react';
 import { Menu, Search as SearchIcon, X } from 'lucide-react';
+import type { Route } from 'next';
 import Form from 'next/form';
 import { useSearchParams } from 'next/navigation';
 import { useState } from 'react';
@@ -83,7 +84,7 @@ export function MobileNav() {
               {NAV_ITEMS.map((item) => (
                 <DrawerClose asChild key={item.label}>
                   <Link
-                    href={item.href}
+                    href={item.href as Route}
                     className="text-sm font-semibold tracking-widest uppercase py-3 hover:text-muted-foreground transition-colors"
                   >
                     {item.label}

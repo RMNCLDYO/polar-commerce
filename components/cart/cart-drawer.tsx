@@ -1,6 +1,7 @@
 'use client';
 
 import { AlertCircle, Minus, Plus, ShoppingBag, Trash2 } from 'lucide-react';
+import type { Route } from 'next';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -130,7 +131,7 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
                     )}
                   >
                     <Link
-                      href={`/product/${item.catalogId}`}
+                      href={`/product/${item.catalogId}` as Route}
                       onClick={handleProductClick}
                       className="relative w-20 h-20 bg-muted rounded-lg overflow-hidden flex-shrink-0"
                     >
@@ -151,7 +152,7 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
 
                     <div className="flex-1 min-w-0">
                       <Link
-                        href={`/product/${item.catalogId}`}
+                        href={`/product/${item.catalogId}` as Route}
                         onClick={handleProductClick}
                         className="font-medium hover:underline block truncate"
                       >
