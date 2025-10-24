@@ -76,7 +76,7 @@ export function useCart() {
 
       if (productInfo) {
         toast.custom(
-          (_t) => (
+          () => (
             <div className="bg-background border rounded-lg shadow-lg p-4 flex items-center gap-3 min-w-[300px]">
               <Image
                 src={productInfo.image}
@@ -141,7 +141,7 @@ export function useCart() {
 
       if (productInfo) {
         toast.custom(
-          (_t) => (
+          () => (
             <div className="bg-background border rounded-lg shadow-lg p-4 flex items-center gap-3 min-w-[300px]">
               <Image
                 src={productInfo.image}
@@ -247,5 +247,5 @@ export function useCartMerge() {
 
   useEffect(() => {
     onUserLogin();
-  }, [user, hasRunMerge]);
+  }, [user?.email]);
 }
