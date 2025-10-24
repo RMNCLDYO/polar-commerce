@@ -7,17 +7,7 @@ import { toast } from 'sonner';
 import { api } from '@/convex/_generated/api';
 import type { Id } from '@/convex/_generated/dataModel';
 import type { CurrentUser, WishlistWithItems, ToggleWishlistResponse } from '@/types/convex';
-
-function getSessionId(): string {
-  if (typeof window === 'undefined') {return '';}
-
-  let sessionId = localStorage.getItem('wishlist-session-id');
-  if (!sessionId) {
-    sessionId = `wishlist-session-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
-    localStorage.setItem('wishlist-session-id', sessionId);
-  }
-  return sessionId;
-}
+import { getOrCreateSessionId } from '@/lib/client/utils/session-id';
 
 export function useWishlist() {
   const { isAuthenticated } = useConvexAuth();
@@ -26,7 +16,7 @@ export function useWishlist() {
 
   const onAuthChange = useEffectEvent(() => {
     if (!isAuthenticated) {
-      setSessionId(getSessionId());
+      setSessionId(getOrCreateSessionId('wishlist-session-id'));
     } else {
       setSessionId('');
       localStorage.removeItem('wishlist-session-id');

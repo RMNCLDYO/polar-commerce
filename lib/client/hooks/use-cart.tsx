@@ -7,17 +7,7 @@ import { toast } from 'sonner';
 import { api } from '@/convex/_generated/api';
 import type { Id } from '@/convex/_generated/dataModel';
 import type { CurrentUser, CartWithItems, CartValidation } from '@/types/convex';
-
-function getSessionId(): string {
-  if (typeof window === 'undefined') {return '';}
-
-  let sessionId = localStorage.getItem('cart-session-id');
-  if (!sessionId) {
-    sessionId = `session-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
-    localStorage.setItem('cart-session-id', sessionId);
-  }
-  return sessionId;
-}
+import { getOrCreateSessionId } from '@/lib/client/utils/session-id';
 
 export function useCart() {
   const [sessionId, setSessionId] = useState<string>('');
@@ -26,7 +16,7 @@ export function useCart() {
 
   const onAuthChange = useEffectEvent(() => {
     if (!isAuthenticated) {
-      setSessionId(getSessionId());
+      setSessionId(getOrCreateSessionId('cart-session-id'));
     } else {
       setSessionId('');
       localStorage.removeItem('cart-session-id');
