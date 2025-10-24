@@ -30,21 +30,15 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files
-# Note: .env.test should be committed for consistent test environments
-.env
-.env.local
-.env.production
-.env.development
-.env*.local
-!.env.example
-!.env.test
+# env files (can opt-in for committing if needed)
+.env*
 
 # vercel
 .vercel
 
-# build
+# typescript
 *.tsbuildinfo
+next-env.d.ts
 
 # development
 CLAUDE.md

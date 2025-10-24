@@ -1,8 +1,9 @@
 import type { NextConfig } from 'next';
 
-const nextConfig = {
+const nextConfig: NextConfig = {
   reactStrictMode: true,
   reactCompiler: true,
+  typedRoutes: true,
   logging: {
     fetches: {
       fullUrl: true,
@@ -16,9 +17,9 @@ const nextConfig = {
       expire: 86400,
     },
     max: {
-      stale: Infinity,
+      stale: 604800,
       revalidate: 86400,
-      expire: Infinity,
+      expire: 2592000,
     },
     hours: {
       stale: 3600,
@@ -34,6 +35,7 @@ const nextConfig = {
   experimental: {
     cssChunking: true,
     turbopackFileSystemCacheForDev: true,
+    typedEnv: true,
   },
   turbopack: {
     root: __dirname,
@@ -99,6 +101,6 @@ const nextConfig = {
       },
     ];
   },
-} satisfies NextConfig;
+};
 
 export default nextConfig;
