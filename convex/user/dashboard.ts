@@ -14,7 +14,6 @@ export const getDashboardData = query({
 
     const limit = args.ordersLimit ?? 5;
 
-    // Fetch orders and subscription in parallel
     const [orders, subscription] = await Promise.all([
       ctx.db
         .query('orders')
