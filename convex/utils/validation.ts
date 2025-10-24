@@ -82,9 +82,17 @@ export const vEmail = v.string();
 
 export const vUrl = v.string();
 
-export const vCheckoutMetadata = v.record(v.string(), v.any());
+// Safer metadata type - allows only JSON-serializable primitives
+const vMetadataValue = v.union(
+  v.string(),
+  v.number(),
+  v.boolean(),
+  v.null()
+);
 
-export const vCustomFieldData = v.record(v.string(), v.any());
+export const vCheckoutMetadata = v.record(v.string(), vMetadataValue);
+
+export const vCustomFieldData = v.record(v.string(), vMetadataValue);
 
 export const vProductInfo = v.object({
   id: v.string(),

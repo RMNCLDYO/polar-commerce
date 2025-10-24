@@ -1,6 +1,14 @@
 import { defineSchema, defineTable } from 'convex/server';
 import { v } from 'convex/values';
 
+// Safer metadata type - allows only JSON-serializable primitives
+const vMetadataValue = v.union(
+  v.string(),
+  v.number(),
+  v.boolean(),
+  v.null()
+);
+
 export default defineSchema({
   catalog: defineTable({
     name: v.string(),
@@ -29,7 +37,7 @@ export default defineSchema({
     lastCheckoutUrl: v.optional(v.string()),
     discountId: v.optional(v.string()),
     discountCode: v.optional(v.string()),
-    customFieldData: v.optional(v.record(v.string(), v.any())),
+    customFieldData: v.optional(v.record(v.string(), vMetadataValue)),
     createdAt: v.number(),
     updatedAt: v.number(),
     expiresAt: v.optional(v.number()),
@@ -112,8 +120,8 @@ export default defineSchema({
     trialEnd: v.optional(v.number()),
     subscriptionId: v.optional(v.string()),
 
-    metadata: v.optional(v.record(v.string(), v.any())),
-    customFieldData: v.optional(v.record(v.string(), v.any())),
+    metadata: v.optional(v.record(v.string(), vMetadataValue)),
+    customFieldData: v.optional(v.record(v.string(), vMetadataValue)),
 
     createdAt: v.number(),
     completedAt: v.optional(v.number()),
