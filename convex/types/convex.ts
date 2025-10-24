@@ -310,17 +310,6 @@ export interface Order {
   canceledAt?: number;
 }
 
-export interface DemoTodo {
-  _id: Id<'demoTodos'>;
-  _creationTime: number;
-  text: string;
-  isCompleted: boolean;
-  userId?: string;
-  sessionId?: string;
-  createdAt: number;
-  updatedAt: number;
-}
-
 export interface BetterAuthUser {
   _id: string;
   _creationTime: number;
@@ -397,7 +386,6 @@ export type GetWishlistResponse = WishlistWithItems | null | undefined;
 export type GetCatalogResponse = CatalogProduct[];
 export type GetProductResponse = CatalogProduct | null;
 export type GetOrdersResponse = Order[];
-export type GetDemoTodosResponse = DemoTodo[];
 
 export interface AddToCartResponse {
   success: boolean;

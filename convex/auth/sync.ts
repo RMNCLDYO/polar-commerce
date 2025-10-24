@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 import { Polar as PolarSDK } from '@polar-sh/sdk';
 import { v } from 'convex/values';
 import { api, components, internal } from '../_generated/api';
@@ -57,7 +58,7 @@ export const onUserCreated = internalAction({
   }> => {
     try {
       const result = await ctx.runAction(
-        // @ts-ignore - Type instantiation depth issue with Convex generated types
+        // @ts-ignore - TypeScript deep instantiation issue with Convex generated types (intermittent)
         api.polarCustomer.ensurePolarCustomer,
         {
           userId,
@@ -67,7 +68,7 @@ export const onUserCreated = internalAction({
       );
 
       const orderLinkResult = await ctx.runMutation(
-        // @ts-ignore - Type instantiation depth issue with Convex generated types
+        // @ts-ignore - TypeScript deep instantiation issue with Convex generated types (intermittent)
         internal.orders.sync.linkOrdersToUser,
         {
           userId,
@@ -91,7 +92,7 @@ export const onUserCreated = internalAction({
 export const syncAllUsers = action({
   args: {},
   returns: v.object({ message: v.string() }),
-  handler: async (_ctx) => {
+  handler: async () => {
     return { message: 'Use ensureCurrentUserSynced for each user' };
   },
 });

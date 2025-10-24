@@ -1,12 +1,13 @@
 import { preloadQuery } from 'convex/nextjs';
 import { headers } from 'next/headers';
+import type { Route } from 'next';
 import Image from 'next/image';
 import { Suspense } from 'react';
 import { CartIcon } from '@/components/cart/cart-icon';
 import { MobileNav } from '@/components/layout/header/mobile-nav';
 import { Search } from '@/components/layout/header/search';
 import { ThemeToggle } from '@/components/layout/header/theme-toggle';
-import { UserMenuClient } from '@/components/layout/header/user-menu-client';
+import { UserMenu } from '@/components/layout/header/user-menu';
 import { Link } from '@/components/link';
 import { Skeleton } from '@/components/ui/skeleton';
 import { WishlistIcon } from '@/components/wishlist/wishlist-icon';
@@ -26,7 +27,7 @@ async function UserMenuWrapper() {
   await headers();
   const preloadedUser = await preloadQuery(api.auth.auth.getCurrentUserBasic);
 
-  return <UserMenuClient preloadedUser={preloadedUser} />;
+  return <UserMenu preloadedUser={preloadedUser} />;
 }
 
 export function Header() {
@@ -48,7 +49,7 @@ export function Header() {
           {NAV_ITEMS.map((item, index) => (
             <Link
               key={item.label}
-              href={`/${item.label.toLowerCase()}`}
+              href={`/${item.label.toLowerCase()}` as Route}
               prefetchStrategy="hover"
               className={`${item.hideBelow} text-xs font-semibold tracking-widest uppercase hover:text-muted-foreground animate-slide-up transition-colors whitespace-nowrap`}
               style={{ animationDelay: `${300 + index * 100}ms` }}

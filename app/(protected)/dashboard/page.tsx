@@ -1,6 +1,18 @@
-'use client';
+import { preloadQuery } from 'convex/nextjs';
+import { headers } from 'next/headers';
+import { Suspense } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { api } from '@/convex/_generated/api';
+import { DashboardClient } from './components/dashboard-client';
 
-import { TodoList } from './todo-list';
+async function DashboardContent() {
+  await headers();
+  const preloadedData = await preloadQuery(api.user.dashboard.getDashboardData, {
+    ordersLimit: 5,
+  });
+
+  return <DashboardClient preloadedData={preloadedData} />;
+}
 
 export default function DashboardPage() {
   return (
@@ -15,8 +27,19 @@ export default function DashboardPage() {
         >
           Dashboard
         </h1>
-        <TodoList />
+        <Suspense fallback={<DashboardSkeleton />}>
+          <DashboardContent />
+        </Suspense>
       </div>
+    </div>
+  );
+}
+
+function DashboardSkeleton() {
+  return (
+    <div className="grid gap-6 md:grid-cols-2">
+      <Skeleton className="h-[200px] rounded-lg" />
+      <Skeleton className="h-[200px] rounded-lg" />
     </div>
   );
 }

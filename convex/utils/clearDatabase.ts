@@ -418,12 +418,6 @@ export const clearConvexData = internalMutation({
     }
     results.catalog = catalog.length;
 
-    const demoTodos = await ctx.db.query('demoTodos').collect();
-    for (const todo of demoTodos) {
-      await ctx.db.delete(todo._id);
-    }
-    results.demoTodos = demoTodos.length;
-
     const cartItems = await ctx.db.query('cartItems').collect();
     for (const item of cartItems) {
       await ctx.db.delete(item._id);

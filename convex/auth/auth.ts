@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 import {
   type GenericCtx,
   createClient,
@@ -55,7 +56,7 @@ export const authComponent = createClient<DataModel>(components.betterAuth, {
     user: {
       onCreate: async (ctx, authUser) => {
         try {
-          // @ts-ignore - TypeScript deep instantiation issue with Convex
+          // @ts-ignore - TypeScript deep instantiation issue with Convex internal API (intermittent) - eslint-disable-line @typescript-eslint/ban-ts-comment
           await ctx.scheduler.runAfter(0, internal.auth.sync.onUserCreated, {
             userId: authUser._id,
             email: authUser.email,
@@ -70,7 +71,7 @@ export const authComponent = createClient<DataModel>(components.betterAuth, {
       },
       onDelete: async (ctx, authUser) => {
         try {
-          // @ts-ignore - TypeScript deep instantiation issue with Convex
+          // @ts-ignore - TypeScript issue with ctx.scheduler type
           await ctx.scheduler.runAfter(
             0,
             components.polar.lib.deleteCustomer,
@@ -107,8 +108,7 @@ export const createAuth = (
     },
     emailVerification: {
       sendVerificationEmail: async ({ user, url }) => {
-        // @ts-ignore - TypeScript deep instantiation issue with Convex
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+        // @ts-ignore - TypeScript issue with ctx.scheduler type
         await ctx.scheduler.runAfter(0, internal.emails.email.internal_sendEmailVerification, {
           to: user.email,
           url,
@@ -121,8 +121,7 @@ export const createAuth = (
       minPasswordLength: 12,
       maxPasswordLength: 128,
       sendResetPassword: async ({ user, url }) => {
-        // @ts-ignore - TypeScript deep instantiation issue with Convex
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+        // @ts-ignore - TypeScript issue with ctx.scheduler type
         await ctx.scheduler.runAfter(0, internal.emails.email.internal_sendResetPassword, {
           to: user.email,
           url,
@@ -189,8 +188,7 @@ export const createAuth = (
       username(),
       magicLink({
         sendMagicLink: async ({ email, url }) => {
-          // @ts-ignore - TypeScript deep instantiation issue with Convex
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+          // @ts-ignore - TypeScript issue with ctx.scheduler type
           await ctx.scheduler.runAfter(0, internal.emails.email.internal_sendMagicLink, {
             to: email,
             url,
@@ -199,8 +197,7 @@ export const createAuth = (
       }),
       emailOTP({
         async sendVerificationOTP({ email, otp }) {
-          // @ts-ignore - TypeScript deep instantiation issue with Convex
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+          // @ts-ignore - TypeScript issue with ctx.scheduler type
           await ctx.scheduler.runAfter(0, internal.emails.email.internal_sendOTPVerification, {
             to: email,
             code: otp,

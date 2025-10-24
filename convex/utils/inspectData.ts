@@ -44,7 +44,6 @@ export const inspectAllData = query({
     results.wishlists = (await ctx.db.query('wishlists').collect()).length;
     results.wishlistItems = (await ctx.db.query('wishlistItems').collect()).length;
     results.orders = (await ctx.db.query('orders').collect()).length;
-    results.demoTodos = (await ctx.db.query('demoTodos').collect()).length;
     results.rateLimits = (await ctx.db.query('rateLimits').collect()).length;
 
     return results;
@@ -57,7 +56,7 @@ export const inspectPolarData = action({
     v.record(v.string(), v.number()),
     v.object({ error: v.string() }),
   ),
-  handler: async (_ctx) => {
+  handler: async () => {
     const token = process.env.POLAR_ORGANIZATION_TOKEN;
     if (!token) {
       return { error: 'POLAR_ORGANIZATION_TOKEN not set' };

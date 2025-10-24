@@ -1,6 +1,7 @@
 'use client';
 
 import { Loader2 } from 'lucide-react';
+import type { Route } from 'next';
 import Image from 'next/image';
 import { useEffect, useRef, useState } from 'react';
 import { Link } from '@/components/link';
@@ -57,7 +58,7 @@ export function ProductCard({
 
   return (
     <Link
-      href={`/product/${product.id}`}
+      href={`/product/${product.id}` as Route}
       prefetchStrategy="hover"
       className={cn(
         'group cursor-pointer animate-slide-up',

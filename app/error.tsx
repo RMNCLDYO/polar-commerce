@@ -69,10 +69,7 @@ export default function ErrorBoundary({
             Try again
           </Button>
           <p className="text-xs text-muted-foreground">
-            If this problem persists, please{' '}
-            <a href="/contact" className="underline">
-              contact support
-            </a>
+            If this problem persists, please contact support
           </p>
         </div>
       </div>

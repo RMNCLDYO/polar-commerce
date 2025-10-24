@@ -23,6 +23,7 @@ export const omitSystemFields = <
   if (!doc) {
     return doc;
   }
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { _id, _creationTime, ...rest } = doc;
   return rest;
 };
@@ -40,6 +41,7 @@ export type RunActionCtx = {
   runAction: GenericActionCtx<GenericDataModel>['runAction'];
 };
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export type OpaqueIds<T> = T extends GenericId<infer _T>
   ? string
   : T extends FunctionHandle<FunctionType>

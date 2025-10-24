@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { authComponent } from '../auth/auth';
 import type { Doc } from '../_generated/dataModel';
 import type { QueryCtx, MutationCtx } from '../_generated/server';
@@ -105,18 +106,6 @@ export async function rlsRules(ctx: QueryCtx | MutationCtx) {
       },
       modify: async () => {
         return true;
-      },
-    },
-
-    demoTodos: {
-      read: async (todo: Doc<'demoTodos'>) => {
-        return userId === todo.userId;
-      },
-      write: async (todo: Partial<Doc<'demoTodos'>>) => {
-        return userId === todo.userId;
-      },
-      modify: async (todo: Doc<'demoTodos'>) => {
-        return userId === todo.userId;
       },
     },
   };

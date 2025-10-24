@@ -1,5 +1,6 @@
 'use client';
 
+import { type Preloaded, usePreloadedQuery } from 'convex/react';
 import { LayoutDashboard, LogOut, Settings, User } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Link } from '@/components/link';
@@ -13,18 +14,24 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import type { api } from '@/convex/_generated/api';
 import { authClient } from '@/lib/client/auth';
 
 interface UserMenuProps {
-  user: {
-    id: string;
-    email: string;
-    name?: string | null;
-    image?: string | null;
-  } | null;
+  preloadedUser: Preloaded<typeof api.auth.auth.getCurrentUserBasic>;
 }
 
-export function UserMenu({ user }: UserMenuProps) {
+export function UserMenu({ preloadedUser }: UserMenuProps) {
+  const userData = usePreloadedQuery(preloadedUser);
+
+  const user = userData
+    ? {
+        id: userData._id,
+        email: userData.email,
+        name: userData.name ?? null,
+        image: userData.image ?? null,
+      }
+    : null;
   const router = useRouter();
 
   const handleSignOut = async () => {

@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Route } from 'next';
 import {
   cacheLife,
   cacheTag,
@@ -73,7 +73,7 @@ async function CachedProductsContent({
           {products.map((product, index) => (
             <Link
               key={product.id}
-              href={`/product/${product.id}`}
+              href={`/product/${product.id}` as Route}
               prefetchStrategy="hover"
               className="group cursor-pointer"
             >

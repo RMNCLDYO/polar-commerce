@@ -104,7 +104,7 @@ export function useWishlist() {
       if (!silent) {
         if (productInfo) {
           toast.custom(
-            (_t) => (
+            () => (
               <div className="bg-background border rounded-lg shadow-lg p-4 flex items-center gap-3 min-w-[300px]">
                 <Image
                   src={productInfo.image}
@@ -155,7 +155,7 @@ export function useWishlist() {
       if (result.action === 'added') {
         if (productInfo) {
           toast.custom(
-            (_t) => (
+            () => (
               <div className="bg-background border rounded-lg shadow-lg p-4 flex items-center gap-3 min-w-[300px]">
                 <Image
                   src={productInfo.image}
@@ -184,7 +184,7 @@ export function useWishlist() {
       } else {
         if (productInfo) {
           toast.custom(
-            (_t) => (
+            () => (
               <div className="bg-background border rounded-lg shadow-lg p-4 flex items-center gap-3 min-w-[300px]">
                 <Image
                   src={productInfo.image}
@@ -295,7 +295,7 @@ export function useWishlistMerge() {
 
   useEffect(() => {
     onUserLogin();
-  }, [user, hasRunMerge]);
+  }, [user?.email]);
 }
 
 export function useIsInWishlist(catalogId: Id<'catalog'>, sessionId?: string) {
