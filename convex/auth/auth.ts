@@ -8,7 +8,6 @@ import { type BetterAuthOptions, betterAuth } from 'better-auth';
 import {
   anonymous,
   emailOTP,
-  genericOAuth,
   magicLink,
   twoFactor,
   username,
@@ -34,16 +33,11 @@ if (isProduction && !siteUrl.startsWith('https://')) {
 // OAuth provider configuration with safety checks
 const githubClientId = process.env.GITHUB_CLIENT_ID;
 const githubClientSecret = process.env.GITHUB_CLIENT_SECRET;
-const slackClientId = process.env.SLACK_CLIENT_ID;
-const slackClientSecret = process.env.SLACK_CLIENT_SECRET;
 
 // In production, throw if providers are partially configured
 if (isProduction) {
   if ((githubClientId && !githubClientSecret) || (!githubClientId && githubClientSecret)) {
     throw new Error('GitHub OAuth requires both GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET');
-  }
-  if ((slackClientId && !slackClientSecret) || (!slackClientId && slackClientSecret)) {
-    throw new Error('Slack OAuth requires both SLACK_CLIENT_ID and SLACK_CLIENT_SECRET');
   }
 }
 
@@ -205,21 +199,6 @@ export const createAuth = (
         },
       }),
       twoFactor(),
-      ...(slackClientId && slackClientSecret
-        ? [
-            genericOAuth({
-              config: [
-                {
-                  providerId: 'slack',
-                  clientId: slackClientId,
-                  clientSecret: slackClientSecret,
-                  discoveryUrl: 'https://slack.com/.well-known/openid-configuration',
-                  scopes: ['openid', 'email', 'profile'],
-                },
-              ],
-            }),
-          ]
-        : []),
       convex(),
     ],
   } satisfies BetterAuthOptions);
