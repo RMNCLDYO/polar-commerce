@@ -17,6 +17,8 @@ So I built workarounds.
 
 **Guest/auth cart merging:** Implemented seamless cart and wishlist migration when guests sign in. Items added while browsing anonymously automatically merge with their account data on login - no lost items, no duplicates.
 
+**JSON-based product seeding:** Built a comprehensive seeding system that starts with JSON product definitions, uploads images to Polar's CDN, creates products via Polar API, then syncs everything to Convex. One command (`npm run polar:seed`) populates both systems with full inventory, pricing, images, and metadata - all kept in sync automatically.
+
 **Tech stack:**
 - Next.js 16 + React 19
 - Convex (real-time database with type-safe schema)
