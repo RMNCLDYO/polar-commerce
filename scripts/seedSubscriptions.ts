@@ -209,6 +209,7 @@ async function uploadSubscriptionImage(
       },
     });
   } catch (error) {
+    console.error('Failed to upload product image:', error);
   }
 }
 

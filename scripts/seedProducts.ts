@@ -307,6 +307,7 @@ export async function seedProducts(): Promise<void> {
           convexId,
         });
       } catch (error) {
+        console.error('Failed to create product:', error);
       }
     }
 
