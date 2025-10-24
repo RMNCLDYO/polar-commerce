@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 import { Polar } from '@convex-dev/polar';
 import { Polar as PolarSDK } from '@polar-sh/sdk';
 import { v } from 'convex/values';
@@ -6,7 +7,7 @@ import { action, internalAction, query } from './_generated/server';
 
 export const polar = new Polar(components.polar, {
   getUserInfo: async (ctx): Promise<{ userId: string; email: string }> => {
-    // @ts-ignore - TypeScript deep instantiation issue with Convex
+    // @ts-ignore - TypeScript deep instantiation issue with Convex generated types (intermittent)
     const user = await ctx.runQuery(api.auth.auth.getCurrentUserBasic);
     if (!user) {
       throw new Error('User not authenticated');

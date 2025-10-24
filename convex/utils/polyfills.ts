@@ -6,12 +6,12 @@ if (typeof MessageChannel === 'undefined') {
 
     close() { }
 
-    postMessage(_message: unknown, _transfer: Transferable[] = []) { }
+    postMessage() { }
     start() { }
     addEventListener() { }
     removeEventListener() { }
 
-    dispatchEvent(_event: Event): boolean {
+    dispatchEvent(): boolean {
       return false;
     }
   }

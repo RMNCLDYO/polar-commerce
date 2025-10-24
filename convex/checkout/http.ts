@@ -93,7 +93,7 @@ export const createCheckout = httpAction(async (ctx, request) => {
   }
 });
 
-export const checkoutOptions = httpAction(async (_ctx, _request) => {
+export const checkoutOptions = httpAction(async () => {
   return new Response(null, {
     status: 204,
     headers: getPreflightHeaders(),

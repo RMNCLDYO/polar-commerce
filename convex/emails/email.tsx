@@ -2,7 +2,6 @@ import '../utils/polyfills';
 import { Resend } from '@convex-dev/resend';
 import { render } from '@react-email/components';
 import { v } from 'convex/values';
-// @ts-ignore - React is used implicitly in JSX
 import * as React from 'react';
 import { components } from '../_generated/api';
 import { internalAction, type ActionCtx } from '../_generated/server';

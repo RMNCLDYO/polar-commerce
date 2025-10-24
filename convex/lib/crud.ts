@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { GenericId } from 'convex/values';
 import type { MutationCtx, QueryCtx } from '../_generated/server';
 import { canRead, canWrite, canModify } from './rls';
@@ -192,11 +193,6 @@ export function createCRUD<T extends string>(config: CRUDConfig<T>) {
   };
 }
 
-
-export const todoCRUD = createCRUD({
-  table: 'demoTodos',
-  enableRLS: true,
-});
 
 export const catalogCRUD = createCRUD({
   table: 'catalog',

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { customQuery, customMutation, customAction } from 'convex-helpers/server/customFunctions';
 import { z } from 'zod';
 import { query, mutation, action } from '../_generated/server';

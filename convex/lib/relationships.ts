@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { GenericQueryCtx, GenericDataModel } from 'convex/server';
 import type { GenericId } from 'convex/values';
 import { getAll } from 'convex-helpers/server/relationships';
