@@ -7,6 +7,14 @@ import {
   mutation,
   query,
 } from '../_generated/server';
+
+// Safer metadata type - allows only JSON-serializable primitives
+const vMetadataValue = v.union(
+  v.string(),
+  v.number(),
+  v.boolean(),
+  v.null()
+);
 import { authComponent } from '../auth/auth';
 import { checkRateLimit } from '../lib/rateLimit';
 import {
@@ -651,7 +659,7 @@ export const internal_updateCartCheckout = internalMutation({
     checkoutUrl: v.string(),
     discountId: v.optional(v.string()),
     discountCode: v.optional(v.string()),
-    customFieldData: v.optional(v.record(v.string(), v.any())),
+    customFieldData: v.optional(v.record(v.string(), vMetadataValue)),
   },
   returns: v.null(),
   handler: async (ctx, args) => {
@@ -747,8 +755,8 @@ export const internal_createOrder = internalMutation({
 
     subscriptionId: v.optional(v.string()),
 
-    metadata: v.optional(v.record(v.string(), v.any())),
-    customFieldData: v.optional(v.record(v.string(), v.any())),
+    metadata: v.optional(v.record(v.string(), vMetadataValue)),
+    customFieldData: v.optional(v.record(v.string(), vMetadataValue)),
   },
   returns: v.id('orders'),
   handler: async (ctx, args) => {

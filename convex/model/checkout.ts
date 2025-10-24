@@ -114,7 +114,7 @@ export async function updateCartCheckout(
     checkoutUrl: string;
     discountId?: string;
     discountCode?: string;
-    customFieldData?: Record<string, unknown>;
+    customFieldData?: Record<string, string | number | boolean | null>;
   },
 ): Promise<void> {
   const updateData: {
@@ -123,7 +123,7 @@ export async function updateCartCheckout(
     updatedAt: number;
     discountId?: string;
     discountCode?: string;
-    customFieldData?: Record<string, unknown>;
+    customFieldData?: Record<string, string | number | boolean | null>;
   } = {
     lastCheckoutId: checkoutData.checkoutId,
     lastCheckoutUrl: checkoutData.checkoutUrl,

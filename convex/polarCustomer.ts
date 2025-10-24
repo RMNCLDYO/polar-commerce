@@ -249,7 +249,9 @@ export async function ensurePolarCustomerHelper(
             };
           }
         }
-      } catch {
+      } catch (recoveryError) {
+        // Recovery failed, will throw original error below
+        console.error('Customer recovery failed:', recoveryError);
       }
     }
 
