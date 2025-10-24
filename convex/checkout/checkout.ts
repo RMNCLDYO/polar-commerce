@@ -16,7 +16,6 @@ import {
   vCheckoutSuccessResponse,
 } from './types';
 
-// Safer metadata type - allows only JSON-serializable primitives
 const vMetadataValue = v.union(
   v.string(),
   v.number(),

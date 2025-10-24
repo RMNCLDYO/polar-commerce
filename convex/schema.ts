@@ -1,7 +1,6 @@
 import { defineSchema, defineTable } from 'convex/server';
 import { v } from 'convex/values';
 
-// Safer metadata type - allows only JSON-serializable primitives
 const vMetadataValue = v.union(
   v.string(),
   v.number(),

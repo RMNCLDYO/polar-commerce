@@ -1,5 +1,5 @@
-import { v } from 'convex/values';
 import { partial } from 'convex-helpers/validators';
+import { v } from 'convex/values';
 
 export class ValidationError extends Error {
   constructor(message: string) {
@@ -82,7 +82,6 @@ export const vEmail = v.string();
 
 export const vUrl = v.string();
 
-// Safer metadata type - allows only JSON-serializable primitives
 const vMetadataValue = v.union(
   v.string(),
   v.number(),

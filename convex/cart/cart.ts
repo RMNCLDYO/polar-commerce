@@ -3,29 +3,28 @@ import type { Doc } from '../_generated/dataModel';
 import {
   internalMutation,
   internalQuery,
-  type MutationCtx,
   mutation,
   query,
+  type MutationCtx,
 } from '../_generated/server';
+import { authComponent } from '../auth/auth';
+import { checkRateLimit } from '../lib/rateLimit';
+import {
+  validateQuantity,
+  vAuthUser,
+  vCartDoc,
+  vCartItemWithProduct,
+  vCartResponse,
+  vCartValidationResponse,
+  vSuccessResponse,
+} from '../utils/validation';
 
-// Safer metadata type - allows only JSON-serializable primitives
 const vMetadataValue = v.union(
   v.string(),
   v.number(),
   v.boolean(),
   v.null()
 );
-import { authComponent } from '../auth/auth';
-import { checkRateLimit } from '../lib/rateLimit';
-import {
-  validateQuantity,
-  vSuccessResponse,
-  vCartResponse,
-  vCartValidationResponse,
-  vCartDoc,
-  vAuthUser,
-  vCartItemWithProduct,
-} from '../utils/validation';
 
 async function getOrCreateCart(
   ctx: MutationCtx,
@@ -323,7 +322,7 @@ export const getCart = query({
     const itemsWithProducts = await Promise.all(
       cartItems.map(async (item) => {
         const product = await ctx.db.get(item.catalogId);
-        if (!product) {return null;}
+        if (!product) { return null; }
 
         return {
           _id: item._id,
@@ -620,7 +619,7 @@ export const internal_getCartItems = internalQuery({
     const itemsWithProducts = await Promise.all(
       items.map(async (item) => {
         const product = await ctx.db.get(item.catalogId);
-        if (!product) {return null;}
+        if (!product) { return null; }
 
         return {
           ...item,
@@ -676,9 +675,9 @@ export const internal_updateCartCheckout = internalMutation({
       updatedAt: Date.now(),
     };
 
-    if (args.discountId) {updateData.discountId = args.discountId;}
-    if (args.discountCode) {updateData.discountCode = args.discountCode;}
-    if (args.customFieldData) {updateData.customFieldData = args.customFieldData;}
+    if (args.discountId) { updateData.discountId = args.discountId; }
+    if (args.discountCode) { updateData.discountCode = args.discountCode; }
+    if (args.customFieldData) { updateData.customFieldData = args.customFieldData; }
 
     await ctx.db.patch(args.cartId, updateData);
     return null;
