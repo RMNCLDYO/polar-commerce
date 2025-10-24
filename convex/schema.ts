@@ -126,14 +126,6 @@ export default defineSchema({
     .index('createdAt', ['createdAt'])
     .index('subscriptionId', ['subscriptionId']),
 
-  demoTodos: defineTable({
-    text: v.string(),
-    completed: v.boolean(),
-    userId: v.string(),
-    createdAt: v.number(),
-    updatedAt: v.number(),
-  }).index('userId', ['userId']),
-
   rateLimits: defineTable({
     key: v.string(),
     requests: v.array(v.number()),
