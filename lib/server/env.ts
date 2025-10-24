@@ -1,9 +1,5 @@
 import 'server-only';
 
-export function getGoogleApiKey(): string | undefined {
-  return process.env.GOOGLE_GENERATIVE_AI_API_KEY;
-}
-
 export function getBaseUrl(): string {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
 
