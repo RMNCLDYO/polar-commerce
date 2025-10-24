@@ -2,6 +2,7 @@
 
 import { useConvexAuth } from 'convex/react';
 import { AlertCircle, Heart, Loader2, ShoppingBag, Trash2 } from 'lucide-react';
+import type { Route } from 'next';
 import Image from 'next/image';
 import { useState } from 'react';
 import { Link } from '@/components/link';
@@ -126,7 +127,7 @@ export default function WishlistPage() {
                   )}
                 >
                   <Link
-                    href={`/product/${item.catalogId}`}
+                    href={`/product/${item.catalogId}` as Route}
                     className="block relative aspect-[3/4] bg-muted"
                   >
                     {item.product.imageUrl ? (
@@ -154,7 +155,7 @@ export default function WishlistPage() {
 
                   <div className="p-4 space-y-3">
                     <div>
-                      <Link href={`/product/${item.catalogId}`}>
+                      <Link href={`/product/${item.catalogId}` as Route}>
                         <h3 className="text-sm font-semibold tracking-wide hover:underline">
                           {item.product.name}
                         </h3>

@@ -1,5 +1,5 @@
 import { Check, RefreshCw, Shield, Truck } from 'lucide-react';
-import type { Metadata } from 'next';
+import type { Metadata, Route } from 'next';
 import {
   cacheLife,
   cacheTag,
@@ -163,7 +163,7 @@ async function CachedProductContent({ id }: { id: string }) {
                 {filteredRelated.slice(0, 3).map((relatedProduct: Product) => (
                   <Link
                     key={relatedProduct.id}
-                    href={`/product/${relatedProduct.id}`}
+                    href={`/product/${relatedProduct.id}` as Route}
                     prefetchStrategy="hover"
                     className="group cursor-pointer"
                   >

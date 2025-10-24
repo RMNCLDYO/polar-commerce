@@ -2,6 +2,7 @@
 
 import { useAction, useQuery } from 'convex/react';
 import { Check } from 'lucide-react';
+import type { Route } from 'next';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -71,7 +72,7 @@ export default function PricingPage() {
           origin: window.location.origin,
           successUrl: `${window.location.origin}/pricing?success=true`,
         });
-        router.push(checkout.url);
+        router.push(checkout.url as Route);
       } catch {
         setLoading(null);
       }
