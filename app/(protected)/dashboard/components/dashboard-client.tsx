@@ -12,14 +12,10 @@ interface DashboardClientProps {
 export function DashboardClient({ preloadedData }: DashboardClientProps) {
   const data = usePreloadedQuery(preloadedData);
 
-  if (!data) {
-    return null;
-  }
-
   return (
     <div className="grid gap-6 md:grid-cols-2">
-      <SubscriptionStatus subscription={data.subscription} />
-      <RecentOrders orders={data.orders} />
+      <SubscriptionStatus subscription={data?.subscription ?? null} />
+      <RecentOrders orders={data?.orders ?? []} />
     </div>
   );
 }
