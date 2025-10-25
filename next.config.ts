@@ -4,6 +4,9 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   reactCompiler: true,
   typedRoutes: true,
+  poweredByHeader: false,
+  compress: true,
+  generateEtags: true,
   logging: {
     fetches: {
       fullUrl: true,
@@ -31,11 +34,54 @@ const nextConfig: NextConfig = {
       revalidate: 86400,
       expire: 604800,
     },
+    // E-commerce specific profiles
+    products: {
+      stale: 1800,        // 30 minutes - serve stale product data
+      revalidate: 900,    // 15 minutes - revalidate in background
+      expire: 3600,       // 1 hour - max stale age
+    },
+    inventory: {
+      stale: 300,         // 5 minutes - inventory changes frequently
+      revalidate: 60,     // 1 minute - quick revalidation
+      expire: 600,        // 10 minutes - expire quickly
+    },
+    catalog: {
+      stale: 7200,        // 2 hours - catalog rarely changes
+      revalidate: 3600,   // 1 hour - revalidate
+      expire: 86400,      // 1 day - expire
+    },
+    pricing: {
+      stale: 600,         // 10 minutes - prices can change
+      revalidate: 300,    // 5 minutes - revalidate often
+      expire: 1800,       // 30 minutes - expire
+    },
   },
   experimental: {
     cssChunking: true,
     turbopackFileSystemCacheForDev: true,
+    turbopackFileSystemCacheForBuild: true,
     typedEnv: true,
+    inlineCss: true,
+    viewTransition: true,
+    staticGenerationRetryCount: 3,
+    staticGenerationMaxConcurrency: 8,
+    staticGenerationMinPagesPerWorker: 25,
+  },
+  webpack: (config, { dev, isServer }) => {
+    if (!dev && !isServer) {
+      config.optimization.splitChunks = {
+        ...config.optimization.splitChunks,
+        cacheGroups: {
+          ...config.optimization.splitChunks?.cacheGroups,
+          commons: {
+            name: 'commons',
+            chunks: 'all',
+            minChunks: 2,
+          },
+        },
+      };
+    }
+    return config;
   },
   turbopack: {
     root: __dirname,

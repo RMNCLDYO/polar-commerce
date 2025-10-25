@@ -1,12 +1,14 @@
 import { preloadQuery } from 'convex/nextjs';
-import { headers } from 'next/headers';
+import { unstable_noStore as noStore } from 'next/cache';
+import { cookies } from 'next/headers';
 import { Suspense } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { api } from '@/convex/_generated/api';
 import { SettingsClient } from './settings-client';
 
 async function SettingsContent() {
-  await headers();
+  noStore();
+  await cookies();
   const preloadedUser = await preloadQuery(api.auth.auth.getCurrentUser);
 
   return <SettingsClient preloadedUser={preloadedUser} />;

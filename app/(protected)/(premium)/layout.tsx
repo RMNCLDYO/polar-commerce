@@ -1,7 +1,4 @@
-export default function PremiumLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function PremiumLayout(props: LayoutProps<'/'>) {
+  const { children } = props;
   return <>{children}</>;
 }

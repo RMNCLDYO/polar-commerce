@@ -3,11 +3,8 @@
 import { Activity, useEffect, useState } from 'react';
 import { CheckoutPreloader } from '@/components/checkout-preloader';
 
-export default function ShopLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function ShopLayout(props: LayoutProps<'/'>) {
+  const { children } = props;
   const [preloadCheckout, setPreloadCheckout] = useState(false);
 
   useEffect(() => {

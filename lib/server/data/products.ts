@@ -1,10 +1,8 @@
 import 'server-only';
 
 import { fetchQuery } from 'convex/nextjs';
-import {
-  cacheLife,
-  cacheTag,
-} from 'next/cache';
+import { cacheLife, cacheTag } from 'next/cache';
+import { cache } from 'react';
 import { api } from '@/convex/_generated/api';
 import type { Id } from '@/convex/_generated/dataModel';
 import type { Product, ProductFilters } from '@/lib/shared/types';
@@ -15,8 +13,8 @@ export async function getProducts(
   filters?: ProductFilters,
 ): Promise<Product[]> {
   'use cache';
-  cacheLife('hours');
-  cacheTag('products');
+  cacheLife('catalog');
+  cacheTag('products', 'catalog');
 
   const products = await fetchQuery(
     api.catalog.catalog.getProducts,
@@ -34,9 +32,9 @@ export async function getProducts(
   return products;
 }
 
-export async function getProduct(id: string): Promise<Product | null> {
+export const getProduct = cache(async (id: string): Promise<Product | null> => {
   'use cache';
-  cacheLife('hours');
+  cacheLife('products');
   cacheTag('products', `product-${id}`);
 
   try {
@@ -53,4 +51,4 @@ export async function getProduct(id: string): Promise<Product | null> {
     }
     return null;
   }
-}
+});

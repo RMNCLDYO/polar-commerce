@@ -1,26 +1,25 @@
 # Polar Commerce
 
-An experiment combining Convex (real-time database), Polar (payments), and Better Auth into an e-commerce platform. These tools weren't designed for this, but that's what made it interesting.
+Experimental e-commerce platform built with Next.js 16, Convex, Better Auth, and Polar. Features custom cart bundling, seamless guest-to-auth migration, and automated product seeding. Polar wasn't built for multi-item carts - that's what made this interesting.
 
-## The Problem
+## The Challenge
 
-I wanted to build an e-commerce platform but:
-- Polar handles payments beautifully but has no cart system
-- Convex is built for SaaS apps, not e-commerce
-- Better Auth works great but needed to integrate with both
-
-So I built workarounds.
+Polar handles payments beautifully but has zero cart system - no multi-item checkout, no cart management, nothing. I needed to figure out how to make it work for a full e-commerce platform without those features.
 
 ## The Solution
 
 **Cart bundling:** Built a custom system where multiple cart items bundle into a single ephemeral Polar product at checkout. The full cart composition gets stored in checkout metadata, then reconstructed server-side after payment confirmation via webhook. This workaround lets Polar handle payments for multi-item carts without native support.
 
-**Guest/auth cart merging:** Implemented seamless cart and wishlist migration when guests sign in. Items added while browsing anonymously automatically merge with their account data on login - no lost items, no duplicates.
+**Real-time cart sync:** Convex's real-time subscriptions make the magic happen - cart and wishlist updates sync instantly across all devices and tabs. Add an item on your phone, see it immediately on desktop. No polling, no refresh needed.
+
+**Guest/auth cart merging:** Seamless migration when guests sign in. Items added while browsing anonymously automatically merge with their account data on login - no lost items, no duplicates. Better Auth integration made this straightforward.
 
 **JSON-based product seeding:** Built a comprehensive seeding system that starts with JSON product definitions, uploads images to Polar's CDN, creates products via Polar API, then syncs everything to Convex. One command (`npm run polar:seed`) populates both systems with full inventory, pricing, images, and metadata - all kept in sync automatically.
 
 **Tech stack:**
-- Next.js 16 + React 19
+- Next.js 16.0.1-canary.2 with React Compiler, Turbopack dev/build caching, component-level caching, and PPR
+- React 19.2 with useEffectEvent, View Transitions API
+- Experimental: `cacheLife`, `cacheTag`, typed routes, inline CSS
 - Convex (real-time database with type-safe schema)
 - Better Auth with Convex adapter
 - Polar (payments for subscriptions and one-time purchases)
@@ -64,7 +63,7 @@ Still figuring out:
 
 ## Why Build This
 
-I was curious if I could make e-commerce work with tools designed for different purposes. Convex's real-time subscriptions turned out to be perfect for cart sync. Polar's payment processing is solid even without native cart support. The bundling workaround isn't elegant, but it works.
+I wanted to see if I could build e-commerce on Polar despite the missing cart system. Turns out Convex's real-time sync is perfect for carts and wishlists, Better Auth integrates seamlessly, and Next.js 16's experimental features (React Compiler, component-level caching, Turbopack dev caching) combined with React 19.2's useEffectEvent and View Transitions push performance and UX even further. The bundling workaround for Polar isn't elegant, but it works.
 
 ## Credits
 

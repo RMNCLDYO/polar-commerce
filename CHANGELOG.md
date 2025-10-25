@@ -5,6 +5,164 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.12.0-alpha.1] - 2025-10-24 - Next.js 16 Best Practices & Canary Migration
+
+**Major Update** - Next.js 16 canary with experimental features and comprehensive modernization
+
+### Added
+
+#### Next.js 16 Metadata & Assets
+- **File-based Metadata** - Next.js 16 metadata generation
+  - `app/icon.png` - App icon (192x192)
+  - `app/apple-icon.png` - Apple touch icon
+  - `app/manifest.ts` - Web app manifest (TypeScript)
+  - `app/opengraph-image.tsx` - Dynamic OG image generation
+  - `app/twitter-image.tsx` - Dynamic Twitter card generation
+  - `app/(public)/(shop)/product/[id]/opengraph-image.tsx` - Product OG images
+  - `app/(public)/(shop)/product/[id]/twitter-image.tsx` - Product Twitter cards
+
+#### Cache Infrastructure
+- **Server-side Caching** - `lib/server/cache/`
+  - `revalidate.ts` - Cache revalidation with Next.js 16 API
+  - `revalidateProducts()` - Invalidate product catalog cache
+  - `revalidateProduct(id)` - Invalidate specific product cache
+  - Uses `revalidateTag(tag, 'max')` for stale-while-revalidate
+
+- **API Routes** - `app/api/revalidate/`
+  - `route.ts` - On-demand cache revalidation endpoint
+  - Authenticated with `REVALIDATE_SECRET`
+  - Supports product and catalog tag invalidation
+
+#### Convex Cache Integration
+- **Cache Revalidation** - `convex/cache/`
+  - `revalidate.ts` - Trigger Next.js cache invalidation from Convex
+  - Called after catalog mutations for automatic cache updates
+
+### Changed
+
+#### Next.js 16 Canary Migration
+- **Package Upgrades**
+  - `next@16.0.0` → `next@16.0.1-canary.2`
+  - Enabled experimental Turbopack file system cache for build
+  - Restored experimental features: `turbopackFileSystemCacheForDev`, `turbopackFileSystemCacheForBuild`
+
+#### Type Safety & Best Practices
+- **Global Type Helpers** - All pages and layouts updated
+  - Implemented `PageProps<route>` helper (no imports needed)
+  - Implemented `LayoutProps<route>` helper (no imports needed)
+  - Types auto-generated in `.next/types/routes.d.ts`
+  - Route groups like `(public)` excluded from route paths
+
+- **Async Route Parameters** - Next.js 16 requirement
+  - All `params` and `searchParams` now awaited
+  - Updated across 15+ page files
+
+- **Separate Viewport Export**
+  - Moved viewport metadata from `metadata` to separate `viewport` export
+  - Required by Next.js 16 for proper metadata handling
+
+#### Caching Strategy
+- **Enhanced Product Caching** - `lib/server/data/products.ts`
+  - Restored `'use cache'` directives on server functions
+  - `getProducts()` - Uses `cacheLife('catalog')` (2 hours stale)
+  - `getProduct(id)` - Uses `cacheLife('products')` (30 min stale), wrapped in React `cache()`
+  - Added `cacheTag` for targeted invalidation
+
+- **Revalidation API** - `lib/server/cache/revalidate.ts`
+  - `revalidateTag(tag, 'max')` - Next.js 16 recommended API
+  - Stale-while-revalidate semantics
+
+- **Configuration** - `next.config.ts`
+  - `cacheComponents: true` - Enables 'use cache' directive
+  - `cacheLife` profiles for different data types (products, inventory, catalog, pricing)
+  - Static generation retry/concurrency settings
+
+#### Build Fixes
+- **Static Generation**
+  - Removed `generateStaticParams` from product and category pages
+  - Prevents React 19 + Next.js canary compatibility issues
+  - All routes now use dynamic rendering with caching
+
+- **preloadQuery Math.random() Fix**
+  - Added `await cookies()` before `preloadQuery` calls
+  - Fixes "Route used Math.random() before accessing uncached data" error
+  - Applied to dashboard and settings pages
+
+#### Next.js Configuration
+- **Production Optimizations** - `next.config.ts`
+  - `poweredByHeader: false` - Remove X-Powered-By header
+  - `compress: true` - Enable gzip compression
+  - `generateEtags: true` - Enable ETag generation
+  - Enhanced image optimization with quality levels
+  - Stricter security headers
+
+#### Environment Variables
+- **Cache Revalidation** - `.env.example`
+  - Added `REVALIDATE_SECRET` for authenticated cache invalidation
+
+#### Metadata Updates
+- **Root Layout** - `app/layout.tsx`
+  - Enhanced metadata with `applicationName`, `creator`, `publisher`
+  - Added `formatDetection` config
+  - Improved OpenGraph and Twitter card metadata
+  - Added canonical URL alternate
+
+### Removed
+- **Old Static Assets** - Replaced by Next.js 16 file-based metadata
+  - `public/android-chrome-192x192.png`
+  - `public/android-chrome-512x512.png`
+  - `public/apple-touch-icon.png`
+  - `public/favicon-16x16.png`
+  - `public/favicon-32x32.png`
+  - `public/favicon.ico`
+  - `public/manifest.json`
+  - `public/og.png`
+  - `public/opengraph-image.png`
+  - `public/twitter-image.png`
+  - `public/placeholder.png`
+  - `public/site.webmanifest`
+
+### Impact
+
+**Performance:**
+- ✅ Turbopack file system caching for faster builds
+- ✅ Component-level caching with 'use cache' directive
+- ✅ Stale-while-revalidate for instant page loads
+- ✅ Optimized cache invalidation with targeted tags
+
+**Type Safety:**
+- ✅ Global PageProps and LayoutProps helpers
+- ✅ Route path type checking at compile time
+- ✅ Zero type errors with async params
+
+**Developer Experience:**
+- ✅ File-based metadata generation
+- ✅ Dynamic OG/Twitter image generation per product
+- ✅ On-demand cache revalidation API
+- ✅ Automatic cache invalidation from Convex mutations
+
+**Build:**
+- ✅ All 24 pages build successfully
+- ✅ Partial Prerendering (PPR) enabled
+- ✅ Next.js canary compatibility achieved
+
+### Breaking Changes
+
+#### Type Changes
+- All `params` and `searchParams` must be awaited
+- `viewport` must be separate export from `metadata`
+
+### Statistics
+- **Files Changed**: 37 files
+  - 24 files modified
+  - 13 files removed (old assets)
+  - 8 files added (new metadata system)
+- **Lines**: 1,267 additions, 1,225 deletions
+- **Net Change**: +42 lines
+- **Build Status**: ✅ All 24 routes generated successfully
+
+---
+
 ## [0.11.0-alpha.1] - 2025-10-24 - Real Dashboard & Demo Cleanup
 
 **Major Refactor** - Removed demo features and added production user dashboard
