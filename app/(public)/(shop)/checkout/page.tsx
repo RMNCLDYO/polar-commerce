@@ -161,6 +161,7 @@ export default function CheckoutPage() {
       } else {
         setError(errorMessage);
       }
+    } finally {
       setIsLoading(false);
     }
   };
