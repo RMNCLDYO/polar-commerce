@@ -1,8 +1,8 @@
 {
   "name": "polar-commerce",
-  "version": "0.11.0-alpha.1",
+  "version": "0.12.0-alpha.1",
   "type": "module",
-  "description": "Experimental e-commerce platform combining Next.js 16, Convex for real-time data, Better Auth for authentication, and Polar for payments. Includes custom product bundling to work around Polar's lack of multi-product checkout support.",
+  "description": "Experimental e-commerce platform built with Next.js 16, Convex, Better Auth, and Polar. Features custom cart bundling, seamless guest-to-auth migration, and automated product seeding.",
   "author": "Ray <hi@rmncldyo.com> (https://github.com/RMNCLDYO)",
   "license": "MIT",
   "private": false,
@@ -14,6 +14,28 @@
     "url": "https://github.com/RMNCLDYO/polar-commerce/issues"
   },
   "homepage": "https://github.com/RMNCLDYO/polar-commerce#readme",
+  "keywords": [
+    "ecommerce",
+    "real-time",
+    "typescript",
+    "serverless",
+    "checkout",
+    "nextjs",
+    "payments",
+    "seeding",
+    "cart",
+    "polar",
+    "product-catalog",
+    "convex",
+    "react19",
+    "better-auth",
+    "subscription-payments",
+    "nextjs16"
+  ],
+  "engines": {
+    "node": ">=20.9.0",
+    "npm": ">=10.0.0"
+  },
   "scripts": {
     "dev": "./scripts/time-script.sh dev npm-run-all --parallel dev:frontend dev:backend",
     "dev:backend": "convex dev --typecheck-components --live-component-sources",
@@ -54,7 +76,7 @@
     "convex-helpers": "^0.1.104",
     "dotenv": "^17.2.3",
     "lucide-react": "^0.547.0",
-    "next": "16.0.0",
+    "next": "^16.0.1-canary.2",
     "next-themes": "^0.4.6",
     "react": "19.2.0",
     "react-dom": "19.2.0",
