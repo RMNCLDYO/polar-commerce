@@ -39,6 +39,14 @@ export function UserMenu({ preloadedUser }: UserMenuProps) {
     router.push('/');
   };
 
+  if (userData === undefined) {
+    return (
+      <Button variant="ghost" size="icon" aria-label="Loading" disabled>
+        <User className="size-5" />
+      </Button>
+    );
+  }
+
   if (!user) {
     return (
       <Link href="/sign-in">
