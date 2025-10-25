@@ -54,10 +54,12 @@ export function UserMenu({ preloadedUser }: UserMenuProps) {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon" aria-label="User menu">
           <Avatar className="size-6">
-            <AvatarImage
-              src={user.image || undefined}
-              alt={user.name || 'User'}
-            />
+            {user.image && (
+              <AvatarImage
+                src={user.image}
+                alt={user.name || 'User'}
+              />
+            )}
             <AvatarFallback>
               <User className="size-4" />
             </AvatarFallback>
