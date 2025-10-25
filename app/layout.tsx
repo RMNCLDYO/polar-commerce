@@ -3,7 +3,7 @@ import { Toaster } from '@/components/ui/sonner';
 import { WishlistManager } from '@/components/wishlist/wishlist-manager';
 import { ConvexProvider } from '@/lib/client/providers/convex';
 import { ThemeProvider } from '@/lib/client/providers/theme';
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import './globals.css';
 
@@ -21,21 +21,45 @@ export const metadata: Metadata = {
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000',
   ),
-  title: 'Polar Commerce - E-commerce Platform | Next.js 16 + Convex + Better Auth',
+  applicationName: 'Polar Commerce',
+  title: {
+    default: 'Polar Commerce - E-commerce Platform | Next.js 16 + Convex + Better Auth',
+    template: '%s | Polar Commerce',
+  },
   description:
-    'Experimental e-commerce platform demonstrating Polar payment bundling, Convex real-time database, and Better Auth integration. Features cart/wishlist with real-time sync and multi-item checkout workaround. Built with Next.js 16 canary and React 19.',
+    'Experimental e-commerce platform built with Next.js 16, Convex, Better Auth, and Polar. Features custom cart bundling, seamless guest-to-auth migration, and automated product seeding.',
   keywords: [
-    'e-commerce',
-    'Next.js 16',
-    'Convex',
-    'Better Auth',
-    'Polar',
-    'real-time cart',
-    'React 19',
-    'e-commerce platform',
+    'ecommerce',
+    'real-time',
+    'typescript',
+    'serverless',
+    'checkout',
+    'nextjs',
+    'payments',
+    'seeding',
+    'cart',
+    'polar',
+    'product-catalog',
+    'convex',
+    'react19',
+    'better-auth',
+    'subscription-payments',
+    'nextjs16',
   ],
-  authors: [{ name: 'RMNCLDYO' }],
+  authors: [{ name: 'Ray', url: 'https://github.com/RMNCLDYO' }],
+  creator: 'Ray',
+  publisher: 'Ray',
+  generator: 'Next.js',
+  category: 'shopping',
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
   manifest: '/manifest.json',
+  alternates: {
+    canonical: '/',
+  },
   icons: {
     icon: [
       { url: '/android-chrome-192x192.png', sizes: '192x192', type: 'image/png' },
@@ -46,7 +70,8 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: 'Polar Commerce - E-commerce Platform',
-    description: 'Experimental e-commerce platform with Polar, Convex, and Better Auth',
+    description: 'Experimental e-commerce platform built with Next.js 16, Convex, Better Auth, and Polar. Features custom cart bundling, seamless guest-to-auth migration, and automated product seeding.',
+    url: process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000',
     type: 'website',
     siteName: 'Polar Commerce',
     locale: 'en_US',
@@ -62,7 +87,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'Polar Commerce',
-    description: 'Experimental e-commerce platform with Polar, Convex, and Better Auth',
+    description: 'Experimental e-commerce platform built with Next.js 16, Convex, Better Auth, and Polar. Features custom cart bundling, seamless guest-to-auth migration, and automated product seeding.',
     images: ['/twitter-image.png'],
   },
   robots: {
@@ -71,11 +96,14 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+};
+
+export default function RootLayout(props: LayoutProps<'/'>) {
+  const { children } = props;
   return (
     <html lang="en" suppressHydrationWarning>
       <body

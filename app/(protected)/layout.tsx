@@ -7,11 +7,8 @@ import { api } from '@/convex/_generated/api';
 import type { CurrentUser } from '@/convex/types/convex';
 import { getToken } from '@/lib/server/auth';
 
-export default async function ProtectedLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default async function ProtectedLayout(props: LayoutProps<'/'>) {
+  const { children } = props;
   await headers();
 
   const token = await getToken();

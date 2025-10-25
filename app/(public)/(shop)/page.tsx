@@ -1,15 +1,8 @@
-import {
-  cacheLife,
-  cacheTag,
-} from 'next/cache';
 import { ProductGrid } from '@/components/products/product-grid';
 import { ViewTransition } from '@/components/view-transition';
 import { getProducts, type ProductFilters } from '@/lib/server/data/products';
 
 async function CachedProductContent() {
-  'use cache';
-  cacheLife('hours');
-  cacheTag('products');
 
   const filters: ProductFilters = {
     excludeSubscriptions: true,

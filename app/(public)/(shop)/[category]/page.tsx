@@ -1,9 +1,4 @@
-import type { Metadata } from 'next';
-import type { Route } from 'next';
-import {
-  cacheLife,
-  cacheTag,
-} from 'next/cache';
+import type { Metadata, Route } from 'next';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { QuickAddButton } from '@/components/cart/quick-add-button';
@@ -70,11 +65,6 @@ function isValidCategory(category: string): category is CategorySlug {
   return category in categoryConfig;
 }
 
-interface CategoryPageProps {
-  params: Promise<{ category: string }>;
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
-}
-
 async function CachedCategoryContent({
   category,
   search,
@@ -84,9 +74,6 @@ async function CachedCategoryContent({
   search?: string;
   sort?: ProductFilters['sort'];
 }) {
-  'use cache';
-  cacheLife('hours');
-  cacheTag('products', `category-${category}`);
 
   const config = Object.prototype.hasOwnProperty.call(categoryConfig, category)
     ? categoryConfig[category as CategorySlug]
@@ -233,32 +220,21 @@ async function CachedCategoryContent({
   );
 }
 
-export default async function CategoryPage({
-  params,
-  searchParams,
-}: CategoryPageProps) {
-  const { category } = await params;
-  const searchParamsData = await searchParams;
+export default async function CategoryPage(props: PageProps<'/[category]'>) {
+  const { category } = await props.params;
+  const searchParams = await props.searchParams;
 
   return (
     <CachedCategoryContent
       category={category}
-      search={searchParamsData?.search as string | undefined}
-      sort={searchParamsData?.sort as ProductFilters['sort']}
+      search={searchParams?.search as string | undefined}
+      sort={searchParams?.sort as ProductFilters['sort']}
     />
   );
 }
 
-export async function generateStaticParams() {
-  return Object.keys(categoryConfig).map((category) => ({
-    category,
-  }));
-}
-
-export async function generateMetadata({
-  params,
-}: CategoryPageProps): Promise<Metadata> {
-  const { category } = await params;
+export async function generateMetadata(props: PageProps<'/[category]'>): Promise<Metadata> {
+  const { category } = await props.params;
 
   const config = Object.prototype.hasOwnProperty.call(categoryConfig, category)
     ? categoryConfig[category as CategorySlug]

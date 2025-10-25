@@ -1,7 +1,4 @@
-export default function StarterLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function StarterLayout(props: LayoutProps<'/'>) {
+  const { children } = props;
   return <>{children}</>;
 }

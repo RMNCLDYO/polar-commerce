@@ -1,8 +1,4 @@
-import type { Metadata, Route } from 'next';
-import {
-  cacheLife,
-  cacheTag,
-} from 'next/cache';
+import type { Metadata, Route} from 'next';
 import Image from 'next/image';
 import { QuickAddButton } from '@/components/cart/quick-add-button';
 import { Link } from '@/components/link';
@@ -11,10 +7,6 @@ import { AddToWishlistButton } from '@/components/wishlist/add-to-wishlist-butto
 import type { Id } from '@/convex/_generated/dataModel';
 import { getProducts, type ProductFilters } from '@/lib/server/data/products';
 import { cn } from '@/lib/shared/utils';
-
-interface ProductsPageProps {
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
-}
 
 async function CachedProductsContent({
   search,
@@ -29,9 +21,6 @@ async function CachedProductsContent({
   minPrice?: number;
   maxPrice?: number;
 }) {
-  'use cache';
-  cacheLife('hours');
-  cacheTag('products');
 
   const filters: ProductFilters = {
     search,
@@ -153,24 +142,22 @@ async function CachedProductsContent({
   );
 }
 
-export default async function ProductsPage({
-  searchParams,
-}: ProductsPageProps) {
-  const searchParamsData = await searchParams;
+export default async function ProductsPage(props: PageProps<'/products'>) {
+  const searchParams = await props.searchParams;
 
   return (
     <CachedProductsContent
-      search={searchParamsData?.search as string | undefined}
-      category={searchParamsData?.category as string | undefined}
-      sort={searchParamsData?.sort as ProductFilters['sort']}
+      search={searchParams?.search as string | undefined}
+      category={searchParams?.category as string | undefined}
+      sort={searchParams?.sort as ProductFilters['sort']}
       minPrice={
-        searchParamsData?.minPrice
-          ? parseFloat(searchParamsData.minPrice as string)
+        searchParams?.minPrice
+          ? parseFloat(searchParams.minPrice as string)
           : undefined
       }
       maxPrice={
-        searchParamsData?.maxPrice
-          ? parseFloat(searchParamsData.maxPrice as string)
+        searchParams?.maxPrice
+          ? parseFloat(searchParams.maxPrice as string)
           : undefined
       }
     />

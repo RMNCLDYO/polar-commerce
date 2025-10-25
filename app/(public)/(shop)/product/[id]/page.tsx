@@ -1,9 +1,5 @@
 import { Check, RefreshCw, Shield, Truck } from 'lucide-react';
 import type { Metadata, Route } from 'next';
-import {
-  cacheLife,
-  cacheTag,
-} from 'next/cache';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { QuickAddButton } from '@/components/cart/quick-add-button';
@@ -19,14 +15,7 @@ import {
 } from '@/lib/server/data/products';
 import { cn } from '@/lib/shared/utils';
 
-interface ProductPageProps {
-  params: Promise<{ id: string }>;
-}
-
 async function CachedProductContent({ id }: { id: string }) {
-  'use cache';
-  cacheLife('hours');
-  cacheTag('products', `product-${id}`);
 
   const productData = getProduct(id);
   const relatedProductsData = getProducts({ excludeSubscriptions: true });
@@ -238,22 +227,13 @@ async function CachedProductContent({ id }: { id: string }) {
   );
 }
 
-export default async function ProductPage({ params }: ProductPageProps) {
-  const { id } = await params;
+export default async function ProductPage(props: PageProps<'/product/[id]'>) {
+  const { id } = await props.params;
   return <CachedProductContent id={id} />;
 }
 
-export async function generateStaticParams() {
-  const products = await getProducts();
-  return products.map((product) => ({
-    id: product.id,
-  }));
-}
-
-export async function generateMetadata({
-  params,
-}: ProductPageProps): Promise<Metadata> {
-  const { id } = await params;
+export async function generateMetadata(props: PageProps<'/product/[id]'>): Promise<Metadata> {
+  const { id } = await props.params;
   const product = await getProduct(id);
 
   if (!product) {
@@ -266,9 +246,27 @@ export async function generateMetadata({
     typeof product.image === 'string' ? product.image : product.image.src;
 
   return {
-    title: `${product.name} - Polar Commerce`,
+    title: product.name,
     description: product.description,
+    alternates: {
+      canonical: `/product/${id}`,
+    },
     openGraph: {
+      title: product.name,
+      description: product.description,
+      url: `/product/${id}`,
+      images: [
+        {
+          url: imageUrl,
+          width: 1200,
+          height: 630,
+          alt: product.name,
+        },
+      ],
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image',
       title: product.name,
       description: product.description,
       images: [imageUrl],
