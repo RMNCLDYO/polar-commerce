@@ -54,5 +54,10 @@ export const handleOrderPaid = internalMutation({
         productId: bundleProductId,
       });
     }
+
+    // Revalidate product caches after inventory changes
+    await ctx.scheduler.runAfter(100, internal.cache.revalidate.triggerRevalidation, {
+      tags: ['products', 'catalog', 'inventory'],
+    });
   },
 });

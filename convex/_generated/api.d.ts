@@ -11,6 +11,7 @@
 import type * as auth_auth from "../auth/auth.js";
 import type * as auth_cleanup from "../auth/cleanup.js";
 import type * as auth_sync from "../auth/sync.js";
+import type * as cache_revalidate from "../cache/revalidate.js";
 import type * as cart_cart from "../cart/cart.js";
 import type * as cart_cleanup from "../cart/cleanup.js";
 import type * as catalog_catalog from "../catalog/catalog.js";
@@ -79,6 +80,7 @@ declare const fullApi: ApiFromModules<{
   "auth/auth": typeof auth_auth;
   "auth/cleanup": typeof auth_cleanup;
   "auth/sync": typeof auth_sync;
+  "cache/revalidate": typeof cache_revalidate;
   "cart/cart": typeof cart_cart;
   "cart/cleanup": typeof cart_cleanup;
   "catalog/catalog": typeof catalog_catalog;
