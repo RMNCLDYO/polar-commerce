@@ -1,16 +1,14 @@
 'use client';
 
-import { type Preloaded, usePreloadedQuery } from 'convex/react';
-import type { api } from '@/convex/_generated/api';
+import { useQuery } from 'convex/react';
+import { api } from '@/convex/_generated/api';
 import { RecentOrders } from './recent-orders';
 import { SubscriptionStatus } from './subscription-status';
 
-interface DashboardClientProps {
-  preloadedData: Preloaded<typeof api.user.dashboard.getDashboardData>;
-}
-
-export function DashboardClient({ preloadedData }: DashboardClientProps) {
-  const data = usePreloadedQuery(preloadedData);
+export function DashboardClient() {
+  const data = useQuery(api.user.dashboard.getDashboardData, {
+    ordersLimit: 5,
+  });
 
   return (
     <div className="grid gap-6 md:grid-cols-2">

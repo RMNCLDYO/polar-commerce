@@ -1,17 +1,12 @@
-import { preloadQuery } from 'convex/nextjs';
-import { headers } from 'next/headers';
 import type { Route } from 'next';
 import Image from 'next/image';
-import { Suspense } from 'react';
 import { CartIcon } from '@/components/cart/cart-icon';
 import { MobileNav } from '@/components/layout/header/mobile-nav';
 import { Search } from '@/components/layout/header/search';
 import { ThemeToggle } from '@/components/layout/header/theme-toggle';
 import { UserMenu } from '@/components/layout/header/user-menu';
 import { Link } from '@/components/link';
-import { Skeleton } from '@/components/ui/skeleton';
 import { WishlistIcon } from '@/components/wishlist/wishlist-icon';
-import { api } from '@/convex/_generated/api';
 import LogoImage from '@/public/logo.png';
 
 const NAV_ITEMS = [
@@ -22,13 +17,6 @@ const NAV_ITEMS = [
   { label: 'ACCESSORIES', hideBelow: 'max-[1080px]:hidden' },
   { label: 'PRICING', hideBelow: 'max-[1180px]:hidden' },
 ] as const;
-
-async function UserMenuWrapper() {
-  await headers();
-  const preloadedUser = await preloadQuery(api.auth.auth.getCurrentUserBasic);
-
-  return <UserMenu preloadedUser={preloadedUser} />;
-}
 
 export function Header() {
   return (
@@ -67,9 +55,7 @@ export function Header() {
           <WishlistIcon />
           <CartIcon />
           <ThemeToggle />
-          <Suspense fallback={<Skeleton className="size-9 rounded-md" />}>
-            <UserMenuWrapper />
-          </Suspense>
+          <UserMenu />
           <MobileNav />
         </div>
       </div>

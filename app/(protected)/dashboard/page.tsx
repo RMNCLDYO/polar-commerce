@@ -1,20 +1,4 @@
-import { preloadQuery } from 'convex/nextjs';
-import { unstable_noStore as noStore } from 'next/cache';
-import { cookies } from 'next/headers';
-import { Suspense } from 'react';
-import { Skeleton } from '@/components/ui/skeleton';
-import { api } from '@/convex/_generated/api';
 import { DashboardClient } from './components/dashboard-client';
-
-async function DashboardContent() {
-  noStore();
-  await cookies();
-  const preloadedData = await preloadQuery(api.user.dashboard.getDashboardData, {
-    ordersLimit: 5,
-  });
-
-  return <DashboardClient preloadedData={preloadedData} />;
-}
 
 export default function DashboardPage() {
   return (
@@ -29,19 +13,8 @@ export default function DashboardPage() {
         >
           Dashboard
         </h1>
-        <Suspense fallback={<DashboardSkeleton />}>
-          <DashboardContent />
-        </Suspense>
+        <DashboardClient />
       </div>
-    </div>
-  );
-}
-
-function DashboardSkeleton() {
-  return (
-    <div className="grid gap-6 md:grid-cols-2">
-      <Skeleton className="h-[200px] rounded-lg" />
-      <Skeleton className="h-[200px] rounded-lg" />
     </div>
   );
 }

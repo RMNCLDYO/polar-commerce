@@ -1,7 +1,7 @@
 'use client';
 
 import { CustomerPortalLink } from '@convex-dev/polar/react';
-import { type Preloaded, usePreloadedQuery } from 'convex/react';
+import { useQuery } from 'convex/react';
 import { AlertTriangle, ArrowLeft, Crown } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -35,15 +35,11 @@ interface User {
   tier?: 'free' | 'starter' | 'premium';
 }
 
-interface SettingsClientProps {
-  preloadedUser: Preloaded<typeof api.auth.auth.getCurrentUser>;
-}
-
-export function SettingsClient({ preloadedUser }: SettingsClientProps) {
+export function SettingsClient() {
   const [showEnable2FA, setShowEnable2FA] = useState(false);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const user = usePreloadedQuery(preloadedUser) as User | null | undefined;
+  const user = useQuery(api.auth.auth.getCurrentUser) as User | null | undefined;
 
   const handleDisable2FA = async () => {
     try {
